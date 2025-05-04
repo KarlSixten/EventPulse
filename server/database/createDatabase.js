@@ -3,26 +3,19 @@ import { hashPassword } from '../util/passwordHasher.js';
 
 const deleteMode = process.argv.includes('--delete');
 
-console.log('Setting up database...');
-console.log(`Delete mode is ${deleteMode ? "enabled" : "disabled"}.`);
-
-
 try {
+    console.log('Setting up database...');
+    console.log(`Delete mode is ${deleteMode ? "enabled" : "disabled"}.`);
+
     if (deleteMode) {
-        console.log('Dropping users table...');
-        await db.query(`DROP TABLE IF EXISTS users CASCADE`);
-        console.log('Users table dropped.');
+        console.log('Dropping tables...');
+        await dropAllTables();
+        console.log('Tables dropped.');
     }
 
-    console.log('Creating users table if it does not exist...');
-    await db.query(`CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    email TEXT UNIQUE NOT NULL,
-    password_hashed TEXT NOT NULL,
-    first_name TEXT NOT NULL,
-    last_name TEXT NOT NULL
-)`);
-    console.log('Users table created or already exists.');
+    console.log('Creating tables...');
+    await createTables();
+    console.log('Tables created or already exists.');
 
     if (deleteMode) {
         console.log("Seeding the database...")
@@ -38,7 +31,32 @@ try {
     console.log('Database connection pool closed.');
 }
 
+async function dropAllTables() {
+    await db.query(`
+        DROP TABLE IF EXISTS users CASCADE;
+        DROP TABLE IF EXISTS events CASCADE;
+    `);
+}
+
+async function createTables() {
+    await db.query(`
+        CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        password_hashed TEXT NOT NULL,
+        first_name TEXT NOT NULL,
+        last_name TEXT NOT NULL);
+
+        CREATE TABLE IF NOT EXISTS events (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        created_by_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
+        )
+`);}
+
 async function seed() {
+    // USERS
     await db.query('INSERT INTO users (email, password_hashed, first_name, last_name) VALUES ($1, $2, $3, $4)', [
         'admin@admin.com',
         await hashPassword('admin'),
@@ -49,4 +67,11 @@ async function seed() {
         await hashPassword('password'),
         'Karl',
         'Bjarnø']);
+
+    // EVENTS
+    await db.query('INSERT INTO events (title, description, created_by_id) VALUES ($1, $2, $3)', [
+        'testEvent',
+        'This is a test event',
+        1
+    ])
 }
