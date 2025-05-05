@@ -22,7 +22,6 @@
                 toastr.success("User created, you can now log in!");
             } else {
                 toastr.error(result.data.message, "User creation failed");
-                console.error("User creation failed:", result.data.message);
             }
         } catch (error) {
             toastr.error("An error occured during user creation.");

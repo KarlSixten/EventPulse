@@ -1,9 +1,15 @@
 <script>
     import { Router, Route, Link } from "svelte-routing";
+    import { userStore } from "../stores/userStore";
     import SignUp from "../pages/SignUp/SignUp.svelte";
     import Login from "../pages/Login/Login.svelte";
 
     export let url = "";
+
+    function handleLogout() {
+        userStore.set(null);
+        sessionStorage.removeItem('currentUser');
+    }
 </script>
 
 <main>
@@ -15,8 +21,22 @@
             <Link to="/">Home</Link>
             <Link to="/discover">Discover</Link>
             <Link to="/about">About</Link>
-            <Link to="/login">Login</Link>
-            <Link to="/sign-up">Sign up</Link>
+
+            <div class="nav-spacer"></div>
+
+            <div class="nav-links-auth">
+                {#if !$userStore}
+                    <Link to="/login">Login</Link>
+                    <Link to="/sign-up">Sign up</Link>
+                {:else}
+                    <span class="welcome-message">
+                        Welcome, {$userStore.firstName}!
+                    </span>
+                    <button class="logout-button" on:click={handleLogout}>
+                        Logout
+                    </button>
+                {/if}
+            </div>
         </nav>
 
         <div class="content-area">
@@ -35,19 +55,48 @@
 
 <style>
     .navbar {
-        background-color: #00adb5;
         display: flex;
         align-items: center;
         padding: 10px 25px;
+        background-color: #00adb5;
+        color: white;
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
+        box-sizing: border-box;
     }
 
     .logo-img {
         height: 40px;
-        width: auto;
         display: block;
     }
+
+    .nav-spacer {
+        flex-grow: 1;
+    }
+
+    .nav-links-auth {
+        display: flex;
+        align-items: center;
+    }
+
+    .welcome-message {
+        margin-right: 15px;
+    }
+
+    .logout-button {
+        background: none;
+        border: 1px solid white;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-left: 15px;
+    }
+
+    .logout-button:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
 </style>
