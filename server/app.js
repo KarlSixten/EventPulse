@@ -6,8 +6,13 @@ const app = express();
 
 app.use(express.json());
 
-import session from 'express-session';
+import cors from 'cors';
+app.use(cors({
+  origin: true, 
+  credentials: true
+}));
 
+import session from 'express-session';
 app.use(session({
     secret: process.env.SESSIONSECRET,
     resave: false,
