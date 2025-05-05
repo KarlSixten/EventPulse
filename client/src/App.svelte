@@ -1,9 +1,10 @@
 <script>
+    import Header from "./components/Header.svelte";
 
 </script>
 
 <main>
-  <h1>EventPulse</h1>
+  <Header></Header>
 </main>
 
 <style>
