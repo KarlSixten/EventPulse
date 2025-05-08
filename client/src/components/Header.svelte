@@ -42,8 +42,9 @@
 
         <div class="content-area">
             <Route path="/"></Route>
-            <Route path="/discover"></Route>
+            <Route path="/discover">
                 <Discover></Discover>
+            </Route>    
             <Route path="/about"></Route>
             <Route path="/login">
                 <Login></Login>
