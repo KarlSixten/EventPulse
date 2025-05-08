@@ -13,6 +13,10 @@ try {
         console.log('Tables dropped.');
     }
 
+    console.log('Creating PostGIS extension...');
+    await createPostgis();
+    console.log('PostGIS created.');
+
     console.log('Creating tables...');
     await createTables();
     console.log('Tables created or already exists.');
@@ -38,6 +42,12 @@ async function dropAllTables() {
     `);
 }
 
+async function createPostgis() {
+    await db.query(`
+        CREATE EXTENSION IF NOT EXISTS postgis;
+    `)
+}
+
 async function createTables() {
     await db.query(`
         CREATE TABLE IF NOT EXISTS users (
@@ -51,6 +61,7 @@ async function createTables() {
         id SERIAL PRIMARY KEY,
         title TEXT NOT NULL,
         description TEXT,
+        location_point GEOGRAPHY(Point, 4326),
         created_by_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
         )
 `);}
