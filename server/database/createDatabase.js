@@ -73,5 +73,10 @@ async function seed() {
         'testEvent',
         'This is a test event',
         1
+    ]);
+    await db.query('INSERT INTO events (title, description, created_by_id) VALUES ($1, $2, $3)', [
+        'Another Test event',
+        'This is also a test event',
+        2
     ])
 }
