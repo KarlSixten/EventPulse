@@ -3,6 +3,7 @@
     import { userStore } from "../stores/userStore";
     import SignUp from "../pages/SignUp/SignUp.svelte";
     import Login from "../pages/Login/Login.svelte";
+    import Discover from "../pages/Discover/Discover.svelte";
 
     export let url = "";
 
@@ -42,6 +43,7 @@
         <div class="content-area">
             <Route path="/"></Route>
             <Route path="/discover"></Route>
+                <Discover></Discover>
             <Route path="/about"></Route>
             <Route path="/login">
                 <Login></Login>

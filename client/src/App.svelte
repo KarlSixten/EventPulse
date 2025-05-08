@@ -18,10 +18,24 @@
   });
 </script>
 
-<main>
-  <Header></Header>
-  <Footer></Footer>
-</main>
+<div class="app-layout">
+  <Header />
+
+  <main class="main-content-area">
+  </main>
+
+  <Footer />
+</div>
 
 <style>
+  .app-layout {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    padding-top: 70px;
+  }
+
+  .main-content-area {
+    flex-grow: 1;
+  }
 </style>
