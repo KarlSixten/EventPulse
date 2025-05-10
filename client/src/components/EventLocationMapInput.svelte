@@ -82,13 +82,15 @@
     }
 </script>
 
-<div class="map-container-wrapper" bind:this={mapContainer}></div>
+<main>
+    <div class="map-container-wrapper" bind:this={mapContainer}></div>
 
-{#if latitude !== null && longitude !== null}
-    <p class="coordinates-display">
-        Selected: Lat: {latitude.toFixed(5)}, Lon: {longitude.toFixed(5)}
-    </p>
-{/if}
+    {#if latitude !== null && longitude !== null}
+        <p class="coordinates-display">
+            Selected: Lat: {latitude.toFixed(5)}, Lon: {longitude.toFixed(5)}
+        </p>
+    {/if}
+</main>
 
 <style>
     .map-container-wrapper {

@@ -6,25 +6,28 @@
 
     function formatDistance(distance) {
         if (distance < 1000) {
-            return distance.toFixed(0) + 'm';
+            return distance.toFixed(0) + "m";
         } else {
-            return (distance / 1000).toFixed(0) + 'km';
+            return (distance / 1000).toFixed(0) + "km";
         }
     }
 </script>
 
-<main class="event-card">
-    <h3 class="event-title">{title}</h3>
-    <p class="event-description">{description}</p>
-    <p class="event-date-time">{dateTime}</p>
-    {#if distanceMeters}
-        <p class="event-distance-from-user">{formatDistance(distanceMeters)}</p>
-    {/if}
+<main>
+        <div class="event-card">
+            <h3 class="event-title">{title}</h3>
+            <p class="event-description">{description}</p>
+            <p class="event-date-time">{dateTime}</p>
+            {#if distanceMeters}
+                <p class="event-distance-from-user">
+                    {formatDistance(distanceMeters)}
+                </p>
+            {/if}
+        </div>
 </main>
 
 <style>
-
-.event-card {
+    .event-card {
         background-color: #ffffff;
         border: 1px solid #00adb5;
         border-radius: 8px;
@@ -55,5 +58,4 @@
         color: #555;
         margin-bottom: 0;
     }
-
 </style>

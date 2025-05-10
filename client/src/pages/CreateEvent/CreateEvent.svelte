@@ -50,48 +50,54 @@
         const day = String(date.getDate()).padStart(2, "0");
         const hours = String(date.getHours()).padStart(2, "0");
         const minutes = String(date.getMinutes()).padStart(2, "0");
-        
+
         return `${year}-${month}-${day}T${hours}:${minutes}`;
     }
 </script>
 
-<div class="create-event-container">
-    <h1>Create New Event</h1>
+<main>
+    <div class="create-event-container">
+        <h1>Create New Event</h1>
 
-    <form on:submit|preventDefault={handleSubmit}>
-        <fieldset>
-            <legend>Event Details</legend>
-            <div>
-                <label for="event-title">Title (Required):</label>
-                <input
-                    type="text"
-                    id="event-title"
-                    bind:value={title}
-                    required
-                />
-            </div>
-            <div>
-                <label for="event-description">Description:</label>
-                <textarea
-                    id="event-description"
-                    rows="6"
-                    bind:value={description}
-                ></textarea>
-            </div>
-            <div>
-                <label for="event-date">Date:</label>
-                <input type="datetime-local" min={getLocalDateTimeString()} bind:value={dateTime} />
-            </div>
-        </fieldset>
+        <form on:submit|preventDefault={handleSubmit}>
+            <fieldset>
+                <legend>Event Details</legend>
+                <div>
+                    <label for="event-title">Title (Required):</label>
+                    <input
+                        type="text"
+                        id="event-title"
+                        bind:value={title}
+                        required
+                    />
+                </div>
+                <div>
+                    <label for="event-description">Description:</label>
+                    <textarea
+                        id="event-description"
+                        rows="6"
+                        bind:value={description}
+                    ></textarea>
+                </div>
+                <div>
+                    <label for="event-date">Date:</label>
+                    <input
+                        type="datetime-local"
+                        min={getLocalDateTimeString()}
+                        bind:value={dateTime}
+                    />
+                </div>
+            </fieldset>
 
-        <fieldset>
-            <legend>Location (Optional)</legend>
-            <EventLocationMapInput bind:latitude bind:longitude />
-        </fieldset>
+            <fieldset>
+                <legend>Location (Optional)</legend>
+                <EventLocationMapInput bind:latitude bind:longitude />
+            </fieldset>
 
-        <button type="submit">Create Event</button>
-    </form>
-</div>
+            <button type="submit">Create Event</button>
+        </form>
+    </div>
+</main>
 
 <style>
     .create-event-container {

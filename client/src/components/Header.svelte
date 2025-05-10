@@ -6,6 +6,7 @@
     import Login from "../pages/Login/Login.svelte";
     import Discover from "../pages/Discover/Discover.svelte";
     import CreateEvent from "../pages/CreateEvent/CreateEvent.svelte";
+    import EventDetails from "../pages/EventDetails/EventDetails.svelte";
 
     export let url = "";
 
@@ -53,6 +54,7 @@
             <Route path="/login"><Login></Login></Route>
             <Route path="/sign-up"><SignUp></SignUp></Route>
             <Route path="/create-event"><CreateEvent></CreateEvent></Route>
+            <Route path="/events/:id"><EventDetails></EventDetails></Route>
         </div>
     </Router>
 </main>

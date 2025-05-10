@@ -4,21 +4,22 @@
     import { BASE_URL } from "../../stores/generalStore";
 
     import EventCard from "../../components/EventCard.svelte";
+    import { Link } from "svelte-routing";
 
     let events = [];
 
-    let sortBy = 'date';
-    let sortOrder = 'ASC';
-    
+    let sortBy = "date";
+    let sortOrder = "ASC";
+
     let userLatitude = null;
     let userLongitude = null;
 
     onMount(() => {
-        handleSortCriteriaChange(); 
+        handleSortCriteriaChange();
     });
 
     async function handleSortCriteriaChange() {
-        if (sortBy === 'distance') {
+        if (sortBy === "distance") {
             if (userLatitude == null || userLongitude == null) {
                 await requestLocationAndThenFetch();
             } else {
@@ -31,12 +32,15 @@
 
     async function requestLocationAndThenFetch() {
         if (!navigator.geolocation) {
-            console.warn("Geolocation is not supported by this browser. Cannot sort by distance effectively.");
-            await actualFetchEvents(); 
+            console.warn(
+                "Geolocation is not supported by this browser. Cannot sort by distance effectively.",
+            );
+            await actualFetchEvents();
             return;
         }
 
-        navigator.geolocation.getCurrentPosition(async (position) => {
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
                 userLatitude = position.coords.latitude;
                 userLongitude = position.coords.longitude;
 
@@ -48,26 +52,37 @@
                 userLongitude = null;
 
                 await actualFetchEvents();
-            });
+            },
+        );
     }
 
     async function actualFetchEvents() {
-        
         try {
-            let apiUrl = $BASE_URL + `/api/events?sortBy=${sortBy}&sortOrder=${sortOrder}`;
-            
-            if (sortBy === 'distance' && userLatitude != null && userLongitude != null) {
+            let apiUrl =
+                $BASE_URL +
+                `/api/events?sortBy=${sortBy}&sortOrder=${sortOrder}`;
+
+            if (
+                sortBy === "distance" &&
+                userLatitude != null &&
+                userLongitude != null
+            ) {
                 apiUrl += `&userLat=${userLatitude}&userLon=${userLongitude}`;
-            } else if (sortBy === 'distance') {
-                console.warn("Attempting to sort by distance, but no user location is available. API will use its default sort.");
+            } else if (sortBy === "distance") {
+                console.warn(
+                    "Attempting to sort by distance, but no user location is available. API will use its default sort.",
+                );
             }
-            
+
             const result = await fetchGet(apiUrl);
 
             if (result && result.data) {
                 events = result.data;
             } else {
-                console.error("Failed to fetch events or no data in response:", result);
+                console.error(
+                    "Failed to fetch events or no data in response:",
+                    result,
+                );
                 events = [];
             }
         } catch (error) {
@@ -82,18 +97,26 @@
 
     <div class="sort-controls">
         <label for="sort-by">Sort by:</label>
-        <select id="sort-by" bind:value={sortBy} on:change={handleSortCriteriaChange}>
+        <select
+            id="sort-by"
+            bind:value={sortBy}
+            on:change={handleSortCriteriaChange}
+        >
             <option value="date">Date</option>
             <option value="distance">Distance</option>
         </select>
 
         <label for="sort-order">Order:</label>
-        <select id="sort-order" bind:value={sortOrder} on:change={handleSortCriteriaChange}>
+        <select
+            id="sort-order"
+            bind:value={sortOrder}
+            on:change={handleSortCriteriaChange}
+        >
             <option value="ASC">Ascending</option>
             <option value="DESC">Descending</option>
         </select>
-        
-        {#if sortBy === 'distance' && (userLatitude == null || userLongitude == null)}
+
+        {#if sortBy === "distance" && (userLatitude == null || userLongitude == null)}
             <button on:click={requestLocationAndThenFetch}>
                 Use My Location for Distance Sort
             </button>
@@ -103,15 +126,21 @@
     {#if events.length > 0}
         <div class="event-list">
             {#each events as event (event.id || JSON.stringify(event))}
-                <EventCard 
-                    title={event.title} 
-                    description={event.description} 
-                    dateTime={event.date_time} 
-                    distanceMeters={event.distance_meters} />
+                <Link to="/events/{event.id}">
+                    <EventCard
+                        title={event.title}
+                        description={event.description}
+                        dateTime={event.date_time}
+                        distanceMeters={event.distance_meters}
+                    />
+                </Link>
             {/each}
         </div>
     {:else}
-        <p>No events found. Try adjusting your sort criteria or check back later!</p>
+        <p>
+            No events found. Try adjusting your sort criteria or check back
+            later!
+        </p>
     {/if}
 </main>
 
@@ -125,7 +154,8 @@
     .sort-controls label {
         margin-right: 5px;
     }
-    .sort-controls select, .sort-controls button {
+    .sort-controls select,
+    .sort-controls button {
         padding: 8px;
         border-radius: 4px;
         border: 1px solid #ccc;
