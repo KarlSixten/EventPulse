@@ -1,11 +1,25 @@
 <script>
     export let title;
     export let description;
+    export let dateTime;
+    export let distanceMeters = null;
+
+    function formatDistance(distance) {
+        if (distance < 1000) {
+            return distance.toFixed(0) + 'm';
+        } else {
+            return (distance / 1000).toFixed(0) + 'km';
+        }
+    }
 </script>
 
 <main class="event-card">
     <h3 class="event-title">{title}</h3>
     <p class="event-description">{description}</p>
+    <p class="event-date-time">{dateTime}</p>
+    {#if distanceMeters}
+        <p class="event-distance-from-user">{formatDistance(distanceMeters)}</p>
+    {/if}
 </main>
 
 <style>
