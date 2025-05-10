@@ -23,6 +23,9 @@ router.post("/api/events", async (req, res) => {
         return res.status(400).send({ message: "Title and description cannot be empty." });
     }
 
+    const longitude = req.body?.longitude;
+    const latitude = req.body?.latitude;
+
     const eventCreatorId = req.session.user?.id;
 
     if (!eventCreatorId) {
@@ -30,9 +33,12 @@ router.post("/api/events", async (req, res) => {
     }
 
     try {
-        const insertQuery = 'INSERT INTO events (title, description, created_by_id) VALUES ($1, $2, $3) RETURNING id, title, description, created_by_id';
+        const insertQuery = `
+            INSERT INTO events (title, description, created_by_id, location_point) 
+            VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography) 
+            RETURNING id, title, description, created_by_id, location_point`;
 
-        const result = await db.query(insertQuery, [title, description, eventCreatorId]);
+        const result = await db.query(insertQuery, [title, description, eventCreatorId, longitude, latitude]);
 
         if (result.rows && result.rows.length > 0) {
             const newEvent = result.rows[0];
