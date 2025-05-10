@@ -1,9 +1,11 @@
 <script>
     import { Router, Route, Link } from "svelte-routing";
     import { userStore } from "../stores/userStore";
+    
     import SignUp from "../pages/SignUp/SignUp.svelte";
     import Login from "../pages/Login/Login.svelte";
     import Discover from "../pages/Discover/Discover.svelte";
+    import CreateEvent from "../pages/CreateEvent/CreateEvent.svelte";
 
     export let url = "";
 
@@ -30,6 +32,7 @@
                     <Link to="/login">Login</Link>
                     <Link to="/sign-up">Sign up</Link>
                 {:else}
+                    <Link to="/create-event">Create Event</Link>
                     <span class="welcome-message">
                         Welcome, {$userStore.firstName}!
                     </span>
@@ -51,6 +54,9 @@
             </Route>
             <Route path="/sign-up">
                 <SignUp></SignUp>
+            </Route>
+            <Route path="/create-event">
+                <CreateEvent></CreateEvent>
             </Route>
         </div>
     </Router>
