@@ -1,4 +1,5 @@
 <script>
+    import { navigate } from "svelte-routing";
     import { BASE_URL } from "../../stores/generalStore.js";
     import { fetchPost } from "../../util/fetch.js";
     import toastr from "toastr";
@@ -20,6 +21,7 @@
 
             if (result.status === 201) {
                 toastr.success("User created, you can now log in!");
+                navigate("/login");
             } else {
                 toastr.error(result.data.message, "User creation failed");
             }

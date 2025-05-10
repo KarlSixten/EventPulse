@@ -18,9 +18,10 @@ router.get("/api/events", async (req, res) => {
 router.post("/api/events", async (req, res) => {
     const title = req.body.title && req.body.title.trim();
     const description = req.body.description && req.body.description.trim();
+    const dateTime = req.body.dateTime
 
-    if (!title || !description) {
-        return res.status(400).send({ message: "Title and description cannot be empty." });
+    if (!title || !description || !dateTime) {
+        return res.status(400).send({ message: "Title, description and date/time cannot be empty." });
     }
 
     const longitude = req.body?.longitude;
@@ -34,11 +35,11 @@ router.post("/api/events", async (req, res) => {
 
     try {
         const insertQuery = `
-            INSERT INTO events (title, description, created_by_id, location_point) 
-            VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography) 
-            RETURNING id, title, description, created_by_id, location_point`;
+            INSERT INTO events (title, description, created_by_id, location_point, date_time) 
+            VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6) 
+            RETURNING id, title, description, created_by_id, location_point, date_time`;
 
-        const result = await db.query(insertQuery, [title, description, eventCreatorId, longitude, latitude]);
+        const result = await db.query(insertQuery, [title, description, eventCreatorId, longitude, latitude, dateTime]);
 
         if (result.rows && result.rows.length > 0) {
             const newEvent = result.rows[0];

@@ -1,4 +1,5 @@
 <script>
+    import { navigate } from "svelte-routing";
     import { BASE_URL } from "../../stores/generalStore.js";
     import { fetchPost } from "../../util/fetch.js";
     import { userStore } from "../../stores/userStore.js";
@@ -29,6 +30,7 @@
                 }
 
                 toastr.success("Logged in");
+                navigate("/");
             } else {
                 toastr.error(result.data.message, "Login failed");
             }

@@ -13,6 +13,9 @@ try {
         console.log('Tables dropped.');
     }
 
+    const timeZone = await db.query('SHOW TIMEZONE');
+    console.log('Timezone is:', timeZone.rows[0].TimeZone)
+
     console.log('Creating PostGIS extension...');
     await createPostgis();
     console.log('PostGIS created.');
@@ -62,9 +65,11 @@ async function createTables() {
         title TEXT NOT NULL,
         description TEXT,
         location_point GEOGRAPHY(Point, 4326),
+        date_time TIMESTAMPTZ NOT NULL,
         created_by_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
         )
-`);}
+`);
+}
 
 async function seed() {
     // USERS
@@ -80,14 +85,22 @@ async function seed() {
         'Bjarnø']);
 
     // EVENTS
-    await db.query('INSERT INTO events (title, description, created_by_id) VALUES ($1, $2, $3)', [
-        'testEvent',
-        'This is a test event',
-        1
-    ]);
-    await db.query('INSERT INTO events (title, description, created_by_id) VALUES ($1, $2, $3)', [
-        'Another Test event',
-        'This is also a test event',
-        2
-    ])
+    await db.query('INSERT INTO events (title, description, created_by_id, location_point, date_time) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326), $6)',
+        [
+            'testEvent',
+            'This is a test event',
+            1,
+            55,
+            12,
+            "2025-06-25T18:30"
+        ]);
+    await db.query('INSERT INTO events (title, description, created_by_id, location_point, date_time) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326), $6)',
+        [
+            'Another Test event',
+            'This is also a test event',
+            2,
+            56,
+            13,
+            "2025-06-28T19:00"
+        ]);
 }
