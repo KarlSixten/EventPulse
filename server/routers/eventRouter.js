@@ -4,16 +4,57 @@ import db from '../database/connection.js'
 const router = Router();
 
 router.get("/api/events", async (req, res) => {
+    const { 
+        sortBy,
+        sortOrder = 'ASC', // Default
+        userLat,
+        userLon
+    } = req.query;
+
+    const queryParams = [];
+    let paramCounter = 1;
+
+    // Base select
+    let selectFields = `SELECT id, title, description, location_point, date_time, created_by_id`;
+    
+    // Filter out past events
+    let fromAndWhereClause = ` FROM events WHERE date_time >= NOW()`;
+    
+    let orderByClause = ` ORDER BY date_time ASC`;
+    const validSortOrder = sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+
+    if (sortBy === 'date') {
+        orderByClause = ` ORDER BY date_time ${validSortOrder}`;
+    } else if (sortBy === 'distance') {
+        const latitude = parseFloat(userLat);
+        const longitude = parseFloat(userLon);
+
+        if (!isNaN(latitude) && !isNaN(longitude)) {
+            selectFields += `, ST_Distance(location_point, ST_SetSRID(ST_MakePoint($${paramCounter++}, $${paramCounter++}), 4326)::geography) AS distance_meters`;
+            queryParams.push(longitude);
+            queryParams.push(latitude);
+            orderByClause = ` ORDER BY distance_meters ${validSortOrder} NULLS LAST`;
+        } else {
+            console.warn("Distance sort requested without valid userLat/userLon; defaulting to date sort.");
+        }
+    }
+    const finalQuery = selectFields + fromAndWhereClause + orderByClause;
 
     try {
-        const result = await db.query('SELECT * FROM events');
+        const result = await db.query(finalQuery, queryParams);
 
-        res.send({ data: result.rows });
+        console.log(finalQuery, queryParams);
+        
+        res.send({
+            data: result.rows
+        });
+
     } catch (error) {
-        console.error("Database error:", error);
-        return res.status(500).send({ message: 'Database error' });
+        console.error("Error fetching sorted/filtered events:", error);
+        res.status(500).send({ message: "Error fetching events. Check server logs." });
     }
 });
+
 
 router.post("/api/events", async (req, res) => {
     const title = req.body.title && req.body.title.trim();
