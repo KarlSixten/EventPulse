@@ -53,6 +53,60 @@ router.get("/api/events", async (req, res) => {
     }
 });
 
+router.get("/api/events/:id", async (req, res) => {
+    const eventId = Number(req.params.id);
+
+    if (isNaN(eventId)) {
+        return res.status(400).send({ message: "Invalid event ID format." });
+    }
+
+    const query = `
+        SELECT
+            id,
+            title,
+            description,
+            date_time,
+            location_point,
+            ST_X(location_point::geometry) AS "latitude",
+            ST_Y(location_point::geometry) AS "longitude"
+        FROM
+            events
+        WHERE
+            id = $1;
+    `;
+
+    try {
+        const result = await db.query(query, [eventId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).send({ message: `No event found with ID: ${eventId}` });
+        }
+
+        const row = result.rows[0];
+
+        const eventData = {
+            id: row.id,
+            title: row.title,
+            description: row.description,
+            dateTime: row.date_time,
+            location: null
+        };
+
+        if (row.latitude !== null && row.longitude !== null) {
+            eventData.location = {
+                latitude: row.latitude,
+                longitude: row.longitude
+            };
+        }
+
+        res.send({ data: eventData });
+
+    } catch (error) {
+        console.error("Error fetching event by ID:", error);
+        res.status(500).send({ message: "An error occurred while fetching event details." });
+    }
+});
+
 
 router.post("/api/events", async (req, res) => {
     const title = req.body.title && req.body.title.trim();
@@ -63,8 +117,8 @@ router.post("/api/events", async (req, res) => {
         return res.status(400).send({ message: "Title, description and date/time cannot be empty." });
     }
 
-    const longitude = req.body?.longitude;
     const latitude = req.body?.latitude;
+    const longitude = req.body?.longitude;
 
     const eventCreatorId = req.session.user?.id;
 
@@ -78,7 +132,7 @@ router.post("/api/events", async (req, res) => {
             VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6) 
             RETURNING id, title, description, created_by_id, location_point, date_time`;
 
-        const result = await db.query(insertQuery, [title, description, eventCreatorId, longitude, latitude, dateTime]);
+        const result = await db.query(insertQuery, [title, description, eventCreatorId, latitude, longitude, dateTime]);
 
         if (result.rows && result.rows.length > 0) {
             const newEvent = result.rows[0];

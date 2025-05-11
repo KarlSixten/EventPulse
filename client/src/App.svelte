@@ -54,7 +54,7 @@
       <Route path="/login"><Login></Login></Route>
       <Route path="/sign-up"><SignUp></SignUp></Route>
       <Route path="/create-event"><CreateEvent></CreateEvent></Route>
-      <Route path="/events/:id"><EventDetails></EventDetails></Route>
+      <Route path="/events/:id" let:params><EventDetails id={params.id}></EventDetails></Route>
     </div>
     <Footer />
   </Router>
