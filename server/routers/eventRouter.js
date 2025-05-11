@@ -42,8 +42,6 @@ router.get("/api/events", async (req, res) => {
 
     try {
         const result = await db.query(finalQuery, queryParams);
-
-        console.log(finalQuery, queryParams);
         
         res.send({
             data: result.rows
