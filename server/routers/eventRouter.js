@@ -72,8 +72,8 @@ router.get("/api/events/:id", async (req, res) => {
             description,
             date_time,
             location_point,
-            ST_X(location_point::geometry) AS "latitude",
-            ST_Y(location_point::geometry) AS "longitude"
+            ST_X(location_point::geometry) AS "longitude",
+            ST_Y(location_point::geometry) AS "latitude"
         FROM
             events
         WHERE
