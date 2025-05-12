@@ -5,6 +5,8 @@
   import { BASE_URL } from "./stores/generalStore.js";
   import { Router, Route } from "svelte-routing";
 
+  import "toastr/build/toastr.min.css";
+
   import Header from "./components/Header.svelte";
   import Footer from "./components/Footer.svelte";
   import SignUp from "./pages/SignUp/SignUp.svelte";
