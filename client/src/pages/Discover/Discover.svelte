@@ -58,9 +58,7 @@
 
     async function actualFetchEvents() {
         try {
-            let apiUrl =
-                $BASE_URL +
-                `/api/events?sortBy=${sortBy}&sortOrder=${sortOrder}`;
+            let apiUrl = $BASE_URL + `/api/events?sortBy=${sortBy}&sortOrder=${sortOrder}`;
 
             if (
                 sortBy === "distance" &&
