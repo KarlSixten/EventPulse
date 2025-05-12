@@ -90,8 +90,8 @@ async function seed() {
             'testEvent',
             'This is a test event',
             1,
-            55,
             12,
+            55,
             "2025-06-25T18:30"
         ]);
     await db.query('INSERT INTO events (title, description, created_by_id, location_point, date_time) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6)',
@@ -99,8 +99,8 @@ async function seed() {
             'Another Test event',
             'This is also a test event',
             2,
-            56,
             13,
+            56,
             "2025-06-28T19:00"
         ]);
 }

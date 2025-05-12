@@ -11,11 +11,14 @@ router.get("/api/events", async (req, res) => {
         userLon
     } = req.query;
 
+    console.log(userLat, userLon);
+
     const queryParams = [];
     let paramCounter = 1;
 
     // Base select
-    let selectFields = `SELECT id, title, description, location_point, date_time, created_by_id`;
+    let selectFields = `SELECT id, title, description, location_point, date_time, created_by_id, ST_X(location_point::geometry) AS "latitude",
+    ST_Y(location_point::geometry) AS "longitude"`;
     
     // Filter out past events
     let fromAndWhereClause = ` FROM events WHERE date_time >= NOW()`;
@@ -42,6 +45,8 @@ router.get("/api/events", async (req, res) => {
 
     try {
         const result = await db.query(finalQuery, queryParams);
+
+        console.log(result.rows[0])
         
         res.send({
             data: result.rows
@@ -132,7 +137,7 @@ router.post("/api/events", async (req, res) => {
             VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6) 
             RETURNING id, title, description, created_by_id, location_point, date_time`;
 
-        const result = await db.query(insertQuery, [title, description, eventCreatorId, latitude, longitude, dateTime]);
+        const result = await db.query(insertQuery, [title, description, eventCreatorId, longitude, latitude, dateTime]);
 
         if (result.rows && result.rows.length > 0) {
             const newEvent = result.rows[0];
