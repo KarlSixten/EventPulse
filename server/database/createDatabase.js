@@ -42,6 +42,7 @@ async function dropAllTables() {
     await db.query(`
         DROP TABLE IF EXISTS users CASCADE;
         DROP TABLE IF EXISTS events CASCADE;
+        DROP TABLE IF EXISTS event_rsvps CASCADE
     `);
 }
 
@@ -58,7 +59,10 @@ async function createTables() {
         email TEXT UNIQUE NOT NULL,
         password_hashed TEXT NOT NULL,
         first_name TEXT NOT NULL,
-        last_name TEXT NOT NULL);
+        last_name TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        );
 
         CREATE TABLE IF NOT EXISTS events (
         id SERIAL PRIMARY KEY,
@@ -67,8 +71,20 @@ async function createTables() {
         location_point GEOGRAPHY(Point, 4326),
         date_time TIMESTAMPTZ NOT NULL,
         created_by_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        is_private BOOLEAN NOT NULL
-        )
+        is_private BOOLEAN NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS event_rsvps (
+        id SERIAL PRIMARY KEY,
+        event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        status VARCHAR(20) DEFAULT 'going' NOT NULL CHECK (status IN ('going', 'maybe', 'not_going')),
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (event_id, user_id)
+        );
 `);
 }
 

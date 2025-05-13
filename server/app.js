@@ -20,10 +20,10 @@ app.use(session({
     cookie: { secure: false }
   }));
 
-import authRouter from './routers/authRouter.js';
+import authRouter from './routers/auth/authRouter.js';
 app.use(authRouter);
 
-import eventRouter from './routers/eventRouter.js';
+import eventRouter from './routers/events/eventRouter.js';
 app.use(eventRouter);
 
 const PORT = process.env.PORT || 8080;

@@ -1,7 +1,15 @@
-import { Router } from "express";
-import db from '../database/connection.js'
+import { Router } from 'express';
+import db from '../../database/connection.js'
 
 const router = Router();
+
+import rsvpRouter from './rsvpRouter.js';
+
+router.use("/api/events/:eventId/rsvps", (req, res, next) => {
+    req.eventId = req.params.eventId;
+    next();
+}, rsvpRouter);
+
 
 router.get("/api/events", async (req, res) => {
     const currentUserId = req.session.user ? req.session.user.id : null;

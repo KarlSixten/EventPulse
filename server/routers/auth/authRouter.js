@@ -1,6 +1,6 @@
 import { Router } from "express";
-import db from '../database/connection.js'
-import { hashPassword, passwordMatchesHashed } from "../util/passwordHasher.js";
+import db from '../../database/connection.js'
+import { hashPassword, passwordMatchesHashed } from "../../util/passwordHasher.js";
 
 const router = Router();
 
