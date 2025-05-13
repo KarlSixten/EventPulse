@@ -4,6 +4,8 @@ import db from '../database/connection.js'
 const router = Router();
 
 router.get("/api/events", async (req, res) => {
+    const currentUserId = req.session.user ? req.session.user.id : null;
+
     const { 
         sortBy,
         sortOrder = 'ASC', // Default
@@ -11,17 +13,25 @@ router.get("/api/events", async (req, res) => {
         userLon
     } = req.query;
 
-    console.log(userLat, userLon);
-
     const queryParams = [];
     let paramCounter = 1;
 
     // Base select
     let selectFields = `SELECT id, title, description, location_point, date_time, created_by_id, ST_X(location_point::geometry) AS "latitude",
-    ST_Y(location_point::geometry) AS "longitude"`;
+    ST_Y(location_point::geometry) AS "longitude", is_private`;
     
     // Filter out past events
     let fromAndWhereClause = ` FROM events WHERE date_time >= NOW()`;
+
+    // Filter out events the user does not have access to.
+    if (currentUserId) {
+        fromAndWhereClause += ` AND (is_private = FALSE OR (is_private = TRUE AND created_by_id = $${paramCounter}))`;
+        queryParams.push(currentUserId);
+        paramCounter++;
+    } else {
+        fromAndWhereClause += ` AND is_private = FALSE`;
+    }
+
     
     let orderByClause = ` ORDER BY date_time ASC`;
     const validSortOrder = sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
@@ -45,8 +55,6 @@ router.get("/api/events", async (req, res) => {
 
     try {
         const result = await db.query(finalQuery, queryParams);
-
-        console.log(result.rows[0])
         
         res.send({
             data: result.rows
@@ -59,13 +67,17 @@ router.get("/api/events", async (req, res) => {
 });
 
 router.get("/api/events/:id", async (req, res) => {
+    const currentUserId = req.session.user ? req.session.user.id : null;
     const eventId = Number(req.params.id);
 
     if (isNaN(eventId)) {
         return res.status(400).send({ message: "Invalid event ID format." });
     }
 
-    const query = `
+    const queryParams = [];
+    let paramCounter = 1;
+
+    let query = `
         SELECT
             id,
             title,
@@ -73,18 +85,31 @@ router.get("/api/events/:id", async (req, res) => {
             date_time,
             location_point,
             ST_X(location_point::geometry) AS "longitude",
-            ST_Y(location_point::geometry) AS "latitude"
+            ST_Y(location_point::geometry) AS "latitude",
+            is_private,
+            created_by_id 
         FROM
             events
         WHERE
-            id = $1;
+            id = $${paramCounter}
     `;
+    queryParams.push(eventId);
+    paramCounter++;
+
+    if (currentUserId) {
+        query += ` AND (is_private = FALSE OR (is_private = TRUE AND created_by_id = $${paramCounter}))`;
+        queryParams.push(currentUserId);
+        paramCounter++;
+    } else {
+        query += ` AND is_private = FALSE`;
+    }
 
     try {
-        const result = await db.query(query, [eventId]);
+
+        const result = await db.query(query, queryParams);
 
         if (result.rows.length === 0) {
-            return res.status(404).send({ message: `No event found with ID: ${eventId}` });
+            return res.status(404).send({ message: `No event found with ID: ${eventId}, or you do not have access to view it.` });
         }
 
         const row = result.rows[0];
@@ -94,6 +119,8 @@ router.get("/api/events/:id", async (req, res) => {
             title: row.title,
             description: row.description,
             dateTime: row.date_time,
+            isPrivate: row.isPrivate,
+            createdById: row.created_by_id,
             location: null
         };
 
@@ -107,7 +134,7 @@ router.get("/api/events/:id", async (req, res) => {
         res.send({ data: eventData });
 
     } catch (error) {
-        console.error("Error fetching event by ID:", error);
+        console.error(`Error fetching event by ID (${eventId}):`, error);
         res.status(500).send({ message: "An error occurred while fetching event details." });
     }
 });
@@ -125,6 +152,8 @@ router.post("/api/events", async (req, res) => {
     const latitude = req.body?.latitude;
     const longitude = req.body?.longitude;
 
+    const isPrivate = req.body.isPrivate;
+
     const eventCreatorId = req.session.user?.id;
 
     if (!eventCreatorId) {
@@ -133,11 +162,11 @@ router.post("/api/events", async (req, res) => {
 
     try {
         const insertQuery = `
-            INSERT INTO events (title, description, created_by_id, location_point, date_time) 
-            VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6) 
-            RETURNING id, title, description, created_by_id, location_point, date_time`;
+            INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) 
+            VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7) 
+            RETURNING id, title, description, created_by_id, location_point, date_time, is_private`;
 
-        const result = await db.query(insertQuery, [title, description, eventCreatorId, longitude, latitude, dateTime]);
+        const result = await db.query(insertQuery, [title, description, eventCreatorId, longitude, latitude, dateTime, isPrivate]);
 
         if (result.rows && result.rows.length > 0) {
             const newEvent = result.rows[0];
