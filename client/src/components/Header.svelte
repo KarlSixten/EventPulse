@@ -1,11 +1,25 @@
 <script>
     import { Link, navigate } from "svelte-routing";
     import { userStore } from "../stores/userStore";
+    import { BASE_URL } from "../stores/generalStore";
+    import { fetchPost } from "../util/fetch";
 
-    function handleLogout() {
-        userStore.set(null);
-        sessionStorage.removeItem("currentUser");
-        navigate("/");
+    async function handleLogout() {
+        try {
+            const result = await fetchPost($BASE_URL + '/api/auth/logout')
+
+            if (result.ok) {
+                console.log("Successfully log out from server.");
+            } else {
+                console.error("Backend logout failed:", result.status, result.data.message);
+            }
+        } catch (error) {
+            console.error("Error making logout request to backend:", error);
+        } finally {
+            userStore.set(null);
+            sessionStorage.removeItem("currentUser");
+            navigate("/");
+        }
     }
 </script>
 
