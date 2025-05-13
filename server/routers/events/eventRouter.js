@@ -82,38 +82,44 @@ router.get("/api/events/:id", async (req, res) => {
     }
 
     const queryParams = [];
-    let paramCounter = 1;
-
-    let query = `
+    let queryBase = `
         SELECT
-            id,
-            title,
-            description,
-            date_time,
-            location_point,
-            ST_X(location_point::geometry) AS "longitude",
-            ST_Y(location_point::geometry) AS "latitude",
-            is_private,
-            created_by_id 
-        FROM
-            events
-        WHERE
-            id = $${paramCounter}
+            e.id,
+            e.title,
+            e.description,
+            e.date_time,
+            e.location_point,
+            ST_X(e.location_point::geometry) AS "longitude",
+            ST_Y(e.location_point::geometry) AS "latitude",
+            e.is_private,
+            e.created_by_id
     `;
+
+    let fromAndJoinClause = ` FROM events e `;
+    
+    if (currentUserId) {
+        queryBase += `, er.status AS user_rsvp_status `;
+        queryParams.push(currentUserId); 
+        fromAndJoinClause += ` LEFT JOIN event_rsvps er ON er.event_id = e.id AND er.user_id = $${queryParams.length} `;
+    } else {
+        queryBase += `, NULL AS user_rsvp_status `;
+    }
+
     queryParams.push(eventId);
-    paramCounter++;
+    let whereClause = ` WHERE e.id = $${queryParams.length} `;
 
     if (currentUserId) {
-        query += ` AND (is_private = FALSE OR (is_private = TRUE AND created_by_id = $${paramCounter}))`;
-        queryParams.push(currentUserId);
-        paramCounter++;
+        queryParams.push(currentUserId); 
+        whereClause += ` AND (e.is_private = FALSE OR (e.is_private = TRUE AND e.created_by_id = $${queryParams.length}))`;
     } else {
-        query += ` AND is_private = FALSE`;
+        whereClause += ` AND e.is_private = FALSE`;
     }
+
+    const finalQuery = queryBase + fromAndJoinClause + whereClause;
 
     try {
 
-        const result = await db.query(query, queryParams);
+        const result = await db.query(finalQuery, queryParams);
 
         if (result.rows.length === 0) {
             return res.status(404).send({ message: `No event found with ID: ${eventId}, or you do not have access to view it.` });
@@ -126,12 +132,13 @@ router.get("/api/events/:id", async (req, res) => {
             title: row.title,
             description: row.description,
             dateTime: row.date_time,
-            isPrivate: row.isPrivate,
+            isPrivate: row.is_private,
             createdById: row.created_by_id,
+            userRsvpStatus: row.user_rsvp_status,
             location: null
         };
 
-        if (row.latitude !== null && row.longitude !== null) {
+        if (row.longitude !== null && row.latitude !== null) {
             eventData.location = {
                 latitude: row.latitude,
                 longitude: row.longitude
