@@ -14,12 +14,13 @@
   import Discover from "./pages/Discover/Discover.svelte";
   import CreateEvent from "./pages/CreateEvent/CreateEvent.svelte";
   import EventDetails from "./pages/EventDetails/EventDetails.svelte";
+  import About from "./pages/About/About.svelte";
 
   export let url = "";
 
   onMount(async () => {
     try {
-      const result = await fetchGet($BASE_URL + "/api/me");
+      const result = await fetchGet($BASE_URL + "/api/auth/me");
 
       if (!result.isAuthenticated) {
         userStore.set(null);
@@ -35,11 +36,7 @@
         }
       }
     } catch (error) {
-      console.error(
-        "Error verifying user session with backend:",
-        error.message,
-        error,
-      );
+      console.error("Error verifying user session with backend:", error.message, error);
       userStore.set(null);
       sessionStorage.removeItem("currentUser");
     }
@@ -52,7 +49,7 @@
     <div class="content-area">
       <Route path="/"></Route>
       <Route path="/discover"><Discover></Discover></Route>
-      <Route path="/about"></Route>
+      <Route path="/about"><About></About></Route>
       <Route path="/login"><Login></Login></Route>
       <Route path="/sign-up"><SignUp></SignUp></Route>
       <Route path="/create-event"><CreateEvent></CreateEvent></Route>
