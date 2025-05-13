@@ -7,6 +7,7 @@
     let title = "";
     let description = "";
     let dateTime = null;
+    let isPrivate = false;
 
     let latitude = null;
     let longitude = null;
@@ -22,6 +23,7 @@
             dateTime: dateTime,
             latitude: latitude,
             longitude: longitude,
+            isPrivate: isPrivate
         };
 
         console.log("Submitting Event Data:", eventData);
@@ -63,7 +65,7 @@
             <fieldset>
                 <legend>Event Details</legend>
                 <div>
-                    <label for="event-title">Title (Required):</label>
+                    <label for="event-title">Title:</label>
                     <input
                         type="text"
                         id="event-title"
@@ -85,6 +87,13 @@
                         type="datetime-local"
                         min={getLocalDateTimeString()}
                         bind:value={dateTime}
+                    />
+                </div>
+                <div>
+                    <label for="event-is-private">Private event:</label>
+                    <input
+                        type="checkbox"
+                        bind:checked={isPrivate}
                     />
                 </div>
             </fieldset>
