@@ -3,12 +3,14 @@
     import L from "leaflet";
     import "leaflet/dist/leaflet.css";
 
-    export let latitude = null;
-    export let longitude = null;
+    let { 
+        latitude = $bindable(), 
+        longitude = $bindable() 
+    } = $props();
 
-    let mapContainer;
-    let mapInstance;
-    let markerInstance = null;
+    let mapContainer = $state(null);
+    let mapInstance = $state(null);
+    let markerInstance = $state(null);
 
     // Copenhagen for default
     const defaultLat = 55.6761;

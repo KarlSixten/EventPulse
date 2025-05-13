@@ -1,7 +1,5 @@
 <script>
-    export let title;
-    export let dateTime;
-    export let distanceMeters = null;
+    let { title, dateTime, distanceMeters} = $props()
 
     function formatDistance(distance) {
         if (distance < 1000) {
