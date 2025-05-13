@@ -6,7 +6,7 @@ const router = Router();
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-router.get("/api/me", (req, res) => {
+router.get("/api/auth/me", (req, res) => {
     if (req.session && req.session.user && req.session.user.id) {
         res.send({
             isAuthenticated: true,
@@ -20,7 +20,7 @@ router.get("/api/me", (req, res) => {
     }
 });
 
-router.post("/api/sign-up", async (req, res) => {
+router.post("/api/auth/sign-up", async (req, res) => {
 
     if (!req.body || !req.body.email || !req.body.password || !req.body.firstName || !req.body.lastName) {
         return res.status(400).send({ message: "Email, password, first and last name are required" });
@@ -49,7 +49,7 @@ router.post("/api/sign-up", async (req, res) => {
     }
 });
 
-router.post("/api/login", async (req, res) => {
+router.post("/api/auth/login", async (req, res) => {
 
     if (!req.body || !req.body.email || !req.body.password) {
         return res.status(400).send({ message: "Email and password are required" });
@@ -86,6 +86,22 @@ router.post("/api/login", async (req, res) => {
     } catch (error) {
         console.error("Login error:", error);
         return res.status(500).send({ message: 'An internal error occurred during login' });
+    }
+});
+
+router.post("/api/auth/logout", (req, res) => {
+    if (req.session) {
+        req.session.destroy(error => {
+            if (error) {
+                console.error('Error destroying session:', error);
+                return res.status(500).send({ message: 'Logout failed. Please try again.' });
+            }
+
+            res.status(200).send({ message: 'Logout successful' });
+        });
+    } else {
+        console.log('Logout attempt but no active session found.');
+        res.status(200).send({ message: 'No active session to logout from.' });
     }
 });
 
