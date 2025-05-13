@@ -20,9 +20,6 @@ app.use(session({
     cookie: { secure: false }
   }));
 
-import testRouter from './routers/testRouter.js';
-app.use(testRouter);
-
 import authRouter from './routers/authRouter.js';
 app.use(authRouter);
 
