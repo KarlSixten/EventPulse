@@ -2,8 +2,7 @@
     import { onMount, onDestroy } from "svelte";
     import L, { marker } from "leaflet";
 
-    export let latitude;
-    export let longitude;
+    let { latitude, longitude } = $props();
 
     let mapContainer;
     let mapInstance;
