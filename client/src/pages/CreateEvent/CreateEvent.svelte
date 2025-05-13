@@ -57,6 +57,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>EventPulse | Create Event </title>
+</svelte:head>
+
 <main>
     <div class="create-event-container">
         <h1>Create New Event</h1>

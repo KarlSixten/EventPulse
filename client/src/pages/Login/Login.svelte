@@ -41,6 +41,10 @@
     };
 </script>
 
+<svelte:head>
+    <title>EventPulse | Login</title>
+</svelte:head>
+
 <main>
     <form class="form-container">
         <h2 class="form-title">Login</h2>

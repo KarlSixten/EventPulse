@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-    <title>About EventPulse</title>
+    <title>EventPulse | About </title>
 </svelte:head>
 
 <main class="about-container">

@@ -32,6 +32,10 @@
     };
 </script>
 
+<svelte:head>
+    <title>EventPulse | Sign Up</title>
+</svelte:head>
+
 <main>
     <form class="form-container">
         <h2 class="form-title">Sign Up</h2>

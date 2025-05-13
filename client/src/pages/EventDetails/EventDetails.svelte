@@ -65,6 +65,14 @@
     }
 </script>
 
+<svelte:head>
+    {#if event}
+        <title>EventPulse | {event.title}</title>
+    {:else}
+        <title>EventPulse | Event</title>
+    {/if}
+</svelte:head>
+
 <main>
     {#if isLoading}
         <p>Loading event details...</p>

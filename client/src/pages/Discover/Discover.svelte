@@ -90,6 +90,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>EventPulse | Discover</title>
+</svelte:head>
+
 <main>
     <h1>Discover Events</h1>
 
