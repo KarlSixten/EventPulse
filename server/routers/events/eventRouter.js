@@ -5,8 +5,7 @@ const router = Router();
 
 import rsvpRouter from './rsvpRouter.js';
 
-router.use("/api/events/:eventId/rsvps", (req, res, next) => {
-    req.eventId = req.params.eventId;
+router.use("/api/events/:id/rsvps", (req, res, next) => {
     next();
 }, rsvpRouter);
 
