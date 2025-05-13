@@ -1,6 +1,5 @@
 <script>
     export let title;
-    export let description;
     export let dateTime;
     export let distanceMeters = null;
 
@@ -11,19 +10,30 @@
             return (distance / 1000).toFixed(0) + "km";
         }
     }
+
+    function formatDate(isoString) {
+        const date = new Date(isoString);
+
+        const day = String(date.getUTCDate()).padStart(2, "0");
+        const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+        const year = date.getUTCFullYear();
+        const hours = String(date.getUTCHours()).padStart(2, "0");
+        const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+    }
 </script>
 
 <main>
-        <div class="event-card">
-            <h3 class="event-title">{title}</h3>
-            <p class="event-description">{description}</p>
-            <p class="event-date-time">{dateTime}</p>
-            {#if distanceMeters}
-                <p class="event-distance-from-user">
-                    {formatDistance(distanceMeters)}
-                </p>
-            {/if}
-        </div>
+    <div class="event-card">
+        <h3 class="event-title">{title}</h3>
+        <p class="event-date-time">{formatDate(dateTime)}</p>
+        {#if distanceMeters}
+            <p class="event-distance-from-user">
+                {formatDistance(distanceMeters)}
+            </p>
+        {/if}
+    </div>
 </main>
 
 <style>
@@ -50,12 +60,5 @@
         color: #1a1a1a;
         margin-top: 0;
         margin-bottom: 10px;
-    }
-
-    .event-description {
-        font-size: 1em;
-        line-height: 1.6;
-        color: #555;
-        margin-bottom: 0;
     }
 </style>
