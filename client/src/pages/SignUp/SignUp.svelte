@@ -12,7 +12,7 @@
 
     const handleSignUp = async () => {
         try {
-            const result = await fetchPost($BASE_URL + "/api/sign-up", {
+            const result = await fetchPost($BASE_URL + "/api/auth/sign-up", {
                 email,
                 password,
                 firstName,

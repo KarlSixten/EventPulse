@@ -10,7 +10,7 @@
 
     const handleLogin = async () => {
         try {
-            const result = await fetchPost($BASE_URL + "/api/login", {
+            const result = await fetchPost($BASE_URL + "/api/auth/login", {
                 email,
                 password,
             });
