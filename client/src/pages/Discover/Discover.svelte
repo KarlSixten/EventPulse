@@ -127,7 +127,6 @@
                 <Link to="/events/{event.id}">
                     <EventCard
                         title={event.title}
-                        description={event.description}
                         dateTime={event.date_time}
                         distanceMeters={event.distance_meters}
                     />
