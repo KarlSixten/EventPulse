@@ -66,7 +66,8 @@ async function createTables() {
         description TEXT,
         location_point GEOGRAPHY(Point, 4326),
         date_time TIMESTAMPTZ NOT NULL,
-        created_by_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
+        created_by_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        is_private BOOLEAN NOT NULL
         )
 `);
 }
@@ -85,22 +86,34 @@ async function seed() {
         'Bjarnø']);
 
     // EVENTS
-    await db.query('INSERT INTO events (title, description, created_by_id, location_point, date_time) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6)',
+    await db.query('INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7)',
         [
             'testEvent',
             'This is a test event',
             1,
             12,
             55,
-            "2025-06-25T18:30"
+            "2025-06-25T18:30",
+            false
         ]);
-    await db.query('INSERT INTO events (title, description, created_by_id, location_point, date_time) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6)',
+    await db.query('INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7)',
         [
             'Another Test event',
             'This is also a test event',
             2,
             13,
             56,
-            "2025-06-28T19:00"
+            "2025-06-28T19:00",
+            false
+        ]);
+    await db.query('INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7)',
+        [
+            'Private Test event',
+            'This is a private test event',
+            2,
+            13,
+            56,
+            "2025-06-28T19:00",
+            true
         ]);
 }
