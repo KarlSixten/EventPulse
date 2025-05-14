@@ -3,14 +3,13 @@ import db from '../../database/connection.js'
 
 const router = Router({ mergeParams: true });
 
-router.get("/test", (req, res) => {
-    console.log(req.params)
-    res.send("Hello from rsvp: " + req.params.id)
-})
-
 router.post('/', async (req, res) => {
     const eventId = req.params.id;
     const status = req.body?.status;
+
+    if (isNaN(eventId) || eventId <= 0) {
+        return res.status(400).send({ message: "Invalid event ID." });
+    }
 
     if (!req.session.user) {
         return res.status(401).send({ message: "Authentication required to RSVP." });

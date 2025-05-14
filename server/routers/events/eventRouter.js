@@ -3,6 +3,12 @@ import db from '../../database/connection.js'
 
 const router = Router();
 
+import invitationsRouter from './invitationsRouter.js';
+
+router.use("/api/events/:id/invitations", (req, res, next) => {
+    next();
+}, invitationsRouter);
+
 import rsvpRouter from './rsvpRouter.js';
 
 router.use("/api/events/:id/rsvps", (req, res, next) => {
