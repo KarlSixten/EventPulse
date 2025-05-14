@@ -26,8 +26,6 @@
             isPrivate: isPrivate
         };
 
-        console.log("Submitting Event Data:", eventData);
-
         try {
             const result = await fetchPost(
                 $BASE_URL + "/api/events",
