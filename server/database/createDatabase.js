@@ -42,7 +42,8 @@ async function dropAllTables() {
     await db.query(`
         DROP TABLE IF EXISTS users CASCADE;
         DROP TABLE IF EXISTS events CASCADE;
-        DROP TABLE IF EXISTS event_rsvps CASCADE
+        DROP TABLE IF EXISTS event_invitations CASCADE;
+        DROP TABLE IF EXISTS event_rsvps CASCADE;
     `);
 }
 
@@ -74,6 +75,18 @@ async function createTables() {
         is_private BOOLEAN NOT NULL,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS event_invitations (
+        id SERIAL PRIMARY KEY,
+        event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+        inviter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        invitee_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        status VARCHAR(20) DEFAULT 'pending' NOT NULL CHECK (status IN ('pending', 'accepted', 'declined')),
+        message TEXT,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (event_id, invitee_id)
         );
 
         CREATE TABLE IF NOT EXISTS event_rsvps (
