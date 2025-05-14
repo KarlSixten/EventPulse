@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import db from '../../database/connection.js';
+import { sendEventInvitationEmail } from '../../util/nodeMailer.js';
 
 const router = Router({ mergeParams: true });
 
@@ -29,7 +30,7 @@ router.post('/', async (req, res) => {
     }
 
     try {
-        const eventQuery = 'SELECT created_by_id, is_private FROM events WHERE id = $1';
+        const eventQuery = 'SELECT id, title, created_by_id, is_private FROM events WHERE id = $1';
         const eventResult = await db.query(eventQuery, [eventId]);
 
         if (eventResult.rows.length === 0) {
@@ -46,7 +47,7 @@ router.post('/', async (req, res) => {
         const inviteeUserResult = await db.query('SELECT id FROM users WHERE lower(email) = $1', [normalizedInviteeEmail]);
 
         if (inviteeUserResult.rows.length === 0) {
-            return res.status(404).json({
+            return res.status(404).send({
                 message: `No registered user found with email '${invitee_email}'. Please ensure they have an account.`
             });
         }
@@ -66,6 +67,9 @@ router.post('/', async (req, res) => {
             RETURNING id, event_id, inviter_id, invitee_id, status, message, created_at;
         `;
         const newInvitationResult = await db.query(newInvitationQuery, [eventId, inviterId, actualInviteeId, message]);
+
+        // Commented out to lessen spam
+        // sendEventInvitationEmail(normalizedInviteeEmail, eventDetails, message, req.session.user.firstName)
 
         res.status(201).send({
             message: `Invitation sent successfully to ${invitee_email}.`,
