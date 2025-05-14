@@ -45,7 +45,8 @@ router.post("/api/auth/sign-up", async (req, res) => {
             const hashedPassword = await hashPassword(password);
             await db.query('INSERT INTO users (email, password_hashed, first_name, last_name) VALUES ($1, $2, $3, $4)', [normalizedEmail, hashedPassword, firstName, lastName]);
 
-            sendSignUpConfirmationEmail(firstName, normalizedEmail);
+            // Commented out to lessen spam
+            // sendSignUpConfirmationEmail(firstName, normalizedEmail);
 
             return res.status(201).send({ message: "User created" });
         }
