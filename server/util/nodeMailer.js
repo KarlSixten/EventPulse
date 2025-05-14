@@ -69,8 +69,8 @@ export async function sendSignUpConfirmationEmail(firstName, email) {
 
     try {
         await transporter.sendMail(emailStructure);
-        console.log(`Sign-up confirmation email sent to ${email}`);
     } catch (error) {
         console.error(`Error while sending sign up confirmation to ${email}:`, error);
     }
 }
+
