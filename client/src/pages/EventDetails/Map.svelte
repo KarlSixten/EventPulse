@@ -1,6 +1,6 @@
 <script>
     import { onMount, onDestroy } from "svelte";
-    import L, { marker } from "leaflet";
+    import L from "leaflet";
 
     let { latitude, longitude } = $props();
 
