@@ -53,9 +53,9 @@
         { status: "not_going", label: "Not Going" },
     ];
 
-    async function handleStatusSelect(status) {
+    async function handleStatusSelect(status, label) {
         const oldStatus = selectedRsvpStatus;
-        selectedRsvpStatus = status; // Optimistic update
+        selectedRsvpStatus = status;
 
         try {
             const response = await fetchPost(
@@ -65,7 +65,7 @@
                 },
             );
             if (response.ok) {
-                toastr.success(`RSVP status updated to ${status}!`);
+                toastr.success(`RSVP status updated to ${label}!`);
             } else {
                 selectedRsvpStatus = oldStatus;
                 toastr.error("Error updating RSVP:", response.data.message);
@@ -128,7 +128,7 @@
                         type="button"
                         class="rsvp-box"
                         class:selected={selectedRsvpStatus === option.status}
-                        onclick={() => handleStatusSelect(option.status)}
+                        onclick={() => handleStatusSelect(option.status, option.label)}
                         role="radio"
                         aria-checked={selectedRsvpStatus === option.status}
                     >

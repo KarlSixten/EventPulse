@@ -7,6 +7,16 @@
 
   import "toastr/build/toastr.min.css";
 
+  import toastr from 'toastr';
+
+    toastr.options = {
+      "closeButton": true,
+      "progressBar": true,
+      "positionClass": "toast-bottom-right",
+      "timeOut": "4000",
+      "extendedTimeOut": "1000",
+    };
+
   import Header from "./components/Header.svelte";
   import Footer from "./components/Footer.svelte";
   import SignUp from "./pages/SignUp/SignUp.svelte";
