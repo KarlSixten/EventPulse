@@ -1,6 +1,7 @@
 import { Router } from "express";
 import db from '../../database/connection.js'
 import { hashPassword, passwordMatchesHashed } from "../../util/passwordHasher.js";
+import { sendSignUpConfirmationEmail } from "../../util/nodeMailer.js";
 
 const router = Router();
 
@@ -26,20 +27,25 @@ router.post("/api/auth/sign-up", async (req, res) => {
         return res.status(400).send({ message: "Email, password, first and last name are required" });
     }
 
-    const { email, password, firstName, lastName } = req.body;
+    const originalEmail = req.body.email;
+    const { password, firstName, lastName } = req.body;    
 
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(originalEmail)) {
         return res.status(400).send({ message: "Invalid email format" });
     }
 
+    const normalizedEmail = originalEmail.trim().toLowerCase();
+
     try {
-        const result = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+        const result = await db.query('SELECT id FROM users WHERE email = $1', [normalizedEmail]);
 
         if (result.rowCount > 0) {
-            return res.status(409).send({ message: `User with email ${email} already exists` });
+            return res.status(409).send({ message: `User with email ${normalizedEmail} already exists` });
         } else {
             const hashedPassword = await hashPassword(password);
-            await db.query('INSERT INTO users (email, password_hashed, first_name, last_name) VALUES ($1, $2, $3, $4)', [email, hashedPassword, firstName, lastName]);
+            await db.query('INSERT INTO users (email, password_hashed, first_name, last_name) VALUES ($1, $2, $3, $4)', [normalizedEmail, hashedPassword, firstName, lastName]);
+
+            sendSignUpConfirmationEmail(firstName, normalizedEmail);
 
             return res.status(201).send({ message: "User created" });
         }
