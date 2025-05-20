@@ -1,13 +1,13 @@
 <script>
     import { Link, navigate } from "svelte-routing";
-    import { userStore } from "../stores/userStore";
-    import { BASE_URL } from "../stores/generalStore";
-    import { fetchPost } from "../util/fetch";
+    import { userStore } from "../stores/userStore"; //
+    import { BASE_URL } from "../stores/generalStore"; //
+    import { fetchPost } from "../util/fetch"; //
+    import NotificationCenter from "./NotificationCenter.svelte";
 
     async function handleLogout() {
         try {
-            const result = await fetchPost($BASE_URL + '/api/auth/logout')
-
+            const result = await fetchPost($BASE_URL + '/api/auth/logout');
             if (result.ok) {
                 console.log("Successfully log out from server.");
             } else {
@@ -25,31 +25,31 @@
 
 <main>
     <nav class="navbar">
-        <Link to="/" class="logo-link">
+        <Link to="/" class="logo-link nav-link">
             <img src="/logo.png" class="logo-img" alt="EventPulse logo" />
         </Link>
-        <Link to="/">Home</Link>
-        <Link to="/discover">Discover</Link>
-        <Link to="/about">About</Link>
+        <Link to="/" class="nav-link">Home</Link>
+        <Link to="/discover" class="nav-link">Discover</Link>
+        <Link to="/about" class="nav-link">About</Link>
 
         <div class="nav-spacer"></div>
 
         <div class="nav-links-auth">
             {#if !$userStore}
-                <Link to="/login">Login</Link>
-                <Link to="/sign-up">Sign up</Link>
+                <Link to="/login" class="nav-link">Login</Link>
+                <Link to="/sign-up" class="nav-link">Sign up</Link>
             {:else}
-                <Link to="/create-event">Create Event</Link>
+                <Link to="/create-event" class="nav-link">Create Event</Link>
                 <span class="welcome-message">
                     Welcome, {$userStore.firstName}!
                 </span>
+                <NotificationCenter />
                 <button class="logout-button" on:click={handleLogout}>
                     Logout
                 </button>
             {/if}
         </div>
     </nav>
-    
 </main>
 
 <style>
@@ -58,7 +58,6 @@
         align-items: center;
         padding: 10px 20px;
         background-color: #00adb5;
-        color: white;
         position: fixed;
         top: 0;
         left: 0;
@@ -66,11 +65,12 @@
         box-sizing: border-box;
     }
 
-    .navbar :global(a) {
+    .navbar :global(a.nav-link) {
         color: white;
         text-decoration: none;
         margin: 0 8px;
     }
+
 
     .logo-img {
         height: 40px;
@@ -87,6 +87,7 @@
 
     .welcome-message {
         margin: 0 8px;
+        color: white;
     }
 
     .logout-button {
