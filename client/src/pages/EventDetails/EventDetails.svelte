@@ -20,6 +20,17 @@
     let inviteeMessage = $state("");
 
     onMount(async () => {
+        fetchEventDetails();
+    });
+
+    // Hvis ID opdateres skal der fetches på det nye ID
+    $effect(() => {
+        if (id) {
+            fetchEventDetails();
+        }
+    });
+
+    async function fetchEventDetails() {
         isLoading = true;
         error = null;
 
@@ -37,13 +48,13 @@
                 );
                 error = "Event data not found.";
             }
-        } catch (e) {
-            console.error("Error fetching event:", e);
+        } catch (error) {
+            console.error("Error fetching event:", error);
             error = "Failed to load event details.";
         } finally {
             isLoading = false;
         }
-    });
+    }
 
     let selectedRsvpStatus = $state(null);
 
@@ -119,6 +130,11 @@
     {:else if event}
         <h1>{event.title}</h1>
         <h2>{event.description}</h2>
+        {#if event.isPrivate}
+            <h2>Private Event</h2>
+        {:else}
+            <h2>Public Event</h2>
+        {/if}
         <h3>{formatDate(event.dateTime)}</h3>
         <h3>RSVP</h3>
         {#if isLoggedIn}
@@ -128,7 +144,8 @@
                         type="button"
                         class="rsvp-box"
                         class:selected={selectedRsvpStatus === option.status}
-                        onclick={() => handleStatusSelect(option.status, option.label)}
+                        onclick={() =>
+                            handleStatusSelect(option.status, option.label)}
                         role="radio"
                         aria-checked={selectedRsvpStatus === option.status}
                     >
