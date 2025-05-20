@@ -198,6 +198,13 @@ router.post("/api/events", async (req, res) => {
         return res.status(400).send({ message: "Title, description and date/time cannot be empty." });
     }
 
+    const parsedDateTime = new Date(dateTime);
+    if (isNaN(parsedDateTime.getTime())) {
+        return res.status(400).send({
+            message: `Invalid date/time format provided: "${dateTime}". Please use a valid ISO 8601 format (e.g., YYYY-MM-DDTHH:MM:SSZ).`
+        });
+    }
+
     const latitude = req.body?.latitude;
     const longitude = req.body?.longitude;
 
@@ -210,18 +217,32 @@ router.post("/api/events", async (req, res) => {
     }
 
     try {
-        const insertQuery = `
-            INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) 
-            VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7) 
-            RETURNING id, title, description, created_by_id, location_point, date_time, is_private`;
 
-        const result = await db.query(insertQuery, [title, description, eventCreatorId, longitude, latitude, dateTime, isPrivate]);
+        const eventToInsert = {
+            title: title,
+            description: description,
+            created_by_id: eventCreatorId,
+            date_time: dateTime,
+            is_private: isPrivate
+        }
 
-        if (result.rows && result.rows.length > 0) {
-            const newEvent = result.rows[0];
+        if (!isNaN(latitude) && !isNaN(longitude)) {
+            eventToInsert.location_point = db.raw(
+                'ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography',
+                [lon, lat]
+            );
+        } else {
+            eventToInsert.location_point = null;
+        }
+
+        const [newEvent] = await db('events')
+            .insert(eventToInsert)
+            .returning('*');
+
+        if (newEvent) {
             res.status(201).send({ message: 'Event created successfully.', event: newEvent });
         } else {
-            console.error('Event creation did not return expected data.');
+            console.error('Event creation did not return expected data with Knex.');
             res.status(500).send({ message: 'Event created, but could not retrieve confirmation data.' });
         }
 
