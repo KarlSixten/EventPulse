@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "setupDatabase": "node ./database/createDatabase.js",
-    "resetDatabase": "node ./database/createDatabase.js --delete"
+    "resetDatabase": "node ./database/createDatabase.js --delete",
+    "clearInvites": "node ./database/util/clearInvites.js"
   },
   "keywords": [],
   "author": "",
