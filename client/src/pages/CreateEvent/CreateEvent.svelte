@@ -1,8 +1,10 @@
 <script>
+    import { navigate } from "svelte-routing";
     import { fetchPost } from "../../util/fetch";
     import { BASE_URL } from "../../stores/generalStore";
 
     import EventLocationMapInput from "../../components/EventLocationMapInput.svelte";
+    import toastr from "toastr";
 
     let title = "";
     let description = "";
@@ -31,13 +33,16 @@
                 $BASE_URL + "/api/events",
                 eventData,
             );
-            console.log("Submission successful:", result);
+            const eventId = result.data.event.id;
+            toastr.success("Event created!");
 
             title = "";
             description = "";
             dateTime = null;
             latitude = null;
             longitude = null;
+
+            navigate(`/events/${eventId}`);
         } catch (error) {
             console.error("Submission error:", error);
         }
