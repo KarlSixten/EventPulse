@@ -19,7 +19,7 @@ router.use("/api/events/:id/rsvps", (req, res, next) => {
 router.get("/api/events", async (req, res) => {
     const currentUserId = req.session.user ? req.session.user.id : null;
 
-    const { 
+    const {
         sortBy,
         sortOrder = 'ASC', // Default
         userLat,
@@ -30,45 +30,60 @@ router.get("/api/events", async (req, res) => {
     let paramCounter = 1;
 
     // Base select
-    let selectFields = `SELECT id, title, description, location_point, date_time, created_by_id, ST_X(location_point::geometry) AS "latitude",
-    ST_Y(location_point::geometry) AS "longitude", is_private`;
-    
+    let selectFields = `SELECT e.id, e.title, e.description, e.location_point, e.date_time, e.created_by_id,
+    ST_X(e.location_point::geometry) AS "longitude",
+    ST_Y(e.location_point::geometry) AS "latitude",
+    e.is_private`;
+
     // Filter out past events
-    let fromAndWhereClause = ` FROM events WHERE date_time >= NOW()`;
+    let fromAndWhereClause = ` FROM events e WHERE e.date_time >= NOW()`;
 
     // Filter out events the user does not have access to.
     if (currentUserId) {
-        fromAndWhereClause += ` AND (is_private = FALSE OR (is_private = TRUE AND created_by_id = $${paramCounter}))`;
+        const userIdParamCreatedBy = paramCounter++;
+        const userIdParamInvitedTo = paramCounter++;
+
+        fromAndWhereClause += ` AND (
+                                    e.is_private = FALSE OR
+                                    (e.is_private = TRUE AND e.created_by_id = $${userIdParamCreatedBy}) OR
+                                    EXISTS (
+                                        SELECT 1
+                                        FROM event_invitations ei
+                                        WHERE ei.event_id = e.id AND ei.invitee_id = $${userIdParamInvitedTo}
+                                    )
+                                 )`;
         queryParams.push(currentUserId);
-        paramCounter++;
+        queryParams.push(currentUserId);
     } else {
-        fromAndWhereClause += ` AND is_private = FALSE`;
+        fromAndWhereClause += ` AND e.is_private = FALSE`;
     }
 
-    
-    let orderByClause = ` ORDER BY date_time ASC`;
+    let orderByClause = ` ORDER BY e.date_time ASC`;
     const validSortOrder = sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
 
     if (sortBy === 'date') {
-        orderByClause = ` ORDER BY date_time ${validSortOrder}`;
-    } else if (sortBy === 'distance') {
+        orderByClause = ` ORDER BY e.date_time ${validSortOrder}`;
+    } else if (sortBy === 'distance' && userLat != null && userLon != null) {
         const latitude = parseFloat(userLat);
         const longitude = parseFloat(userLon);
 
         if (!isNaN(latitude) && !isNaN(longitude)) {
-            selectFields += `, ST_Distance(location_point, ST_SetSRID(ST_MakePoint($${paramCounter++}, $${paramCounter++}), 4326)::geography) AS distance_meters`;
+            const lonParam = paramCounter++;
+            const latParam = paramCounter++;
+            selectFields += `, ST_Distance(e.location_point, ST_SetSRID(ST_MakePoint($${lonParam}, $${latParam}), 4326)::geography) AS distance_meters`;
             queryParams.push(longitude);
             queryParams.push(latitude);
             orderByClause = ` ORDER BY distance_meters ${validSortOrder} NULLS LAST`;
         } else {
             console.warn("Distance sort requested without valid userLat/userLon; defaulting to date sort.");
+            orderByClause = ` ORDER BY e.date_time ${validSortOrder}`;
         }
     }
     const finalQuery = selectFields + fromAndWhereClause + orderByClause;
 
     try {
         const result = await db.query(finalQuery, queryParams);
-        
+
         res.send({
             data: result.rows
         });
@@ -88,6 +103,8 @@ router.get("/api/events/:id", async (req, res) => {
     }
 
     const queryParams = [];
+    let paramCounter = 1;
+
     let queryBase = `
         SELECT
             e.id,
@@ -102,21 +119,35 @@ router.get("/api/events/:id", async (req, res) => {
     `;
 
     let fromAndJoinClause = ` FROM events e `;
-    
+
     if (currentUserId) {
         queryBase += `, er.status AS user_rsvp_status `;
-        queryParams.push(currentUserId); 
-        fromAndJoinClause += ` LEFT JOIN event_rsvps er ON er.event_id = e.id AND er.user_id = $${queryParams.length} `;
+        const userIdForRsvpJoin = paramCounter++;
+        queryParams.push(currentUserId);
+        fromAndJoinClause += ` LEFT JOIN event_rsvps er ON er.event_id = e.id AND er.user_id = $${userIdForRsvpJoin} `;
     } else {
         queryBase += `, NULL AS user_rsvp_status `;
     }
 
+    const eventIdParam = paramCounter++;
     queryParams.push(eventId);
-    let whereClause = ` WHERE e.id = $${queryParams.length} `;
+    let whereClause = ` WHERE e.id = $${eventIdParam} `;
 
     if (currentUserId) {
-        queryParams.push(currentUserId); 
-        whereClause += ` AND (e.is_private = FALSE OR (e.is_private = TRUE AND e.created_by_id = $${queryParams.length}))`;
+        const userIdParamCreatedBy = paramCounter++;
+        const userIdParamInvitedTo = paramCounter++;
+        queryParams.push(currentUserId);
+        queryParams.push(currentUserId);
+
+        whereClause += ` AND (
+                            e.is_private = FALSE OR
+                            (e.is_private = TRUE AND e.created_by_id = $${userIdParamCreatedBy}) OR
+                            EXISTS (
+                                SELECT 1
+                                FROM event_invitations ei
+                                WHERE ei.event_id = e.id AND ei.invitee_id = $${userIdParamInvitedTo}
+                            )
+                        )`;
     } else {
         whereClause += ` AND e.is_private = FALSE`;
     }
@@ -124,11 +155,10 @@ router.get("/api/events/:id", async (req, res) => {
     const finalQuery = queryBase + fromAndJoinClause + whereClause;
 
     try {
-
         const result = await db.query(finalQuery, queryParams);
 
         if (result.rows.length === 0) {
-            return res.status(404).send({ message: `No event found with ID: ${eventId}, or you do not have access to view it.` });
+            return res.status(404).send({ message: `No event found with ID: ${eventId}, or you do not have permission to view it.` });
         }
 
         const row = result.rows[0];
@@ -158,7 +188,6 @@ router.get("/api/events/:id", async (req, res) => {
         res.status(500).send({ message: "An error occurred while fetching event details." });
     }
 });
-
 
 router.post("/api/events", async (req, res) => {
     const title = req.body.title && req.body.title.trim();
