@@ -6,10 +6,10 @@ import toastr from 'toastr';
 
 let socket = null;
 
+let newNotificationListener = null;
+
 export const notifications = writable([]);
-
 export const hasUnreadNotifications = writable(false);
-
 export const isSocketConnected = writable(false);
 
 userStore.subscribe(currentUser => {
@@ -22,41 +22,28 @@ function initializeSocket() {
 
   if (currentUser && serverUrlValue) {
     if (!socket || socket.disconnected) {
-      console.log('NotificationStore: User logged in, attempting to connect WebSocket to:', serverUrlValue);
+
+      if (socket) {
+        if (newNotificationListener) {
+          socket.off('new_notification', newNotificationListener);
+        }
+        socket.disconnect();
+      }
+
       socket = io(serverUrlValue, {
         withCredentials: true,
       });
+      setupSocketListeners(socket);
 
-      socket.on('connect', () => {
-        console.log('NotificationStore: Successfully connected to WebSocket server. Socket ID:', socket.id);
-        isSocketConnected.set(true);
-      });
-
-      socket.on('disconnect', (reason) => {
-        console.log('NotificationStore: Disconnected from WebSocket server:', reason);
-        isSocketConnected.set(false);
-      });
-
-      socket.on('connect_error', (error) => {
-        console.error('NotificationStore: WebSocket connection error:', error);
-        isSocketConnected.set(false);
-      });
-
-      socket.on('new_notification', (notification) => {
-        console.log('NotificationStore: Received new_notification:', notification);
-        notifications.update(currentNotifications => {
-          const updatedNotifications = [notification, ...currentNotifications].slice(0, 20);
-          return updatedNotifications;
-        });
-        hasUnreadNotifications.set(true);
-
-        toastr.info(notification.message || 'You have a new notification!');
-      });
-
+    } else {
+      setupSocketListeners(socket);
     }
   } else {
     if (socket) {
-      console.log('NotificationStore: User logged out or not authenticated, disconnecting WebSocket.');
+      if (newNotificationListener) {
+        socket.off('new_notification', newNotificationListener);
+        newNotificationListener = null;
+      }
       socket.disconnect();
       socket = null;
       isSocketConnected.set(false);
@@ -65,6 +52,38 @@ function initializeSocket() {
     }
   }
 }
+
+function setupSocketListeners(currentSocket) {
+  currentSocket.on('connect', () => {
+    isSocketConnected.set(true);
+  });
+
+  currentSocket.on('disconnect', (reason) => {
+    isSocketConnected.set(false);
+  });
+
+  currentSocket.on('connect_error', (error) => {
+    isSocketConnected.set(false);
+  });
+
+  if (newNotificationListener) {
+    currentSocket.off('new_notification', newNotificationListener);
+  }
+
+  newNotificationListener = (notification) => {
+    console.log(`NotificationStore: Received new_notification on socket ID ${currentSocket?.id}:`, notification);
+    notifications.update(currentNotifications => {
+      const updatedNotifications = [notification, ...currentNotifications].slice(0, 20);
+      return updatedNotifications;
+    });
+    hasUnreadNotifications.set(true);
+    toastr.info(notification.message || 'You have a new notification!');
+  };
+
+  currentSocket.on('new_notification', newNotificationListener);
+}
+
+
 
 export function markNotificationsAsRead() {
   hasUnreadNotifications.set(false);
