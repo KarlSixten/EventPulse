@@ -251,21 +251,26 @@ router.delete("/api/events/:id", async (req, res) => {
     }
 
     try {
-        const eventQuery = await db.query('SELECT created_by_id FROM events WHERE id = $1', [eventId]);
+        const event = await db('events')
+            .where({ id: eventId })
+            .first();
 
-        if (eventQuery.rows.length === 0) {
+        if (!event) {
             return res.status(404).send({ message: "Event not found." });
         }
 
-        const eventCreatorId = eventQuery.rows[0].created_by_id;
-
-        if (requestUserId !== eventCreatorId) {
+        if (requestUserId !== event.created_by_id) {
             return res.status(403).send({ message: "Forbidden. You are not authorized to delete this event." });
         }
 
-        const deleteResult = await db.query('DELETE FROM events WHERE id = $1 AND created_by_id = $2', [eventId, requestUserId]);
+        const deleteCount = await db('events')
+            .where({
+                id: eventId,
+                created_by_id: requestUserId
+            })
+            .del();
 
-        if (deleteResult.rowCount > 0) {
+        if (deleteCount > 0) {
             res.status(200).send({ message: "Event deleted successfully." });
         } else {
             res.status(404).send({ message: "Event not found or already deleted." });
