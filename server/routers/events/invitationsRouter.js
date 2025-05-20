@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import db from '../../database/connection.js';
 import { sendEventInvitationEmail } from '../../util/nodeMailer.js';
+import { io } from '../../app.js';
 
 const router = Router({ mergeParams: true });
 
@@ -67,6 +68,20 @@ router.post('/', async (req, res) => {
             RETURNING id, event_id, inviter_id, invitee_id, status, message, created_at;
         `;
         const newInvitationResult = await db.query(newInvitationQuery, [eventId, inviterId, actualInviteeId, message]);
+
+        if (newInvitationResult.rows.length > 0) {
+            const notificationPayload = {
+                type: 'event_invitation',
+                message: `${req.session.user.firstName} invited you to the event: "${eventDetails.title}".`,
+                eventId: eventDetails.id,
+                eventName: eventDetails.title,
+                inviterName: req.session.user.firstName,
+                timestamp: new Date().toISOString()
+            };
+
+            io.to(actualInviteeId.toString()).emit('new_notification', notificationPayload);
+            console.log(`Notification sent to user room: ${actualInviteeId.toString()}`);
+        }
 
         // Commented out to lessen spam
         // sendEventInvitationEmail(normalizedInviteeEmail, eventDetails, message, req.session.user.firstName)
