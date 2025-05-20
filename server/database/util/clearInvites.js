@@ -1,6 +1,6 @@
-import db from '../connection.js';
+import { pgPool} from '../connection.js';
 
-await db.query(`
+await pgPool.query(`
     DROP TABLE IF EXISTS event_invitations;
     
     CREATE TABLE IF NOT EXISTS event_invitations (
