@@ -22,13 +22,12 @@ router.get("/api/auth/me", (req, res) => {
 });
 
 router.post("/api/auth/sign-up", async (req, res) => {
-
     if (!req.body || !req.body.email || !req.body.password || !req.body.firstName || !req.body.lastName) {
         return res.status(400).send({ message: "Email, password, first and last name are required" });
     }
 
     const originalEmail = req.body.email;
-    const { password, firstName, lastName } = req.body;    
+    const { password, firstName, lastName } = req.body;
 
     if (!emailRegex.test(originalEmail)) {
         return res.status(400).send({ message: "Invalid email format" });
@@ -37,13 +36,21 @@ router.post("/api/auth/sign-up", async (req, res) => {
     const normalizedEmail = originalEmail.trim().toLowerCase();
 
     try {
-        const result = await db.query('SELECT id FROM users WHERE email = $1', [normalizedEmail]);
+        const existingUser = await db('users')
+            .where({ email: normalizedEmail })
+            .first();
 
-        if (result.rowCount > 0) {
+        if (existingUser) {
             return res.status(409).send({ message: `User with email ${normalizedEmail} already exists` });
         } else {
-            const hashedPassword = await hashPassword(password);
-            await db.query('INSERT INTO users (email, password_hashed, first_name, last_name) VALUES ($1, $2, $3, $4)', [normalizedEmail, hashedPassword, firstName, lastName]);
+            const hashedPassword = await hashPassword(password); //
+
+            await db('users').insert({
+                email: normalizedEmail,
+                password_hashed: hashedPassword,
+                first_name: firstName,
+                last_name: lastName
+            });
 
             // Commented out to lessen spam
             // sendSignUpConfirmationEmail(firstName, normalizedEmail);
@@ -51,8 +58,8 @@ router.post("/api/auth/sign-up", async (req, res) => {
             return res.status(201).send({ message: "User created" });
         }
     } catch (error) {
-        console.error("Database error:", error);
-        return res.status(500).send({ message: 'Database error' });
+        console.error("Database error during sign-up:", error);
+        return res.status(500).send({ message: 'Database error during sign-up' });
     }
 });
 
@@ -62,22 +69,29 @@ router.post("/api/auth/login", async (req, res) => {
         return res.status(400).send({ message: "Email and password are required" });
     }
 
-    const { email, password } = req.body;
+    const originalEmail = req.body.email;
+    const { password } = req.body;
+
+    if (!emailRegex.test(originalEmail)) {
+        return res.status(400).send({ message: "Invalid email format" });
+    }
+
+    const normalizedEmail = originalEmail.trim().toLowerCase();
 
     try {
-        const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        const user = await db('users')
+            .where({ email: normalizedEmail })
+            .first();
 
-        if (result.rowCount === 0) {
+        if (!user) {
             return res.status(401).send({ message: "Invalid email or password" });
         }
-
-        const user = result.rows[0];
 
         if (!await passwordMatchesHashed(password, user.password_hashed)) {
             return res.status(401).send({ message: "Invalid email or password" });
         }
 
-        const userInfo = { 
+        const userInfo = {
             id: user.id,
             email: user.email,
             firstName: user.first_name,
