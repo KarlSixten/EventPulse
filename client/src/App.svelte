@@ -4,6 +4,8 @@
   import { fetchGet } from "./util/fetch.js";
   import { BASE_URL } from "./stores/generalStore.js";
   import { Router, Route } from "svelte-routing";
+  
+  import './stores/notificationStore.js'
 
   import "toastr/build/toastr.min.css";
 
