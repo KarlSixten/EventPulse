@@ -44,7 +44,7 @@
                     Welcome, {$userStore.firstName}!
                 </span>
                 <NotificationCenter />
-                <button class="logout-button" on:click={handleLogout}>
+                <button class="logout-button" onclick="{handleLogout}">
                     Logout<ion-icon name="log-out"></ion-icon>
                 </button>
             {/if}
