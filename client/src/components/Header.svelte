@@ -28,24 +28,24 @@
         <Link to="/" class="logo-link nav-link">
             <img src="/logo.png" class="logo-img" alt="EventPulse logo" />
         </Link>
-        <Link to="/" class="nav-link">Home</Link>
-        <Link to="/discover" class="nav-link">Discover</Link>
-        <Link to="/about" class="nav-link">About</Link>
+        <Link to="/" class="nav-link"><ion-icon name="home"></ion-icon>Home</Link>
+        <Link to="/discover" class="nav-link"><ion-icon name="planet"></ion-icon>Discover</Link>
+        <Link to="/about" class="nav-link"><ion-icon name="reader"></ion-icon>About</Link>
 
         <div class="nav-spacer"></div>
 
         <div class="nav-links-auth">
             {#if !$userStore}
-                <Link to="/login" class="nav-link">Login</Link>
-                <Link to="/sign-up" class="nav-link">Sign up</Link>
+                <Link to="/login" class="nav-link"><ion-icon name="log-in"></ion-icon>Login</Link>
+                <Link to="/sign-up" class="nav-link"><ion-icon name="person-add"></ion-icon>Sign up</Link>
             {:else}
-                <Link to="/create-event" class="nav-link">Create Event</Link>
+                <Link to="/create-event" class="nav-link"><ion-icon name="add-circle"></ion-icon>Create Event</Link>
                 <span class="welcome-message">
                     Welcome, {$userStore.firstName}!
                 </span>
                 <NotificationCenter />
                 <button class="logout-button" on:click={handleLogout}>
-                    Logout
+                    Logout<ion-icon name="log-out"></ion-icon>
                 </button>
             {/if}
         </div>
