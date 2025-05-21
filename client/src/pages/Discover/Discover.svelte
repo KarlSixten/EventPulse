@@ -10,6 +10,7 @@
 
     let sortBy = "date";
     let sortOrder = "ASC";
+    let timeFilter = "upcoming"
 
     let userLatitude = null;
     let userLongitude = null;
@@ -58,7 +59,9 @@
 
     async function actualFetchEvents() {
         try {
-            let apiUrl = $BASE_URL + `/api/events?sortBy=${sortBy}&sortOrder=${sortOrder}`;
+            let apiUrl = $BASE_URL + `/api/events?timeFilter=${timeFilter}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
+            console.log(apiUrl);
+            
 
             if (
                 sortBy === "distance" &&
@@ -116,6 +119,16 @@
         >
             <option value="ASC">Ascending</option>
             <option value="DESC">Descending</option>
+        </select>
+        <select
+            id="time-filter"
+            bind:value={timeFilter}
+            on:change={handleSortCriteriaChange}
+        >
+            <option value="past">Past events</option>
+            <option value="upcoming">Upcoming events</option>
+            <option value="all">All events</option>
+
         </select>
 
         {#if sortBy === "distance" && (userLatitude == null || userLongitude == null)}
