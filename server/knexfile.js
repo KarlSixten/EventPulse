@@ -9,8 +9,4 @@ export default {
         password: process.env.PGPASSWORD,
         database: process.env.PGDATABASE,
     },
-    pool: {
-        min: 2,
-        max: 10
-    },
 };
