@@ -1,5 +1,6 @@
 <script>
     import { onMount } from "svelte";
+    import { navigate } from "svelte-routing";
     import { BASE_URL } from "../../stores/generalStore";
     import { userStore } from "../../stores/userStore";
     import { fetchGet, fetchPost } from "../../util/fetch";
@@ -40,7 +41,6 @@
             if (result && result.data) {
                 event = result.data;
                 selectedRsvpStatus = event.userRsvpStatus;
-                console.log(event);
             } else {
                 console.error(
                     "Failed to fetch event data or data is not in expected format",
@@ -190,6 +190,12 @@
             {/if}
         {:else}
             <p>You must <a href="/login">log in</a> to send invites.</p>
+        {/if}
+        {#if $userStore && event.createdById == $userStore.id}
+                <!-- ---------------------------------------------- -->
+                <!-- TODO: PASS WHOLE EVENT DETAILS TO TO EDIT PAGE -->
+                <!-- ---------------------------------------------- -->
+                <button onclick={() => navigate(`/events/${event.id}/edit`)}><ion-icon name="create-outline"></ion-icon>Edit Event</button>
         {/if}
         {#if event.location}
             <Map
