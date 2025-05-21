@@ -4,7 +4,7 @@ import db from '../../database/connection.js'
 const router = Router({ mergeParams: true });
 
 router.post('/', async (req, res) => {
-    const eventId = req.params.id;
+    const eventId = Number(req.params.id);
     const status = req.body?.status;
 
     if (isNaN(eventId) || eventId <= 0) {
@@ -21,32 +21,65 @@ router.post('/', async (req, res) => {
     }
 
     try {
-        const eventCheckResult = await db.query('SELECT is_private FROM events WHERE id = $1', [eventId]);
-        if (eventCheckResult.rows.length === 0) {
+        const event = await db('events')
+            .where({ id: eventId })
+            .select('id', 'is_private', 'created_by_id')
+            .first();
+
+        if (!event) {
             return res.status(404).send({ message: 'Event not found.' });
         }
-        if (eventCheckResult.rows[0].is_private) {
-            return res.status(403).send({ message: 'RSVPs are not applicable to private events through this endpoint.' });
+
+        let canRsvp = false;
+        if (!event.is_private) {
+            canRsvp = true;
+        } else {
+            if (event.created_by_id === userId) {
+                canRsvp = true;
+            } else {
+                const invitation = await db('event_invitations')
+                    .where({
+                        event_id: eventId,
+                        invitee_id: userId
+                    })
+                    .select('id')
+                    .first();
+
+                if (invitation) {
+                    canRsvp = true;
+                }
+            }
         }
 
-        const upsertQuery = `
-            INSERT INTO event_rsvps (event_id, user_id, status, created_at, updated_at)
-            VALUES ($1, $2, $3, NOW(), NOW())
-            ON CONFLICT (event_id, user_id) 
-            DO UPDATE SET status = EXCLUDED.status, updated_at = NOW()
-            RETURNING id, event_id, user_id, status, created_at, updated_at;
-        `;
-        
-        const result = await db.query(upsertQuery, [eventId, userId, status]);
-        
-        res.send({ 
-            message: 'RSVP status updated successfully.', 
-            data: result.rows[0] 
-        });
+        if (!canRsvp) {
+            return res.status(403).send({ message: 'You do not have permission to RSVP to this event.' });
+        }
+
+        const [rsvpRecord] = await db('event_rsvps')
+            .insert({
+                event_id: eventId,
+                user_id: userId,
+                status: status
+            })
+            .onConflict(['event_id', 'user_id'])
+            .merge({
+                status: status,
+                updated_at: db.fn.now()
+            })
+            .returning(['id', 'event_id', 'user_id', 'status', 'created_at', 'updated_at']);
+
+        if (rsvpRecord) {
+            res.send({
+                message: 'RSVP status updated successfully.',
+                data: rsvpRecord
+            });
+        } else {
+            res.status(500).send({ message: 'Failed to update RSVP status or retrieve confirmation.' });
+        }
 
     } catch (error) {
         console.error(`Error setting RSVP for event ${eventId} by user ${userId}:`, error);
-        res.status(500).json({ message: 'Failed to update RSVP status.' });
+        res.status(500).send({ message: 'Failed to update RSVP status due to a server error.' });
     }
 });
 
