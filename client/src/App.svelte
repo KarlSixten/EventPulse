@@ -27,6 +27,7 @@
   import CreateEvent from "./pages/CreateEvent/CreateEvent.svelte";
   import EventDetails from "./pages/EventDetails/EventDetails.svelte";
   import About from "./pages/About/About.svelte";
+    import EditEvent from "./pages/EditEvent/EditEvent.svelte";
 
   export let url = "";
 
@@ -66,6 +67,7 @@
       <Route path="/sign-up"><SignUp></SignUp></Route>
       <Route path="/create-event"><CreateEvent></CreateEvent></Route>
       <Route path="/events/:id" let:params><EventDetails id={params.id}></EventDetails></Route>
+      <Route path="/events/:id/edit"><EditEvent></EditEvent></Route>
     </div>
     <Footer />
   </Router>
