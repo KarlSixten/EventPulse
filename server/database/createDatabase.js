@@ -1,4 +1,4 @@
-import db from './connection.js';
+import { pgPool } from './connection.js';
 import { hashPassword } from '../util/passwordHasher.js';
 
 const deleteMode = process.argv.includes('--delete');
@@ -13,7 +13,7 @@ try {
         console.log('Tables dropped.');
     }
 
-    const timeZone = await db.query('SHOW TIMEZONE');
+    const timeZone = await pgPool.query('SHOW TIMEZONE');
     console.log('Timezone is:', timeZone.rows[0].TimeZone)
 
     console.log('Creating PostGIS extension...');
@@ -34,12 +34,12 @@ try {
     console.log("Error while setting up database:", error);
 } finally {
     console.log('Closing database connection pool...');
-    await db.end();
+    await pgPool.end();
     console.log('Database connection pool closed.');
 }
 
 async function dropAllTables() {
-    await db.query(`
+    await pgPool.query(`
         DROP TABLE IF EXISTS users CASCADE;
         DROP TABLE IF EXISTS events CASCADE;
         DROP TABLE IF EXISTS event_invitations CASCADE;
@@ -48,13 +48,13 @@ async function dropAllTables() {
 }
 
 async function createPostgis() {
-    await db.query(`
+    await pgPool.query(`
         CREATE EXTENSION IF NOT EXISTS postgis;
     `)
 }
 
 async function createTables() {
-    await db.query(`
+    await pgPool.query(`
         CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         email TEXT UNIQUE NOT NULL,
@@ -103,19 +103,19 @@ async function createTables() {
 
 async function seed() {
     // USERS
-    await db.query('INSERT INTO users (email, password_hashed, first_name, last_name) VALUES ($1, $2, $3, $4)', [
+    await pgPool.query('INSERT INTO users (email, password_hashed, first_name, last_name) VALUES ($1, $2, $3, $4)', [
         'admin@admin.com',
         await hashPassword('admin'),
         'admin',
         'admin']);
-    await db.query('INSERT INTO users (email, password_hashed, first_name, last_name) VALUES ($1, $2, $3, $4)', [
+    await pgPool.query('INSERT INTO users (email, password_hashed, first_name, last_name) VALUES ($1, $2, $3, $4)', [
         'karlsixten@gmail.com',
         await hashPassword('password'),
         'Karl',
         'Bjarnø']);
 
     // EVENTS
-    await db.query('INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7)',
+    await pgPool.query('INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7)',
         [
             'testEvent',
             'This is a test event',
@@ -125,7 +125,7 @@ async function seed() {
             "2025-06-25T18:30",
             false
         ]);
-    await db.query('INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7)',
+    await pgPool.query('INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7)',
         [
             'Another Test event',
             'This is also a test event',
@@ -135,7 +135,7 @@ async function seed() {
             "2025-06-28T19:00",
             false
         ]);
-    await db.query('INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7)',
+    await pgPool.query('INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7)',
         [
             'Private Test event',
             'This is a private test event',

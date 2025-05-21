@@ -1,6 +1,13 @@
 import 'dotenv/config';
 import { Pool } from 'pg';
 
-const pool = new Pool();
+const pgPool = new Pool();
 
-export default pool;
+export { pgPool };
+
+import knex from 'knex';
+import knexConfig from '../knexfile.js';
+
+const knexPool = knex(knexConfig);
+
+export default knexPool;

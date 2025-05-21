@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import db from '../../database/connection.js'
 
+import { validateCreateEvent, validateUpdateEvent, validateEventIdParam } from '../../middleware/eventValidationMiddleware.js';
+
 const router = Router();
 
 import invitationsRouter from './invitationsRouter.js';
@@ -10,218 +12,206 @@ router.use("/api/events/:id/invitations", (req, res, next) => {
 }, invitationsRouter);
 
 import rsvpRouter from './rsvpRouter.js';
+import { isAuthenticated } from '../../middleware/authMiddleware.js';
 
 router.use("/api/events/:id/rsvps", (req, res, next) => {
     next();
 }, rsvpRouter);
 
+router.all('/api/events/:id', validateEventIdParam);
+router.all('/api/events/:id/{splat}', validateEventIdParam);
 
 router.get("/api/events", async (req, res) => {
     const currentUserId = req.session.user ? req.session.user.id : null;
-
     const {
-        sortBy,
-        sortOrder = 'ASC', // Default
+        sortBy = 'date',
+        sortOrder = 'ASC',
         userLat,
-        userLon
+        userLon,
+        timeFilter = 'upcoming'
     } = req.query;
 
-    const queryParams = [];
-    let paramCounter = 1;
-
-    // Base select
-    let selectFields = `SELECT e.id, e.title, e.description, e.location_point, e.date_time, e.created_by_id,
-    ST_X(e.location_point::geometry) AS "longitude",
-    ST_Y(e.location_point::geometry) AS "latitude",
-    e.is_private`;
-
-    // Filter out past events
-    let fromAndWhereClause = ` FROM events e WHERE e.date_time >= NOW()`;
-
-    // Filter out events the user does not have access to.
-    if (currentUserId) {
-        const userIdParamCreatedBy = paramCounter++;
-        const userIdParamInvitedTo = paramCounter++;
-
-        fromAndWhereClause += ` AND (
-                                    e.is_private = FALSE OR
-                                    (e.is_private = TRUE AND e.created_by_id = $${userIdParamCreatedBy}) OR
-                                    EXISTS (
-                                        SELECT 1
-                                        FROM event_invitations ei
-                                        WHERE ei.event_id = e.id AND ei.invitee_id = $${userIdParamInvitedTo}
-                                    )
-                                 )`;
-        queryParams.push(currentUserId);
-        queryParams.push(currentUserId);
-    } else {
-        fromAndWhereClause += ` AND e.is_private = FALSE`;
-    }
-
-    let orderByClause = ` ORDER BY e.date_time ASC`;
-    const validSortOrder = sortOrder.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
-
-    if (sortBy === 'date') {
-        orderByClause = ` ORDER BY e.date_time ${validSortOrder}`;
-    } else if (sortBy === 'distance' && userLat != null && userLon != null) {
-        const latitude = parseFloat(userLat);
-        const longitude = parseFloat(userLon);
-
-        if (!isNaN(latitude) && !isNaN(longitude)) {
-            const lonParam = paramCounter++;
-            const latParam = paramCounter++;
-            selectFields += `, ST_Distance(e.location_point, ST_SetSRID(ST_MakePoint($${lonParam}, $${latParam}), 4326)::geography) AS distance_meters`;
-            queryParams.push(longitude);
-            queryParams.push(latitude);
-            orderByClause = ` ORDER BY distance_meters ${validSortOrder} NULLS LAST`;
-        } else {
-            console.warn("Distance sort requested without valid userLat/userLon; defaulting to date sort.");
-            orderByClause = ` ORDER BY e.date_time ${validSortOrder}`;
-        }
-    }
-    const finalQuery = selectFields + fromAndWhereClause + orderByClause;
-
     try {
-        const result = await db.query(finalQuery, queryParams);
+        let query = db('events as e');
 
-        res.send({
-            data: result.rows
-        });
+        const selectColumns = [
+            'e.*',
+            db.raw('ST_X(e.location_point::geometry) as longitude'),
+            db.raw('ST_Y(e.location_point::geometry) as latitude')
+        ];
+
+        const now = db.raw('NOW()');
+        if (timeFilter === 'upcoming') {
+            query.where('e.date_time', '>=', now);
+        } else if (timeFilter === 'past') {
+            query.where('e.date_time', '<', now);
+        }
+
+        if (currentUserId) {
+            query.andWhere(function () {
+                this.where('e.is_private', false)
+                    .orWhere(function () {
+                        this.where('e.is_private', true)
+                            .andWhere('e.created_by_id', currentUserId);
+                    })
+                    .orWhereExists(function () {
+                        this.select(1)
+                            .from('event_invitations as ei')
+                            .whereRaw('ei.event_id = e.id')
+                            .andWhere('ei.invitee_id', currentUserId);
+                    });
+            });
+        } else {
+            query.andWhere('e.is_private', false);
+        }
+
+        const validSortOrder = sortOrder.toUpperCase() === 'DESC' ? 'desc' : 'asc';
+        let orderByColumn = 'e.date_time';
+        let useOrderByRaw = false;
+        let orderByDirection = validSortOrder;
+
+        if (sortBy === 'distance' && userLat != null && userLon != null) {
+            const latitude = parseFloat(userLat);
+            const longitude = parseFloat(userLon);
+
+            if (!isNaN(latitude) && !isNaN(longitude)) {
+                selectColumns.push(
+                    db.raw(
+                        'ST_Distance(e.location_point, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) as distance_meters',
+                        [longitude, latitude]
+                    )
+                );
+                orderByColumn = 'distance_meters';
+                useOrderByRaw = true;
+                orderByDirection = `${validSortOrder} NULLS LAST`;
+            } else {
+                console.warn("Distance sort requested without valid userLat/userLon; defaulting to date sort.");
+            }
+        }
+
+        query.select(selectColumns);
+
+        if (useOrderByRaw) {
+            query.orderByRaw(`${orderByColumn} ${orderByDirection}`);
+        } else {
+            query.orderBy(orderByColumn, orderByDirection);
+        }
+
+        const events = await query;
+
+        res.send({ data: events });
 
     } catch (error) {
-        console.error("Error fetching sorted/filtered events:", error);
+        console.error("Error fetching sorted/filtered events with Knex:", error);
         res.status(500).send({ message: "Error fetching events. Check server logs." });
     }
 });
 
 router.get("/api/events/:id", async (req, res) => {
     const currentUserId = req.session.user ? req.session.user.id : null;
-    const eventId = Number(req.params.id);
+    const eventId = req.params.id;
 
     if (isNaN(eventId)) {
         return res.status(400).send({ message: "Invalid event ID format." });
     }
 
-    const queryParams = [];
-    let paramCounter = 1;
-
-    let queryBase = `
-        SELECT
-            e.id,
-            e.title,
-            e.description,
-            e.date_time,
-            e.location_point,
-            ST_X(e.location_point::geometry) AS "longitude",
-            ST_Y(e.location_point::geometry) AS "latitude",
-            e.is_private,
-            e.created_by_id
-    `;
-
-    let fromAndJoinClause = ` FROM events e `;
-
-    if (currentUserId) {
-        queryBase += `, er.status AS user_rsvp_status `;
-        const userIdForRsvpJoin = paramCounter++;
-        queryParams.push(currentUserId);
-        fromAndJoinClause += ` LEFT JOIN event_rsvps er ON er.event_id = e.id AND er.user_id = $${userIdForRsvpJoin} `;
-    } else {
-        queryBase += `, NULL AS user_rsvp_status `;
-    }
-
-    const eventIdParam = paramCounter++;
-    queryParams.push(eventId);
-    let whereClause = ` WHERE e.id = $${eventIdParam} `;
-
-    if (currentUserId) {
-        const userIdParamCreatedBy = paramCounter++;
-        const userIdParamInvitedTo = paramCounter++;
-        queryParams.push(currentUserId);
-        queryParams.push(currentUserId);
-
-        whereClause += ` AND (
-                            e.is_private = FALSE OR
-                            (e.is_private = TRUE AND e.created_by_id = $${userIdParamCreatedBy}) OR
-                            EXISTS (
-                                SELECT 1
-                                FROM event_invitations ei
-                                WHERE ei.event_id = e.id AND ei.invitee_id = $${userIdParamInvitedTo}
-                            )
-                        )`;
-    } else {
-        whereClause += ` AND e.is_private = FALSE`;
-    }
-
-    const finalQuery = queryBase + fromAndJoinClause + whereClause;
-
     try {
-        const result = await db.query(finalQuery, queryParams);
+        let query = db('events as e')
+            .where('e.id', eventId);
 
-        if (result.rows.length === 0) {
+        const selectColumns = [
+            'e.*',
+            db.raw('ST_X(e.location_point::geometry) as longitude'),
+            db.raw('ST_Y(e.location_point::geometry) as latitude')
+        ];
+
+        if (currentUserId) {
+            selectColumns.push('er.status as user_rsvp_status');
+            query.leftJoin('event_rsvps as er', function () {
+                this.on('er.event_id', '=', 'e.id')
+                    .andOn('er.user_id', '=', db.raw('?', [currentUserId]));
+            });
+
+            query.andWhere(function () {
+                this.where('e.is_private', false)
+                    .orWhere(function () {
+                        this.where('e.is_private', true)
+                            .andWhere('e.created_by_id', currentUserId);
+                    })
+                    .orWhereExists(function () {
+                        this.select(1)
+                            .from('event_invitations as ei')
+                            .whereRaw('ei.event_id = e.id')
+                            .andWhere('ei.invitee_id', currentUserId);
+                    });
+            });
+        } else {
+            selectColumns.push(db.raw('NULL as user_rsvp_status'));
+            query.andWhere('e.is_private', false);
+        }
+
+        query.select(selectColumns);
+
+        const eventRow = await query.first();
+
+        if (!eventRow) {
             return res.status(404).send({ message: `No event found with ID: ${eventId}, or you do not have permission to view it.` });
         }
 
-        const row = result.rows[0];
-
         const eventData = {
-            id: row.id,
-            title: row.title,
-            description: row.description,
-            dateTime: row.date_time,
-            isPrivate: row.is_private,
-            createdById: row.created_by_id,
-            userRsvpStatus: row.user_rsvp_status,
-            location: null
+            id: eventRow.id,
+            title: eventRow.title,
+            description: eventRow.description,
+            dateTime: eventRow.date_time,
+            isPrivate: eventRow.is_private,
+            createdById: eventRow.created_by_id,
+            userRsvpStatus: eventRow.user_rsvp_status,
+            location: (eventRow.longitude !== null && eventRow.latitude !== null) ? {
+                latitude: eventRow.latitude,
+                longitude: eventRow.longitude
+            } : null
         };
-
-        if (row.longitude !== null && row.latitude !== null) {
-            eventData.location = {
-                latitude: row.latitude,
-                longitude: row.longitude
-            };
-        }
 
         res.send({ data: eventData });
 
     } catch (error) {
-        console.error(`Error fetching event by ID (${eventId}):`, error);
+        console.error(`Error fetching event by ID (${eventId}) with Knex:`, error);
         res.status(500).send({ message: "An error occurred while fetching event details." });
     }
 });
 
-router.post("/api/events", async (req, res) => {
-    const title = req.body.title && req.body.title.trim();
-    const description = req.body.description && req.body.description.trim();
-    const dateTime = req.body.dateTime
+router.post("/api/events", isAuthenticated, validateCreateEvent, async (req, res) => {
+    const { title, description, dateTime, isPrivate, latitude, longitude } = req.body;
 
-    if (!title || !description || !dateTime) {
-        return res.status(400).send({ message: "Title, description and date/time cannot be empty." });
-    }
-
-    const latitude = req.body?.latitude;
-    const longitude = req.body?.longitude;
-
-    const isPrivate = req.body.isPrivate;
-
-    const eventCreatorId = req.session.user?.id;
-
-    if (!eventCreatorId) {
-        return res.status(401).send({ message: 'Please log in to create an event.' });
-    }
+    const eventCreatorId = req.session.user.id;
 
     try {
-        const insertQuery = `
-            INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) 
-            VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7) 
-            RETURNING id, title, description, created_by_id, location_point, date_time, is_private`;
 
-        const result = await db.query(insertQuery, [title, description, eventCreatorId, longitude, latitude, dateTime, isPrivate]);
+        const eventToInsert = {
+            title: title,
+            description: description,
+            created_by_id: eventCreatorId,
+            date_time: dateTime,
+            is_private: isPrivate
+        }
 
-        if (result.rows && result.rows.length > 0) {
-            const newEvent = result.rows[0];
+        if (!isNaN(latitude) && !isNaN(longitude)) {
+            eventToInsert.location_point = db.raw(
+                'ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography',
+                [longitude, latitude]
+            );
+        } else {
+            eventToInsert.location_point = null;
+        }
+
+        const [newEvent] = await db('events')
+            .insert(eventToInsert)
+            .returning('*');
+
+        if (newEvent) {
             res.status(201).send({ message: 'Event created successfully.', event: newEvent });
         } else {
-            console.error('Event creation did not return expected data.');
+            console.error('Event creation did not return expected data with Knex.');
             res.status(500).send({ message: 'Event created, but could not retrieve confirmation data.' });
         }
 
@@ -231,41 +221,108 @@ router.post("/api/events", async (req, res) => {
     }
 })
 
-// UPDATE EVENT 
-// UPDATE EVENT 
-// UPDATE EVENT 
-// UPDATE EVENT 
-// UPDATE EVENT 
-// UPDATE EVENT 
+router.put("/api/events/:id", isAuthenticated, validateUpdateEvent, async (req, res) => {
+    const eventId = req.params.id;
+    const currentUserId = req.session.user.id;
 
-router.delete("/api/events/:id", async (req, res) => {
-    const eventId = Number(req.params.id);
-    const requestUserId = req.session.user?.id;
+    const { title, description, dateTime, isPrivate, latitude, longitude } = req.body;
+    const updatePayload = {};
 
-    if (!requestUserId) {
-        return res.status(401).send({ message: "Unauthorized. You must be logged in to delete an event." });
+    if (title !== undefined) updatePayload.title = title.trim();
+    if (description !== undefined) updatePayload.description = description.trim();
+    if (dateTime !== undefined) updatePayload.date_time = dateTime;
+    if (isPrivate !== undefined) updatePayload.is_private = isPrivate;
+
+    if (latitude !== undefined || longitude !== undefined) {
+        if (latitude === null && longitude === null) {
+            updatePayload.location_point = null;
+        } else {
+            const lat = parseFloat(latitude);
+            const lon = parseFloat(longitude);
+            updatePayload.location_point = db.raw(
+                'ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography',
+                [lon, lat]
+            );
+        }
     }
+
+    if (Object.keys(updatePayload).length === 0) {
+        const currentEventData = await db('events as e')
+            .where('e.id', eventId)
+            .select('e.*', db.raw('ST_X(e.location_point::geometry) as longitude'), db.raw('ST_Y(e.location_point::geometry) as latitude'))
+            .first();
+        if (!currentEventData) return res.status(404).send({ message: "Event not found." });
+        return res.status(200).send({ message: "No valid fields provided for update. Current event data returned.", event: currentEventData });
+    }
+
+    updatePayload.updated_at = db.fn.now();
+
+    try {
+        const eventToUpdate = await db('events')
+            .where({ id: eventId })
+            .select('id', 'created_by_id')
+            .first();
+
+        if (!eventToUpdate) {
+            return res.status(404).send({ message: "Event not found." });
+        }
+
+        if (eventToUpdate.created_by_id !== currentUserId) {
+            return res.status(403).send({ message: "Forbidden. You are not authorized to update this event." });
+        }
+
+        const [updatedEventRecord] = await db('events')
+            .where({ id: eventId, created_by_id: currentUserId })
+            .update(updatePayload)
+            .returning('*');
+
+        if (!updatedEventRecord) {
+            return res.status(404).send({ message: "Event not found or update failed unexpectedly during final operation." });
+        }
+
+        const finalEventDetails = await db('events as e')
+            .where('e.id', updatedEventRecord.id)
+            .select('e.*', db.raw('ST_X(e.location_point::geometry) as longitude'), db.raw('ST_Y(e.location_point::geometry) as latitude'))
+            .first();
+
+        res.status(200).send({ message: "Event updated successfully.", event: finalEventDetails });
+
+    } catch (error) {
+        console.error(`Error updating event ${eventId}:`, error);
+        res.status(500).send({ message: "An error occurred while updating the event." });
+    }
+}
+);
+
+router.delete("/api/events/:id", isAuthenticated, async (req, res) => {
+    const eventId = req.params.id;
+    const requestUserId = req.session.user.id;
 
     if (isNaN(eventId) || eventId <= 0) {
         return res.status(400).send({ message: "Invalid event ID." });
     }
 
     try {
-        const eventQuery = await db.query('SELECT created_by_id FROM events WHERE id = $1', [eventId]);
+        const event = await db('events')
+            .where({ id: eventId })
+            .first();
 
-        if (eventQuery.rows.length === 0) {
+        if (!event) {
             return res.status(404).send({ message: "Event not found." });
         }
 
-        const eventCreatorId = eventQuery.rows[0].created_by_id;
-
-        if (requestUserId !== eventCreatorId) {
+        if (requestUserId !== event.created_by_id) {
             return res.status(403).send({ message: "Forbidden. You are not authorized to delete this event." });
         }
 
-        const deleteResult = await db.query('DELETE FROM events WHERE id = $1 AND created_by_id = $2', [eventId, requestUserId]);
+        const deleteCount = await db('events')
+            .where({
+                id: eventId,
+                created_by_id: requestUserId
+            })
+            .del();
 
-        if (deleteResult.rowCount > 0) {
+        if (deleteCount > 0) {
             res.status(200).send({ message: "Event deleted successfully." });
         } else {
             res.status(404).send({ message: "Event not found or already deleted." });
