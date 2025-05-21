@@ -179,9 +179,14 @@ router.post("/api/events", async (req, res) => {
     const title = req.body.title && req.body.title.trim();
     const description = req.body.description && req.body.description.trim();
     const dateTime = req.body.dateTime
+    const isPrivate = req.body.isPrivate
 
     if (!title || !description || !dateTime) {
         return res.status(400).send({ message: "Title, description and date/time cannot be empty." });
+    }
+
+    if (typeof req.body.isPrivate !== 'boolean') {
+        return res.status(400).send({ message: "The 'isPrivate' field must be a boolean (true or false)." });
     }
 
     const parsedDateTime = new Date(dateTime);
@@ -193,8 +198,6 @@ router.post("/api/events", async (req, res) => {
 
     const latitude = req.body?.latitude;
     const longitude = req.body?.longitude;
-
-    const isPrivate = req.body.isPrivate;
 
     const eventCreatorId = req.session.user?.id;
 
@@ -238,12 +241,95 @@ router.post("/api/events", async (req, res) => {
     }
 })
 
-// UPDATE EVENT 
-// UPDATE EVENT 
-// UPDATE EVENT 
-// UPDATE EVENT 
-// UPDATE EVENT 
-// UPDATE EVENT 
+router.put("/api/events/:id", async (req, res) => {
+    const eventId = Number(req.params.id);
+    
+    const title = req.body.title && req.body.title.trim();
+    const description = req.body.description && req.body.description.trim();
+    const dateTime = req.body.dateTime
+    const isPrivate = req.body.isPrivate
+
+    if (!title || !description || !dateTime) {
+        return res.status(400).send({ message: "Title, description and date/time cannot be empty." });
+    }
+
+    if (typeof req.body.isPrivate !== 'boolean') {
+        return res.status(400).send({ message: "The 'isPrivate' field must be a boolean (true or false)." });
+    }
+
+    const parsedDateTime = new Date(dateTime);
+    if (isNaN(parsedDateTime.getTime())) {
+        return res.status(400).send({
+            message: `Invalid date/time format provided: "${dateTime}". Please use a valid ISO 8601 format (e.g., YYYY-MM-DDTHH:MM:SSZ).`
+        });
+    }
+
+    const latitude = req.body?.latitude;
+    const longitude = req.body?.longitude;
+
+    const currentUserId = req.session.user?.id;
+
+    if (!currentUserId) {
+        return res.status(401).send({ message: 'Please log in to create an event.' });
+    }
+
+    try {
+        const eventToUpdate = await db('events')
+            .where({ id: eventId })
+            .select('id', 'created_by_id')
+            .first();
+
+        if (!eventToUpdate) {
+            return res.status(404).send({ message: "Event not found." });
+        }
+
+        if (eventToUpdate.created_by_id !== currentUserId) {
+            return res.status(403).send({ message: "Forbidden. You are not authorized to update this event." });
+        }
+
+        const updatePayload = {
+            title: title,
+            description: description,
+            date_time: dateTime,
+            is_private: isPrivate
+        };
+
+        if (!isNaN(latitude) && !isNaN(longitude)) {
+            updatePayload.location_point = db.raw(
+                'ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography',
+                [longitude, latitude]
+            );
+        } else {
+            updatePayload.location_point = null;
+        }
+        
+        updatePayload.updated_at = db.fn.now();
+
+        const [updatedEvent] = await db('events')
+            .where({ id: eventId, created_by_id: currentUserId })
+            .update(updatePayload)
+            .returning('*');
+
+        if (!updatedEvent) {
+            return res.status(404).send({ message: "Event not found or update failed unexpectedly."});
+        }
+
+        const finalEventDetails = await db('events as e')
+            .where('e.id', updatedEvent.id)
+            .select(
+                'e.*',
+                db.raw('ST_X(e.location_point::geometry) as longitude'),
+                db.raw('ST_Y(e.location_point::geometry) as latitude')
+            )
+            .first();
+
+        res.status(200).send({ message: "Event updated successfully.", event: finalEventDetails });
+
+    } catch (error) {
+        console.error(`Error updating event ${eventId}:`, error);
+        res.status(500).send({ message: "An error occurred while updating the event." });
+    }
+});
 
 router.delete("/api/events/:id", async (req, res) => {
     const eventId = Number(req.params.id);
