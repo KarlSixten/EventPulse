@@ -243,35 +243,86 @@ router.post("/api/events", async (req, res) => {
 
 router.put("/api/events/:id", async (req, res) => {
     const eventId = Number(req.params.id);
-    
-    const title = req.body.title && req.body.title.trim();
-    const description = req.body.description && req.body.description.trim();
-    const dateTime = req.body.dateTime
-    const isPrivate = req.body.isPrivate
-
-    if (!title || !description || !dateTime) {
-        return res.status(400).send({ message: "Title, description and date/time cannot be empty." });
-    }
-
-    if (typeof req.body.isPrivate !== 'boolean') {
-        return res.status(400).send({ message: "The 'isPrivate' field must be a boolean (true or false)." });
-    }
-
-    const parsedDateTime = new Date(dateTime);
-    if (isNaN(parsedDateTime.getTime())) {
-        return res.status(400).send({
-            message: `Invalid date/time format provided: "${dateTime}". Please use a valid ISO 8601 format (e.g., YYYY-MM-DDTHH:MM:SSZ).`
-        });
-    }
-
-    const latitude = req.body?.latitude;
-    const longitude = req.body?.longitude;
-
-    const currentUserId = req.session.user?.id;
+    const currentUserId = req.session.user ? req.session.user.id : null;
 
     if (!currentUserId) {
-        return res.status(401).send({ message: 'Please log in to create an event.' });
+        return res.status(401).send({ message: "Unauthorized. You must be logged in to update an event." });
     }
+
+    if (isNaN(eventId) || eventId <= 0) {
+        return res.status(400).send({ message: "Invalid event ID." });
+    }
+
+    const { title, description, dateTime, isPrivate, latitude, longitude } = req.body;
+    const updatePayload = {};
+
+    if (title !== undefined) {
+        const trimmedTitle = title.trim();
+        if (trimmedTitle === '') {
+            return res.status(400).send({ message: "Title, if provided, cannot be empty." });
+        }
+        updatePayload.title = trimmedTitle;
+    }
+
+    if (description !== undefined) {
+        const trimmedDescription = description.trim();
+        if (trimmedDescription === '') {
+            return res.status(400).send({ message: "Description, if provided for update, cannot be empty or just whitespace." });
+        }
+        updatePayload.description = trimmedDescription;
+    }
+
+    if (dateTime !== undefined) {
+        const parsedDateTime = new Date(dateTime);
+        if (isNaN(parsedDateTime.getTime())) {
+            return res.status(400).send({ message: `Invalid date/time format provided: "${dateTime}". Please use a valid ISO 8601 format.` });
+        }
+        updatePayload.date_time = dateTime;
+    }
+
+    if (isPrivate !== undefined) {
+        if (typeof isPrivate !== 'boolean') {
+            return res.status(400).send({ message: "The 'isPrivate' field must be a boolean (true or false)." });
+        }
+        updatePayload.is_private = isPrivate;
+    }
+
+    if (latitude !== undefined || longitude !== undefined) {
+        const lat = (latitude !== undefined && latitude !== null) ? parseFloat(latitude) : null;
+        const lon = (longitude !== undefined && longitude !== null) ? parseFloat(longitude) : null;
+
+        if (latitude === null && longitude === null) {
+            updatePayload.location_point = null;
+        }
+
+        else if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
+            updatePayload.location_point = db.raw(
+                'ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography',
+                [lon, lat]
+            );
+        }
+        else {
+            return res.status(400).send({ message: "To update location, please provide valid numeric latitude and longitude, or set both to null to clear the location." });
+        }
+    }
+
+    if (Object.keys(updatePayload).length === 0) {
+        const currentEventData = await db('events as e')
+            .where('e.id', eventId)
+            .select(
+                'e.*',
+                db.raw('ST_X(e.location_point::geometry) as longitude'),
+                db.raw('ST_Y(e.location_point::geometry) as latitude')
+            )
+            .first();
+
+        if (!currentEventData) {
+            return res.status(404).send({ message: "Event not found (when checking for no update)." });
+        }
+        return res.status(200).send({ message: "No valid fields provided for update. Current event data returned.", event: currentEventData });
+    }
+
+    updatePayload.updated_at = db.fn.now();
 
     try {
         const eventToUpdate = await db('events')
@@ -287,35 +338,17 @@ router.put("/api/events/:id", async (req, res) => {
             return res.status(403).send({ message: "Forbidden. You are not authorized to update this event." });
         }
 
-        const updatePayload = {
-            title: title,
-            description: description,
-            date_time: dateTime,
-            is_private: isPrivate
-        };
-
-        if (!isNaN(latitude) && !isNaN(longitude)) {
-            updatePayload.location_point = db.raw(
-                'ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography',
-                [longitude, latitude]
-            );
-        } else {
-            updatePayload.location_point = null;
-        }
-        
-        updatePayload.updated_at = db.fn.now();
-
-        const [updatedEvent] = await db('events')
+        const [updatedEventRecord] = await db('events')
             .where({ id: eventId, created_by_id: currentUserId })
             .update(updatePayload)
             .returning('*');
 
-        if (!updatedEvent) {
-            return res.status(404).send({ message: "Event not found or update failed unexpectedly."});
+        if (!updatedEventRecord) {
+            return res.status(404).send({ message: "Event not found or update failed unexpectedly during final operation."});
         }
-
+        
         const finalEventDetails = await db('events as e')
-            .where('e.id', updatedEvent.id)
+            .where('e.id', updatedEventRecord.id)
             .select(
                 'e.*',
                 db.raw('ST_X(e.location_point::geometry) as longitude'),
