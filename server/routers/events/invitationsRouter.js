@@ -5,7 +5,6 @@ import { io } from '../../app.js';
 
 const router = Router({ mergeParams: true });
 
-
 router.post('/', async (req, res) => {
     const eventId = Number(req.params.id);
 
@@ -13,31 +12,33 @@ router.post('/', async (req, res) => {
         return res.status(400).send({ message: "Invalid event ID." });
     }
 
-    const invitee_email = req.body?.invitee_email;
-    const message = req.body?.message;
+    const inviteeEmailInput = req.body?.invitee_email;
+    const messageContent = req.body?.message;
 
     if (!req.session.user || !req.session.user.id) {
         return res.status(401).send({ message: "Authentication required to send invitations." });
     }
     const inviterId = Number(req.session.user.id);
+    const inviterFirstName = req.session.user.firstName;
 
-    if (!invitee_email || typeof invitee_email !== 'string' || invitee_email.trim() === '') {
+    if (!inviteeEmailInput || typeof inviteeEmailInput !== 'string' || inviteeEmailInput.trim() === '') {
         return res.status(400).send({ message: "Invitee email is required." });
     }
-    const normalizedInviteeEmail = invitee_email.trim().toLowerCase();
+    const normalizedInviteeEmail = inviteeEmailInput.trim().toLowerCase();
 
     if (req.session.user.email && normalizedInviteeEmail === req.session.user.email.toLowerCase()) {
         return res.status(400).send({ message: "You cannot invite yourself." });
     }
 
     try {
-        const eventQuery = 'SELECT id, title, created_by_id, is_private FROM events WHERE id = $1';
-        const eventResult = await db.query(eventQuery, [eventId]);
+        const eventDetails = await db('events')
+            .where({ id: eventId })
+            .select('id', 'title', 'created_by_id', 'is_private')
+            .first();
 
-        if (eventResult.rows.length === 0) {
+        if (!eventDetails) {
             return res.status(404).send({ message: "Event not found." });
         }
-        const eventDetails = eventResult.rows[0];
 
         if (eventDetails.is_private === true) {
             if (eventDetails.created_by_id !== inviterId) {
@@ -45,54 +46,65 @@ router.post('/', async (req, res) => {
             }
         }
 
-        const inviteeUserResult = await db.query('SELECT id FROM users WHERE lower(email) = $1', [normalizedInviteeEmail]);
+        const inviteeUser = await db('users')
+            .where(db.raw('lower(email) = ?', [normalizedInviteeEmail]))
+            .select('id')
+            .first();
 
-        if (inviteeUserResult.rows.length === 0) {
+        if (!inviteeUser) {
             return res.status(404).send({
-                message: `No registered user found with email '${invitee_email}'. Please ensure they have an account.`
+                message: `No registered user found with email '${inviteeEmailInput}'. Please ensure they have an account.`
             });
         }
-        const actualInviteeId = inviteeUserResult.rows[0].id;
+        const actualInviteeId = inviteeUser.id;
 
-        const existingInviteResult = await db.query(
-            'SELECT id FROM event_invitations WHERE event_id = $1 AND invitee_id = $2',
-            [eventId, actualInviteeId]
-        );
-        if (existingInviteResult.rows.length > 0) {
+        const existingInvite = await db('event_invitations')
+            .where({
+                event_id: eventId,
+                invitee_id: actualInviteeId
+            })
+            .select('id')
+            .first();
+
+        if (existingInvite) {
             return res.status(409).send({ message: "This user has already been invited to this event." });
         }
 
-        const newInvitationQuery = `
-            INSERT INTO event_invitations (event_id, inviter_id, invitee_id, message, status, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, 'pending', NOW(), NOW())
-            RETURNING id, event_id, inviter_id, invitee_id, status, message, created_at;
-        `;
-        const newInvitationResult = await db.query(newInvitationQuery, [eventId, inviterId, actualInviteeId, message]);
+        const [newInvitation] = await db('event_invitations')
+            .insert({
+                event_id: eventId,
+                inviter_id: inviterId,
+                invitee_id: actualInviteeId,
+                message: messageContent,
+                status: 'pending'
+            })
+            .returning(['id', 'event_id', 'inviter_id', 'invitee_id', 'status', 'message', 'created_at']);
 
-        if (newInvitationResult.rows.length > 0) {
+        if (newInvitation) {
             const notificationPayload = {
                 type: 'event_invitation',
-                message: `${req.session.user.firstName} invited you to the event: "${eventDetails.title}".`,
+                message: `${inviterFirstName} invited you to the event: "${eventDetails.title}".`,
                 eventId: eventDetails.id,
                 eventName: eventDetails.title,
-                inviterName: req.session.user.firstName,
+                inviterName: inviterFirstName,
                 timestamp: new Date().toISOString()
             };
-
             io.to(actualInviteeId.toString()).emit('new_notification', notificationPayload);
             console.log(`Notification sent to user room: ${actualInviteeId.toString()}`);
+
+            // Email notification (remains commented out or implement as needed)
+            // sendEventInvitationEmail(normalizedInviteeEmail, eventDetails, messageContent, inviterFirstName);
+
+            res.status(201).send({
+                message: `Invitation sent successfully to ${inviteeEmailInput}.`,
+                data: newInvitation
+            });
+        } else {
+            res.status(500).send({ message: "Failed to create invitation record." });
         }
 
-        // Commented out to lessen spam
-        // sendEventInvitationEmail(normalizedInviteeEmail, eventDetails, message, req.session.user.firstName)
-
-        res.status(201).send({
-            message: `Invitation sent successfully to ${invitee_email}.`,
-            data: newInvitationResult.rows[0]
-        });
-
     } catch (error) {
-        console.error(`Error sending invitation for event ${eventId}:`, error);
+        console.error(`Error processing invitation for event ${eventId}:`, error);
         res.status(500).send({ message: "Failed to send invitation due to a server error." });
     }
 });
