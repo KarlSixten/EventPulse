@@ -2,23 +2,17 @@ import { Router } from 'express';
 import db from '../../database/connection.js';
 import { sendEventInvitationEmail } from '../../util/nodeMailer.js';
 import { io } from '../../app.js';
+import { isAuthenticated } from '../../middleware/authMiddleware.js';
 
 const router = Router({ mergeParams: true });
 
-router.post('/', async (req, res) => {
-    const eventId = Number(req.params.id);
-
-    if (isNaN(eventId) || eventId <= 0) {
-        return res.status(400).send({ message: "Invalid event ID." });
-    }
+router.post('/', isAuthenticated, async (req, res) => {
+    const eventId = req.params.id;
 
     const inviteeEmailInput = req.body?.invitee_email;
     const messageContent = req.body?.message;
 
-    if (!req.session.user || !req.session.user.id) {
-        return res.status(401).send({ message: "Authentication required to send invitations." });
-    }
-    const inviterId = Number(req.session.user.id);
+    const inviterId = req.session.user.id;
     const inviterFirstName = req.session.user.firstName;
 
     if (!inviteeEmailInput || typeof inviteeEmailInput !== 'string' || inviteeEmailInput.trim() === '') {

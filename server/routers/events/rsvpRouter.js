@@ -1,19 +1,13 @@
 import { Router } from 'express';
 import db from '../../database/connection.js'
+import { isAuthenticated } from '../../middleware/authMiddleware.js';
 
 const router = Router({ mergeParams: true });
 
-router.post('/', async (req, res) => {
-    const eventId = Number(req.params.id);
+router.post('/', isAuthenticated, async (req, res) => {
+    const eventId = req.params.id;
     const status = req.body?.status;
-
-    if (isNaN(eventId) || eventId <= 0) {
-        return res.status(400).send({ message: "Invalid event ID." });
-    }
-
-    if (!req.session.user) {
-        return res.status(401).send({ message: "Authentication required to RSVP." });
-    }
+    
     const userId = req.session.user.id;
 
     if (!['going', 'maybe', 'not_going'].includes(status)) {
