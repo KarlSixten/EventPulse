@@ -33,3 +33,26 @@ export function fetchPost(url, body) {
         throw error;
     });
 }
+
+export function fetchPut(url, body) {
+    return fetch(url, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+    })
+    .then(async (response) => {
+        const data = await response.json();
+        return {
+            status: response.status,
+            ok: response.ok,
+            data,
+        };
+    })
+    .catch((error) => {
+        console.error("fetchPost error:", error);
+        throw error;
+    });
+}
