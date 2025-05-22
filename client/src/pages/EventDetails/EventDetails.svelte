@@ -3,6 +3,7 @@
     import { navigate } from "svelte-routing";
     import { BASE_URL } from "../../stores/generalStore";
     import { userStore } from "../../stores/userStore";
+    import { eventForEditing } from "../../stores/eventStore.js";
     import { fetchGet, fetchPost } from "../../util/fetch";
     import { formatDate } from "../../util/format";
     import toastr from "toastr";
@@ -110,6 +111,11 @@
             console.log("Error sending invite:", error);
         }
     }
+
+    function handleEditClick() {
+        eventForEditing.set(event); 
+        navigate(`/events/${event.id}/edit`);
+    }
 </script>
 
 <svelte:head>
@@ -192,10 +198,7 @@
             <p>You must <a href="/login">log in</a> to send invites.</p>
         {/if}
         {#if $userStore && event.createdById == $userStore.id}
-                <!-- ---------------------------------------------- -->
-                <!-- TODO: PASS WHOLE EVENT DETAILS TO TO EDIT PAGE -->
-                <!-- ---------------------------------------------- -->
-                <button onclick={() => navigate(`/events/${event.id}/edit`)}><ion-icon name="create-outline"></ion-icon>Edit Event</button>
+            <button onclick={handleEditClick}><ion-icon name="create-outline"></ion-icon>Edit Event</button>
         {/if}
         {#if event.location}
             <Map
