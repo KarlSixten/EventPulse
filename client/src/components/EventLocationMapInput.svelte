@@ -3,10 +3,7 @@
     import L from "leaflet";
     import "leaflet/dist/leaflet.css";
 
-    let {
-        latitude = $bindable(null),
-        longitude = $bindable(null),
-    } = $props();
+    let { latitude = $bindable(null), longitude = $bindable(null) } = $props();
 
     let mapContainer = $state(null);
     let mapInstance = $state(null);
@@ -58,32 +55,37 @@
     }
 
     onMount(() => {
-    if (!mapContainer) {
-        console.error("MapInput: mapContainer element not found.");
-        return;
-    }
+        if (!mapContainer) {
+            console.error("MapInput: mapContainer element not found.");
+            return;
+        }
 
-    if (latitude !== null && longitude !== null) {
-        setupMap(latitude, longitude, ZOOM_SELECTED);
-        updateMarker(latitude, longitude);
-    }
-
-    else if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                setupMap(position.coords.latitude, position.coords.longitude, ZOOM_SELECTED);
-            },
-            (error) => {
-                console.warn(`MapInput: Geolocation error (${error.code}): ${error.message}. Defaulting map center to Copenhagen.`);
-                setupMap(COPENHAGEN_LAT, COPENHAGEN_LON, ZOOM_FALLBACK);
-            }
-        );
-    }
-    else {
-        console.warn("MapInput: No initial coordinates and geolocation not supported. Defaulting map center to Copenhagen.");
-        setupMap(COPENHAGEN_LAT, COPENHAGEN_LON, ZOOM_FALLBACK);
-    }
-});
+        if (latitude !== null && longitude !== null) {
+            setupMap(latitude, longitude, ZOOM_SELECTED);
+            updateMarker(latitude, longitude);
+        } else if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setupMap(
+                        position.coords.latitude,
+                        position.coords.longitude,
+                        ZOOM_SELECTED,
+                    );
+                },
+                (error) => {
+                    console.warn(
+                        `MapInput: Geolocation error (${error.code}): ${error.message}. Defaulting map center to Copenhagen.`,
+                    );
+                    setupMap(COPENHAGEN_LAT, COPENHAGEN_LON, ZOOM_FALLBACK);
+                },
+            );
+        } else {
+            console.warn(
+                "MapInput: No initial coordinates and geolocation not supported. Defaulting map center to Copenhagen.",
+            );
+            setupMap(COPENHAGEN_LAT, COPENHAGEN_LON, ZOOM_FALLBACK);
+        }
+    });
 
     onDestroy(() => {
         if (mapInstance) {
