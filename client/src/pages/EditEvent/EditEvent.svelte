@@ -4,7 +4,11 @@
   import { eventForEditing } from "../../stores/eventStore.js";
   import { fetchGet, fetchPut } from "../../util/fetch.js";
   import { BASE_URL } from "../../stores/generalStore.js";
-  import { getLocalDateTimeString } from "../../util/format.js";
+  import {
+    formatDate,
+    formatDateTimeForInput,
+    getLocalDateTimeString,
+  } from "../../util/format.js";
 
   import toastr from "toastr";
 
@@ -68,52 +72,12 @@
     if (loadedEvent) {
       title = loadedEvent.title || "";
       description = loadedEvent.description || "";
+      dateTime = formatDateTimeForInput(loadedEvent.dateTime);
+
       isPrivate = loadedEvent.isPrivate || false;
 
-      // Formatting dateTime for <input type="datetime-local">
-      // This input expects a string in 'YYYY-MM-DDTHH:MM' format.
-      if (loadedEvent.dateTime) {
-        try {
-          const dateObj = new Date(loadedEvent.dateTime);
-          // Check if the date is valid
-          if (!isNaN(dateObj.getTime())) {
-            const year = dateObj.getFullYear();
-            const month = (dateObj.getMonth() + 1).toString().padStart(2, "0"); // getMonth() is 0-indexed
-            const day = dateObj.getDate().toString().padStart(2, "0");
-            const hours = dateObj.getHours().toString().padStart(2, "0");
-            const minutes = dateObj.getMinutes().toString().padStart(2, "0");
-            dateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-            if (loadedEvent.location) {
-              latitude =
-                loadedEvent.location.latitude !== undefined
-                  ? loadedEvent.location.latitude
-                  : null;
-              longitude =
-                loadedEvent.location.longitude !== undefined
-                  ? loadedEvent.location.longitude
-                  : null;
-            } else {
-              latitude = null;
-              longitude = null;
-            }
-          } else {
-            console.warn(
-              "Loaded event dateTime was invalid:",
-              loadedEvent.dateTime,
-            );
-            dateTime = ""; // Fallback for invalid date
-          }
-        } catch (e) {
-          console.error(
-            "Error parsing dateTime from loadedEvent:",
-            loadedEvent.dateTime,
-            e,
-          );
-          dateTime = ""; // Fallback if parsing throws an error
-        }
-      } else {
-        dateTime = ""; // No dateTime provided
-      }
+      latitude = loadedEvent.location?.latitude ?? null;
+      longitude = loadedEvent.location?.longitude ?? null;
     } else {
       title = "";
       description = "";
@@ -122,42 +86,33 @@
       latitude = null;
       longitude = null;
       console.log(
-        "initializeFormFields called with no event data, form reset to defaults.",
+        "initializeFormFields: No event data provided, form reset to defaults.",
       );
     }
   }
 
   async function handleSubmit(event) {
-        event.preventDefault();
-        
-        const eventData = {
-            title: title.trim(),
-            description: description.trim(),
-            dateTime: dateTime,
-            latitude: latitude,
-            longitude: longitude,
-            isPrivate: isPrivate
-        };
+    event.preventDefault();
 
-        try {
-            const result = await fetchPut(
-                $BASE_URL + "/api/events/" + id,
-                eventData,
-            );
-            const eventId = result.data.event.id;
-            toastr.success("Event saved!");
+    const eventData = {
+      title: title.trim(),
+      description: description.trim(),
+      dateTime: dateTime,
+      latitude: latitude,
+      longitude: longitude,
+      isPrivate: isPrivate,
+    };
 
-            title = "";
-            description = "";
-            dateTime = null;
-            latitude = null;
-            longitude = null;
+    try {
+      const result = await fetchPut($BASE_URL + "/api/events/" + id, eventData);
+      const eventId = result.data.event.id;
+      toastr.success("Event saved!");
 
-            navigate(`/events/${eventId}`);
-        } catch (error) {
-            console.error("Submission error:", error);
-        }
+      navigate(`/events/${eventId}`);
+    } catch (error) {
+      console.error("Submission error:", error);
     }
+  }
 
   onDestroy(() => {
     if (storeSubscription) {
@@ -205,10 +160,7 @@
 
       <fieldset>
         <legend>Location (Optional)</legend>
-        <EventLocationMapInput
-          bind:latitude
-          bind:longitude
-        />
+        <EventLocationMapInput bind:latitude bind:longitude />
       </fieldset>
 
       <button type="submit">Save Event</button>
