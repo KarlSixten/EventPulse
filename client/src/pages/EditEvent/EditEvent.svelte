@@ -127,7 +127,9 @@
     }
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(event) {
+        event.preventDefault();
+        
         const eventData = {
             title: title.trim(),
             description: description.trim(),
@@ -170,7 +172,7 @@
   <div class="edit-event-container">
     <h1>Editing Event: {eventToEdit.title}</h1>
 
-    <form on:submit|preventDefault={handleSubmit}>
+    <form onsubmit={handleSubmit}>
       <fieldset>
         <legend>Event Details</legend>
         <div>
