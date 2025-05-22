@@ -28,6 +28,7 @@
   import EventDetails from "./pages/EventDetails/EventDetails.svelte";
   import About from "./pages/About/About.svelte";
   import EditEvent from "./pages/EditEvent/EditEvent.svelte";
+  import Map from "./pages/Map/Map.svelte";
 
   export let url = "";
 
@@ -62,6 +63,7 @@
     <div class="content-area">
       <Route path="/"></Route>
       <Route path="/discover"><Discover></Discover></Route>
+      <Route path="/map"><Map></Map></Route>
       <Route path="/about"><About></About></Route>
       <Route path="/login"><Login></Login></Route>
       <Route path="/sign-up"><SignUp></SignUp></Route>

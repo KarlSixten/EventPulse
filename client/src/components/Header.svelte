@@ -34,6 +34,7 @@
         </Link>
         <Link to="/" class="nav-link"><ion-icon name="home"></ion-icon>Home</Link>
         <Link to="/discover" class="nav-link"><ion-icon name="planet"></ion-icon>Discover</Link>
+        <Link to="/map" class="nav-link"><ion-icon name="map"></ion-icon>Map</Link>
         <Link to="/about" class="nav-link"><ion-icon name="reader"></ion-icon>About</Link>
 
         <div class="nav-spacer"></div>
