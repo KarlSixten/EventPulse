@@ -3,25 +3,32 @@
     import L from "leaflet";
     import "leaflet/dist/leaflet.css";
 
-    let { 
-        latitude = $bindable(), 
-        longitude = $bindable() 
+    let {
+        latitude = $bindable(null),
+        longitude = $bindable(null),
     } = $props();
 
     let mapContainer = $state(null);
     let mapInstance = $state(null);
     let markerInstance = $state(null);
 
-    // Copenhagen for default
-    const defaultLat = 55.6761;
-    const defaultLon = 12.5683;
-    const defaultZoom = 10;
-    const selectedZoom = 15;
+    const COPENHAGEN_LAT = 55.6761;
+    const COPENHAGEN_LON = 12.5683;
+    const ZOOM_FALLBACK = 10;
+    const ZOOM_SELECTED = 15;
 
-    function initializeMapAndMarker(centerLat, centerLon, zoom) {
-        if (!mapContainer || mapInstance) return;
+    function setupMap(centerLat, centerLon, initialZoom) {
+        if (mapInstance || !mapContainer) {
+            if (mapInstance) {
+                mapInstance.setView([centerLat, centerLon], initialZoom);
+            }
+            return;
+        }
 
-        mapInstance = L.map(mapContainer).setView([centerLat, centerLon], zoom);
+        mapInstance = L.map(mapContainer).setView(
+            [centerLat, centerLon],
+            initialZoom,
+        );
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution:
@@ -36,42 +43,9 @@
             longitude = parseFloat(clickedLng.toFixed(6));
 
             updateMarker(latitude, longitude);
+            mapInstance.setView([latitude, longitude], ZOOM_SELECTED);
         });
     }
-
-    onMount(() => {
-        if (!mapContainer) return;
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    initializeMapAndMarker(
-                        position.coords.latitude,
-                        position.coords.longitude,
-                        selectedZoom,
-                    );
-                },
-                (error) => {
-                    console.warn(
-                        `Geolocation error: ${error.message}. Defaulting to Copenhagen.`,
-                    );
-                    initializeMapAndMarker(defaultLat, defaultLon, defaultZoom);
-                },
-            );
-        } else {
-            console.warn(
-                "Geolocation is not supported by this browser. Defaulting to Copenhagen.",
-            );
-            initializeMapAndMarker(defaultLat, defaultLon, defaultZoom);
-        }
-    });
-
-    onDestroy(() => {
-        if (mapInstance) {
-            mapInstance.remove();
-            mapInstance = null;
-        }
-    });
 
     function updateMarker(lat, lon) {
         if (!mapInstance) return;
@@ -82,6 +56,42 @@
             markerInstance = L.marker([lat, lon]).addTo(mapInstance);
         }
     }
+
+    onMount(() => {
+    if (!mapContainer) {
+        console.error("MapInput: mapContainer element not found.");
+        return;
+    }
+
+    if (latitude !== null && longitude !== null) {
+        setupMap(latitude, longitude, ZOOM_SELECTED);
+        updateMarker(latitude, longitude);
+    }
+
+    else if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setupMap(position.coords.latitude, position.coords.longitude, ZOOM_SELECTED);
+            },
+            (error) => {
+                console.warn(`MapInput: Geolocation error (${error.code}): ${error.message}. Defaulting map center to Copenhagen.`);
+                setupMap(COPENHAGEN_LAT, COPENHAGEN_LON, ZOOM_FALLBACK);
+            }
+        );
+    }
+    else {
+        console.warn("MapInput: No initial coordinates and geolocation not supported. Defaulting map center to Copenhagen.");
+        setupMap(COPENHAGEN_LAT, COPENHAGEN_LON, ZOOM_FALLBACK);
+    }
+});
+
+    onDestroy(() => {
+        if (mapInstance) {
+            mapInstance.remove();
+            mapInstance = null;
+            markerInstance = null;
+        }
+    });
 </script>
 
 <main>
