@@ -28,7 +28,8 @@ router.get("/api/events", async (req, res) => {
         sortOrder = 'ASC',
         userLat,
         userLon,
-        timeFilter = 'upcoming'
+        timeFilter = 'upcoming',
+        locationRequired = 'false'
     } = req.query;
 
     try {
@@ -64,6 +65,13 @@ router.get("/api/events", async (req, res) => {
         } else {
             query.andWhere('e.is_private', false);
         }
+
+        if (locationRequired === 'true') {
+            query.andWhere(function () {
+                this.whereNotNull('e.location_point');
+            });
+        }
+
 
         const validSortOrder = sortOrder.toUpperCase() === 'DESC' ? 'desc' : 'asc';
         let orderByColumn = 'e.date_time';
