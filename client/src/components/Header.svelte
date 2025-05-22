@@ -1,6 +1,8 @@
 <script>
     import { Link, navigate } from "svelte-routing";
     import { userStore } from "../stores/userStore"; //
+    import { clearNotifications } from "../stores/notificationStore";
+    import { eventForEditing } from "../stores/eventStore";
     import { BASE_URL } from "../stores/generalStore"; //
     import { fetchPost } from "../util/fetch"; //
     import NotificationCenter from "./NotificationCenter.svelte";
@@ -17,6 +19,8 @@
             console.error("Error making logout request to backend:", error);
         } finally {
             userStore.set(null);
+            clearNotifications();
+            eventForEditing.set(null);
             sessionStorage.removeItem("currentUser");
             navigate("/");
         }
