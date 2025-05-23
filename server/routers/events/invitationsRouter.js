@@ -5,9 +5,8 @@ import db from '../../database/connection.js';
 // eslint-disable-next-line no-unused-vars
 import { sendEventInvitationEmail } from '../../util/nodeMailer.js';
 
-import getIO from '../../socket.js'; 
+import getIO from '../../socket.js';
 import isAuthenticated from '../../middleware/authMiddleware.js';
-
 
 const router = Router({ mergeParams: true });
 
@@ -54,7 +53,7 @@ router.post('/', isAuthenticated, async (req, res) => {
 
     if (!inviteeUser) {
       return res.status(404).send({
-        message: `No registered user found with email '${inviteeEmailInput}'. Please ensure they have an account.`
+        message: `No registered user found with email '${inviteeEmailInput}'. Please ensure they have an account.`,
       });
     }
     const actualInviteeId = inviteeUser.id;
@@ -77,7 +76,7 @@ router.post('/', isAuthenticated, async (req, res) => {
         inviter_id: inviterId,
         invitee_id: actualInviteeId,
         message: messageContent,
-        status: 'pending'
+        status: 'pending',
       })
       .returning(['id', 'event_id', 'inviter_id', 'invitee_id', 'status', 'message', 'created_at']);
 
@@ -88,7 +87,7 @@ router.post('/', isAuthenticated, async (req, res) => {
         eventId: eventDetails.id,
         eventName: eventDetails.title,
         inviterName: inviterFirstName,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
       io.to(actualInviteeId.toString()).emit('new_notification', notificationPayload);
 
@@ -98,13 +97,12 @@ router.post('/', isAuthenticated, async (req, res) => {
 
       res.status(201).send({
         message: `Invitation sent successfully to ${inviteeEmailInput}.`,
-        data: newInvitation
+        data: newInvitation,
       });
-    } else {
-      res.status(500).send({ message: 'Failed to create invitation record.' });
     }
+    return res.status(500).send({ message: 'Failed to create invitation record.' });
   } catch (error) {
-    res.status(500).send({ message: 'Failed to send invitation due to a server error.' });
+    return res.status(500).send({ message: 'Failed to send invitation due to a server error.' });
   }
 });
 
