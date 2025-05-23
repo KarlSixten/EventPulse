@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-await-in-loop */
 /* eslint-disable no-use-before-define */
 /* eslint-disable no-console */
 import { pgPool } from './connection.js';
@@ -104,46 +106,46 @@ async function createTables() {
 }
 
 async function seed() {
-    // USERS
-    await seedUsers();
+  // USERS
+  await seedUsers();
 
-    // EVENTS
-    await seedDatabaseEvents();
+  // EVENTS
+  await seedDatabaseEvents();
 }
 
 async function seedUsers() {
-    console.log("Starting user seeding...");
-    for (const userData of seedUsersData) {
-        const email = userData[0];
-        const plainPassword = userData[1];
-        const firstName = userData[2];
-        const lastName = userData[3];
+  console.log('Starting user seeding...');
+  for (const userData of seedUsersData) {
+    const email = userData[0];
+    const plainPassword = userData[1];
+    const firstName = userData[2];
+    const lastName = userData[3];
 
-        try {
-            const hashedPassword = await hashPassword(plainPassword);
-            await pgPool.query(
-                'INSERT INTO users (email, password_hashed, first_name, last_name) VALUES ($1, $2, $3, $4)',
-                [email, hashedPassword, firstName, lastName]
-            );
-            console.log(`Processed user: ${email}`);
-        } catch (error) {
-            console.error(`Error inserting user "${email}":`, error);
-        }
+    try {
+      const hashedPassword = await hashPassword(plainPassword);
+      await pgPool.query(
+        'INSERT INTO users (email, password_hashed, first_name, last_name) VALUES ($1, $2, $3, $4)',
+        [email, hashedPassword, firstName, lastName],
+      );
+      console.log(`Processed user: ${email}`);
+    } catch (error) {
+      console.error(`Error inserting user "${email}":`, error);
     }
-    console.log("User seeding process complete.");
+  }
+  console.log('User seeding process complete.');
 }
 
 async function seedDatabaseEvents() {
-    for (const eventData of seedEventsData) {
-        try {
-            await pgPool.query(
-                'INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7) RETURNING id',
-                eventData
-            );
-            console.log(`Inserted event: ${eventData[0]}`);
-        } catch (error) {
-            console.error(`Error inserting event "${eventData[0]}":`, error);
-        }
+  for (const eventData of seedEventsData) {
+    try {
+      await pgPool.query(
+        'INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7) RETURNING id',
+        eventData,
+      );
+      console.log(`Inserted event: ${eventData[0]}`);
+    } catch (error) {
+      console.error(`Error inserting event "${eventData[0]}":`, error);
     }
-    console.log("Database seeding attempted.");
+  }
+  console.log('Database seeding attempted.');
 }
