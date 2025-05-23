@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import db from '../../database/connection.js'
-import { isAuthenticated } from '../../middleware/authMiddleware.js';
+import isAuthenticated from '../../middleware/authMiddleware.js';
 
 const router = Router({ mergeParams: true });
 

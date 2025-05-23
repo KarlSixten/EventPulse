@@ -1,12 +1,19 @@
 import { Router } from 'express';
 import db from '../../database/connection.js';
+
+// import ville skulle bruges i prod/real-world, derfor beholdt
+// eslint-disable-next-line no-unused-vars
 import { sendEventInvitationEmail } from '../../util/nodeMailer.js';
-import { io } from '../../app.js';
-import { isAuthenticated } from '../../middleware/authMiddleware.js';
+
+import getIO from '../../socket.js'; 
+import isAuthenticated from '../../middleware/authMiddleware.js';
+
 
 const router = Router({ mergeParams: true });
 
 router.post('/', isAuthenticated, async (req, res) => {
+    const io = getIO();
+
     const eventId = req.params.id;
 
     const inviteeEmailInput = req.body?.invitee_email;
@@ -86,7 +93,7 @@ router.post('/', isAuthenticated, async (req, res) => {
             io.to(actualInviteeId.toString()).emit('new_notification', notificationPayload);
             console.log(`Notification sent to user room: ${actualInviteeId.toString()}`);
 
-            // Email notification (remains commented out or implement as needed)
+            // Commented out to lessen spam
             // sendEventInvitationEmail(normalizedInviteeEmail, eventDetails, messageContent, inviterFirstName);
 
             res.status(201).send({

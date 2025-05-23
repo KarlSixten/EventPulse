@@ -137,6 +137,6 @@ export async function sendEventInvitationEmail(inviteeEmail, event, message, inv
     try {
         await transporter.sendMail(emailStructure);
     } catch (error) {
-        console.error(`Error while sending sign up confirmation to ${email}:`, error);
+        console.error(`Error while sending sign up confirmation to ${inviteeEmail}:`, error);
     }
 }

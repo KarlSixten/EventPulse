@@ -1,6 +1,9 @@
 import { Router } from "express";
 import db from '../../database/connection.js'
 import { hashPassword, passwordMatchesHashed } from "../../util/passwordHasher.js";
+
+// import ville skulle bruges i prod/real-world, derfor beholdt
+// eslint-disable-next-line no-unused-vars
 import { sendSignUpConfirmationEmail } from "../../util/nodeMailer.js";
 
 const router = Router();

@@ -1,5 +1,5 @@
-import { pgPool } from './connection.js';
-import { hashPassword } from '../util/passwordHasher.js';
+import { pgPool } from './connection';
+import { hashPassword } from '../util/passwordHasher';
 
 const deleteMode = process.argv.includes('--delete');
 
