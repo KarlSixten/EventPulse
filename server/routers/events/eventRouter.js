@@ -23,6 +23,7 @@ router.get('/api/events', async (req, res) => {
     userLat,
     userLon,
     timeFilter = 'upcoming',
+    locationRequired = 'false',
   } = req.query;
 
   try {
@@ -59,6 +60,12 @@ router.get('/api/events', async (req, res) => {
       query.andWhere('e.is_private', false);
     }
 
+    if (locationRequired === 'true') {
+      query.andWhere(function hasLocationPoint() {
+        this.whereNotNull('e.location_point');
+      });
+    }
+
     const validSortOrder = sortOrder.toUpperCase() === 'DESC' ? 'desc' : 'asc';
     let orderByColumn = 'e.date_time';
     let useOrderByRaw = false;
@@ -91,19 +98,15 @@ router.get('/api/events', async (req, res) => {
 
     const events = await query;
 
-    res.send({ data: events });
+    return res.send({ data: events });
   } catch (error) {
-    res.status(500).send({ message: 'Error fetching events. Check server logs.' });
+    return res.status(500).send({ message: 'Error fetching events. Check server logs.' });
   }
 });
 
 router.get('/api/events/:id', async (req, res) => {
   const currentUserId = req.session.user ? req.session.user.id : null;
   const eventId = req.params.id;
-
-  if (Number.isNaN(eventId)) {
-    return res.status(400).send({ message: 'Invalid event ID format.' });
-  }
 
   try {
     const query = db('events as e')
@@ -112,23 +115,23 @@ router.get('/api/events/:id', async (req, res) => {
     const selectColumns = [
       'e.*',
       db.raw('ST_X(e.location_point::geometry) as longitude'),
-      db.raw('ST_Y(e.location_point::geometry) as latitude')
+      db.raw('ST_Y(e.location_point::geometry) as latitude'),
     ];
 
     if (currentUserId) {
       selectColumns.push('er.status as user_rsvp_status');
-      query.leftJoin('event_rsvps as er', function userRsvpJoin() {
+      query.leftJoin('event_rsvps as er', function joinUserRsvps() {
         this.on('er.event_id', '=', 'e.id')
           .andOn('er.user_id', '=', db.raw('?', [currentUserId]));
       });
 
-      query.andWhere(function eventVisibilityConditions() {
+      query.andWhere(function filterVisibleEvents() {
         this.where('e.is_private', false)
-          .orWhere(function privateEventOwnedByUser() {
+          .orWhere(function allowPrivateIfOwner() {
             this.where('e.is_private', true)
               .andWhere('e.created_by_id', currentUserId);
           })
-          .orWhereExists(function userIsInvited() {
+          .orWhereExists(function allowIfInvited() {
             this.select(1)
               .from('event_invitations as ei')
               .whereRaw('ei.event_id = e.id')
@@ -141,7 +144,6 @@ router.get('/api/events/:id', async (req, res) => {
     }
 
     query.select(selectColumns);
-
     const eventRow = await query.first();
 
     if (!eventRow) {
@@ -162,9 +164,33 @@ router.get('/api/events/:id', async (req, res) => {
       } : null,
     };
 
-    res.send({ data: eventData });
+    const rsvpStatusForGoing = 'going';
+
+    if (eventRow.is_private) {
+      const attendeesList = await db('event_rsvps as er')
+        .join('users as u', 'er.user_id', '=', 'u.id')
+        .where('er.event_id', eventId)
+        .andWhere('er.status', rsvpStatusForGoing)
+        .select(
+          'u.id as userId',
+          'u.first_name as firstName',
+          'u.last_name as lastName',
+        );
+      eventData.attendees = attendeesList;
+      eventData.attendeesCount = attendeesList.length;
+    } else {
+      const countResult = await db('event_rsvps')
+        .where('event_id', eventId)
+        .andWhere('status', rsvpStatusForGoing)
+        .count('* as goingCount')
+        .first();
+
+      eventData.attendeesCount = countResult ? parseInt(countResult.goingCount, 10) : 0;
+    }
+
+    return res.send({ data: eventData });
   } catch (error) {
-    res.status(500).send({ message: 'An error occurred while fetching event details.' });
+    return res.status(500).send({ message: 'An error occurred while fetching event details.' });
   }
 });
 
@@ -198,12 +224,11 @@ router.post('/api/events', isAuthenticated, validateCreateEvent, async (req, res
       .returning('*');
 
     if (newEvent) {
-      res.status(201).send({ message: 'Event created successfully.', event: newEvent });
-    } else {
-      res.status(500).send({ message: 'Event created, but could not retrieve confirmation data.' });
+      return res.status(201).send({ message: 'Event created successfully.', event: newEvent });
     }
+    return res.status(500).send({ message: 'Event created, but could not retrieve confirmation data.' });
   } catch (error) {
-    res.status(500).send({ message: 'Database error while creating event.' });
+    return res.status(500).send({ message: 'Database error while creating event.' });
   }
 });
 
@@ -212,7 +237,7 @@ router.put('/api/events/:id', isAuthenticated, validateUpdateEvent, async (req, 
   const currentUserId = req.session.user.id;
 
   const {
-    title, description, dateTime, isPrivate, latitude, longitude
+    title, description, dateTime, isPrivate, latitude, longitude,
   } = req.body;
   const updatePayload = {};
 
@@ -273,9 +298,9 @@ router.put('/api/events/:id', isAuthenticated, validateUpdateEvent, async (req, 
       .select('e.*', db.raw('ST_X(e.location_point::geometry) as longitude'), db.raw('ST_Y(e.location_point::geometry) as latitude'))
       .first();
 
-    res.status(200).send({ message: 'Event updated successfully.', event: finalEventDetails });
+    return res.status(200).send({ message: 'Event updated successfully.', event: finalEventDetails });
   } catch (error) {
-    res.status(500).send({ message: 'An error occurred while updating the event.' });
+    return res.status(500).send({ message: 'An error occurred while updating the event.' });
   }
 });
 
@@ -299,17 +324,16 @@ router.delete('/api/events/:id', isAuthenticated, async (req, res) => {
     const deleteCount = await db('events')
       .where({
         id: eventId,
-        created_by_id: requestUserId
+        created_by_id: requestUserId,
       })
       .del();
 
     if (deleteCount > 0) {
-      res.status(200).send({ message: 'Event deleted successfully.' });
-    } else {
-      res.status(404).send({ message: 'Event not found or already deleted.' });
+      return res.status(200).send({ message: 'Event deleted successfully.' });
     }
+    return res.status(404).send({ message: 'Event not found or already deleted.' });
   } catch (error) {
-    res.status(500).send({ message: 'Internal server error while trying to delete the event.' });
+    return res.status(500).send({ message: 'Internal server error while trying to delete the event.' });
   }
 });
 
