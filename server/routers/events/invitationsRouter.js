@@ -95,7 +95,7 @@ router.post('/', isAuthenticated, async (req, res) => {
       // eslint-disable-next-line max-len
       // sendEventInvitationEmail(normalizedInviteeEmail, eventDetails, messageContent, inviterFirstName);
 
-      res.status(201).send({
+      return res.status(201).send({
         message: `Invitation sent successfully to ${inviteeEmailInput}.`,
         data: newInvitation,
       });
