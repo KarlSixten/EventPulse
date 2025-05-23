@@ -21,6 +21,10 @@
     let inviteeEmail = $state("");
     let inviteeMessage = $state("");
 
+    let othersGoingCount = $derived((event?.attendeesCount ?? 0) - (event.userRsvpStatus === 'going' ? 1 : 0));
+    let displayCount = $derived(Math.max(0, othersGoingCount));
+    let othersText = $derived(displayCount === 1 ? 'other' : 'others');
+
     onMount(async () => {
         fetchEventDetails();
     });
@@ -143,6 +147,7 @@
         {/if}
         <h3>{formatDate(event.dateTime)}</h3>
         <h3>RSVP</h3>
+        <h4>{displayCount} {othersText} going</h4>
         {#if isLoggedIn}
             <div class="rsvp-status-picker">
                 {#each rsvpOptions as option (option.status)}
