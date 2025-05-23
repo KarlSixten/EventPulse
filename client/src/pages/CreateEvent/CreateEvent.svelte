@@ -2,6 +2,7 @@
     import { navigate } from "svelte-routing";
     import { fetchPost } from "../../util/fetch";
     import { BASE_URL } from "../../stores/generalStore";
+    import { getLocalDateTimeString } from "../../util/format";
 
     import EventLocationMapInput from "../../components/EventLocationMapInput.svelte";
     import toastr from "toastr";
@@ -14,10 +15,8 @@
     let latitude = null;
     let longitude = null;
 
-    async function handleSubmit() {
-        if (!title.trim()) {
-            return;
-        }
+    async function handleSubmit(event) {
+        event.preventDefault();
 
         const eventData = {
             title: title.trim(),
@@ -47,17 +46,6 @@
             console.error("Submission error:", error);
         }
     }
-
-    function getLocalDateTimeString() {
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        const hours = String(date.getHours()).padStart(2, "0");
-        const minutes = String(date.getMinutes()).padStart(2, "0");
-
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
-    }
 </script>
 
 <svelte:head>
@@ -68,7 +56,7 @@
     <div class="create-event-container">
         <h1>Create New Event</h1>
 
-        <form on:submit|preventDefault={handleSubmit}>
+        <form onsubmit={handleSubmit}>
             <fieldset>
                 <legend>Event Details</legend>
                 <div>
@@ -86,6 +74,7 @@
                         id="event-description"
                         rows="6"
                         bind:value={description}
+                        required
                     ></textarea>
                 </div>
                 <div>
@@ -94,6 +83,7 @@
                         type="datetime-local"
                         min={getLocalDateTimeString()}
                         bind:value={dateTime}
+                        required
                     />
                 </div>
                 <div>

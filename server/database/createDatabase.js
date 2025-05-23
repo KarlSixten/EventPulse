@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 import { pgPool } from './connection.js';
 import { hashPassword } from '../util/passwordHasher.js';
+import { seedUsersData, seedEventsData } from './util/seedData.js';
 
 const deleteMode = process.argv.includes('--delete');
 
@@ -103,53 +104,46 @@ async function createTables() {
 }
 
 async function seed() {
-  // USERS
-  await pgPool.query('INSERT INTO users (email, password_hashed, first_name, last_name) VALUES ($1, $2, $3, $4)', [
-    'admin@admin.com',
-    await hashPassword('admin'),
-    'admin',
-    'admin']);
-  await pgPool.query('INSERT INTO users (email, password_hashed, first_name, last_name) VALUES ($1, $2, $3, $4)', [
-    'karlsixten@gmail.com',
-    await hashPassword('password'),
-    'Karl',
-    'Bjarnø']);
+    // USERS
+    await seedUsers();
 
-  // EVENTS
-  await pgPool.query(
-    'INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7)',
-    [
-      'testEvent',
-      'This is a test event',
-      1,
-      12,
-      55,
-      '2025-06-25T18:30',
-      false,
-    ],
-  );
-  await pgPool.query(
-    'INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7)',
-    [
-      'Another Test event',
-      'This is also a test event',
-      2,
-      13,
-      56,
-      '2025-06-28T19:00',
-      false,
-    ],
-  );
-  await pgPool.query(
-    'INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7)',
-    [
-      'Private Test event',
-      'This is a private test event',
-      2,
-      13,
-      56,
-      '2025-06-28T19:00',
-      true,
-    ],
-  );
+    // EVENTS
+    await seedDatabaseEvents();
+}
+
+async function seedUsers() {
+    console.log("Starting user seeding...");
+    for (const userData of seedUsersData) {
+        const email = userData[0];
+        const plainPassword = userData[1];
+        const firstName = userData[2];
+        const lastName = userData[3];
+
+        try {
+            const hashedPassword = await hashPassword(plainPassword);
+            await pgPool.query(
+                'INSERT INTO users (email, password_hashed, first_name, last_name) VALUES ($1, $2, $3, $4)',
+                [email, hashedPassword, firstName, lastName]
+            );
+            console.log(`Processed user: ${email}`);
+        } catch (error) {
+            console.error(`Error inserting user "${email}":`, error);
+        }
+    }
+    console.log("User seeding process complete.");
+}
+
+async function seedDatabaseEvents() {
+    for (const eventData of seedEventsData) {
+        try {
+            await pgPool.query(
+                'INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7) RETURNING id',
+                eventData
+            );
+            console.log(`Inserted event: ${eventData[0]}`);
+        } catch (error) {
+            console.error(`Error inserting event "${eventData[0]}":`, error);
+        }
+    }
+    console.log("Database seeding attempted.");
 }

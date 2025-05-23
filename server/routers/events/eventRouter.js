@@ -15,16 +15,16 @@ router.use('/api/events/:id/rsvps', rsvpRouter);
 router.all('/api/events/:id', validateEventIdParam);
 router.all('/api/events/:id/{splat}', validateEventIdParam);
 
-router.get('/api/events', async (req, res) => {
-  const currentUserId = req.session.user ? req.session.user.id : null;
-  const {
-    sortBy = 'date',
-    sortOrder = 'ASC',
-    userLat,
-    userLon,
-    timeFilter = 'upcoming',
-    locationRequired = 'false',
-  } = req.query;
+router.get("/api/events", async (req, res) => {
+    const currentUserId = req.session.user ? req.session.user.id : null;
+    const {
+        sortBy = 'date',
+        sortOrder = 'ASC',
+        userLat,
+        userLon,
+        timeFilter = 'upcoming',
+        locationRequired = 'false'
+    } = req.query;
 
   try {
     const query = db('events as e');
@@ -42,29 +42,30 @@ router.get('/api/events', async (req, res) => {
       query.where('e.date_time', '<', now);
     }
 
-    if (currentUserId) {
-      query.andWhere((builder) => {
-        builder.where('e.is_private', false)
-          .orWhere((privateBuilder) => {
-            privateBuilder.where('e.is_private', true)
-              .andWhere('e.created_by_id', currentUserId);
-          })
-          .orWhereExists((existsBuilder) => {
-            existsBuilder.select(1)
-              .from('event_invitations as ei')
-              .whereRaw('ei.event_id = e.id')
-              .andWhere('ei.invitee_id', currentUserId);
-          });
-      });
-    } else {
-      query.andWhere('e.is_private', false);
-    }
+        if (currentUserId) {
+            query.andWhere(function () {
+                this.where('e.is_private', false)
+                    .orWhere(function () {
+                        this.where('e.is_private', true)
+                            .andWhere('e.created_by_id', currentUserId);
+                    })
+                    .orWhereExists(function () {
+                        this.select(1)
+                            .from('event_invitations as ei')
+                            .whereRaw('ei.event_id = e.id')
+                            .andWhere('ei.invitee_id', currentUserId);
+                    });
+            });
+        } else {
+            query.andWhere('e.is_private', false);
+        }
 
-    if (locationRequired === 'true') {
-      query.andWhere(function hasLocationPoint() {
-        this.whereNotNull('e.location_point');
-      });
-    }
+        if (locationRequired === 'true') {
+            query.andWhere(function () {
+                this.whereNotNull('e.location_point');
+            });
+        }
+
 
     const validSortOrder = sortOrder.toUpperCase() === 'DESC' ? 'desc' : 'asc';
     let orderByColumn = 'e.date_time';
@@ -104,9 +105,13 @@ router.get('/api/events', async (req, res) => {
   }
 });
 
-router.get('/api/events/:id', async (req, res) => {
-  const currentUserId = req.session.user ? req.session.user.id : null;
-  const eventId = req.params.id;
+router.get("/api/events/:id", async (req, res) => {
+    const currentUserId = req.session.user ? req.session.user.id : null;
+    const eventId = req.params.id;
+
+    if (isNaN(parseInt(eventId))) { // Ensure eventId is a number before using in DB query
+        return res.status(400).send({ message: "Invalid event ID format." });
+    }
 
   try {
     const query = db('events as e')
@@ -118,80 +123,91 @@ router.get('/api/events/:id', async (req, res) => {
       db.raw('ST_Y(e.location_point::geometry) as latitude'),
     ];
 
-    if (currentUserId) {
-      selectColumns.push('er.status as user_rsvp_status');
-      query.leftJoin('event_rsvps as er', function joinUserRsvps() {
-        this.on('er.event_id', '=', 'e.id')
-          .andOn('er.user_id', '=', db.raw('?', [currentUserId]));
-      });
+        // --- Privacy and User's RSVP Status Logic (mostly unchanged) ---
+        if (currentUserId) {
+            selectColumns.push('er.status as user_rsvp_status');
+            query.leftJoin('event_rsvps as er', function () {
+                this.on('er.event_id', '=', 'e.id')
+                    .andOn('er.user_id', '=', db.raw('?', [currentUserId])); // Correctly parameterized
+            });
 
-      query.andWhere(function filterVisibleEvents() {
-        this.where('e.is_private', false)
-          .orWhere(function allowPrivateIfOwner() {
-            this.where('e.is_private', true)
-              .andWhere('e.created_by_id', currentUserId);
-          })
-          .orWhereExists(function allowIfInvited() {
-            this.select(1)
-              .from('event_invitations as ei')
-              .whereRaw('ei.event_id = e.id')
-              .andWhere('ei.invitee_id', currentUserId);
-          });
-      });
-    } else {
-      selectColumns.push(db.raw('NULL as user_rsvp_status'));
-      query.andWhere('e.is_private', false);
-    }
+            query.andWhere(function () {
+                this.where('e.is_private', false)
+                    .orWhere(function () {
+                        this.where('e.is_private', true)
+                            .andWhere('e.created_by_id', currentUserId);
+                    })
+                    .orWhereExists(function () {
+                        this.select(1)
+                            .from('event_invitations as ei')
+                            .whereRaw('ei.event_id = e.id')
+                            .andWhere('ei.invitee_id', currentUserId);
+                    });
+            });
+        } else {
+            selectColumns.push(db.raw('NULL as user_rsvp_status')); // No specific user RSVP status if not logged in
+            query.andWhere('e.is_private', false); // Only public events if not logged in
+        }
 
-    query.select(selectColumns);
-    const eventRow = await query.first();
+        query.select(selectColumns);
+        const eventRow = await query.first();
 
     if (!eventRow) {
       return res.status(404).send({ message: `No event found with ID: ${eventId}, or you do not have permission to view it.` });
     }
 
-    const eventData = {
-      id: eventRow.id,
-      title: eventRow.title,
-      description: eventRow.description,
-      dateTime: eventRow.date_time,
-      isPrivate: eventRow.is_private,
-      createdById: eventRow.created_by_id,
-      userRsvpStatus: eventRow.user_rsvp_status,
-      location: (eventRow.longitude !== null && eventRow.latitude !== null) ? {
-        latitude: eventRow.latitude,
-        longitude: eventRow.longitude,
-      } : null,
-    };
+        // --- Construct Base Event Data ---
+        const eventData = {
+            id: eventRow.id,
+            title: eventRow.title,
+            description: eventRow.description,
+            dateTime: eventRow.date_time,
+            isPrivate: eventRow.is_private,
+            createdById: eventRow.created_by_id,
+            userRsvpStatus: eventRow.user_rsvp_status, // Current user's RSVP
+            location: (eventRow.longitude !== null && eventRow.latitude !== null) ? {
+                latitude: eventRow.latitude,
+                longitude: eventRow.longitude
+            } : null
+            // We will add attendeesCount or attendees list below
+        };
 
-    const rsvpStatusForGoing = 'going';
+        // --- Fetch and Add Attendance Information ---
+        const rsvpStatusForGoing = 'going'; // Define this clearly, ensure it matches your DB value
 
-    if (eventRow.is_private) {
-      const attendeesList = await db('event_rsvps as er')
-        .join('users as u', 'er.user_id', '=', 'u.id')
-        .where('er.event_id', eventId)
-        .andWhere('er.status', rsvpStatusForGoing)
-        .select(
-          'u.id as userId',
-          'u.first_name as firstName',
-          'u.last_name as lastName',
-        );
-      eventData.attendees = attendeesList;
-      eventData.attendeesCount = attendeesList.length;
-    } else {
-      const countResult = await db('event_rsvps')
-        .where('event_id', eventId)
-        .andWhere('status', rsvpStatusForGoing)
-        .count('* as goingCount')
-        .first();
+        if (eventRow.is_private) {
+            // For PRIVATE events, fetch the list of users who are 'going'
+            // (Assumes current user has permission to see this private event and its attendee list)
+            const attendeesList = await db('event_rsvps as er')
+                .join('users as u', 'er.user_id', '=', 'u.id')
+                .where('er.event_id', eventId)
+                .andWhere('er.status', rsvpStatusForGoing)
+                .select(
+                    'u.id as userId', // Alias to avoid conflict if eventData also has an 'id'
+                    'u.first_name as firstName',
+                    'u.last_name as lastName'
+                    // Add other user fields you want to expose, e.g., 'u.profile_image_url as profileImageUrl'
+                );
+            eventData.attendees = attendeesList;
+            eventData.attendeesCount = attendeesList.length;
 
-      eventData.attendeesCount = countResult ? parseInt(countResult.goingCount, 10) : 0;
+        } else {
+            // For PUBLIC events, fetch the count of users who are 'going'
+            const countResult = await db('event_rsvps')
+                .where('event_id', eventId)
+                .andWhere('status', rsvpStatusForGoing)
+                .count('* as goingCount') // Knex count returns an array with an object like [{ count: 'N' }]
+                .first(); // Use first to get the object directly, or handle the array
+            
+            eventData.attendeesCount = countResult ? parseInt(countResult.goingCount, 10) : 0;
+        }
+
+        res.send({ data: eventData });
+
+    } catch (error) {
+        console.error(`Error fetching event by ID (${eventId}) with Knex:`, error);
+        res.status(500).send({ message: "An error occurred while fetching event details." });
     }
-
-    return res.send({ data: eventData });
-  } catch (error) {
-    return res.status(500).send({ message: 'An error occurred while fetching event details.' });
-  }
 });
 
 router.post('/api/events', isAuthenticated, validateCreateEvent, async (req, res) => {
