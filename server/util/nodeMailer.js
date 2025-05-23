@@ -1,5 +1,7 @@
+/* eslint-disable no-console */
 import nodemailer from 'nodemailer';
 import { emailAuth } from './emailAuth.js';
+
 const APP_URL = process.env.PORT || 'http://localhost:5173';
 const DISCOVER_PAGE_URL = `${APP_URL}/discover`;
 const WEBSITE_URL = APP_URL;
@@ -7,7 +9,7 @@ const WEBSITE_URL = APP_URL;
 const currentYear = new Date().getFullYear();
 
 function getSignUpConfirmationHtmlContent(firstName) {
-    return `
+  return `
     <div style="font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; line-height: 1.6; color: #333333; max-width: 580px; margin: 20px auto; padding: 25px; border: 1px solid #dddddd; border-radius: 6px; background-color: #ffffff;">
          
         <div style="text-align: center; margin-bottom: 25px;">
@@ -32,11 +34,11 @@ function getSignUpConfirmationHtmlContent(firstName) {
             <p style="margin: 0 0 5px 0;">&copy; ${currentYear} EventPulse</p>
             <p style="margin: 0;"><a href="${WEBSITE_URL}" target="_blank" style="color: #00adb5; text-decoration: none;">EventPulse.com</a></p>
         </div>
-    </div>`
+    </div>`;
 }
 
 function getSignUpConfirmationPlainTextContent(firstName) {
-    `Hi ${firstName},
+  return `Hi ${firstName},
     
     Thanks for signing up to EventPulse! We're excited to have you join our community for discovering and creating local events.
     
@@ -50,43 +52,43 @@ function getSignUpConfirmationPlainTextContent(firstName) {
     The EventPulse Team
     
     © ${currentYear} EventPulse
-    ${WEBSITE_URL}`
+    ${WEBSITE_URL}`;
 }
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: emailAuth,
+  service: 'gmail',
+  auth: emailAuth,
 });
 
 export async function sendSignUpConfirmationEmail(firstName, email) {
-    const emailStructure = {
-        from: 'EventPulse Team',
-        to: email,
-        subject: 'Welcome to EventPulse! Your Account is Ready.',
-        text: getSignUpConfirmationPlainTextContent(firstName),
-        html: getSignUpConfirmationHtmlContent(firstName)
-    };
+  const emailStructure = {
+    from: 'EventPulse Team',
+    to: email,
+    subject: 'Welcome to EventPulse! Your Account is Ready.',
+    text: getSignUpConfirmationPlainTextContent(firstName),
+    html: getSignUpConfirmationHtmlContent(firstName),
+  };
 
-    try {
-        await transporter.sendMail(emailStructure);
-    } catch (error) {
-        console.error(`Error while sending sign up confirmation to ${email}:`, error);
-    }
+  try {
+    await transporter.sendMail(emailStructure);
+  } catch (error) {
+    console.error(`Error while sending sign up confirmation to ${email}:`, error);
+  }
 }
 
 function getInvitationHtmlContent(event, message, inviterFirstName) {
-    const EVENT_URL = `${APP_URL}/events/${event.id}`;
+  const EVENT_URL = `${APP_URL}/events/${event.id}`;
 
-    let customMessageHtml = '';
-    if (message && message.trim() !== '') {
-        customMessageHtml = `
+  let customMessageHtml = '';
+  if (message && message.trim() !== '') {
+    customMessageHtml = `
             <div style="margin-bottom: 20px; padding: 12px; background-color: #f0f9fa; border-left: 4px solid #00adb5;">
                 <p style="font-size: 15px; margin:0; font-style: italic;">A message from ${inviterFirstName}:<br>${message.replace(/\n/g, '<br>')}</p>
             </div>
         `;
-    }
+  }
 
-    return `
+  return `
         <div style="font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; line-height: 1.6; color: #333333; max-width: 580px; margin: 20px auto; padding: 25px; border: 1px solid #dddddd; border-radius: 6px; background-color: #ffffff;">
             <div style="text-align: center; margin-bottom: 25px;">
                 <h1 style="font-size: 26px; color: #00adb5; margin: 0; font-weight: 600;">You're Invited!</h1>
@@ -110,33 +112,33 @@ function getInvitationHtmlContent(event, message, inviterFirstName) {
 }
 
 function getInvitationPlainTextContent(event, message, inviterFirstName) {
-    const EVENT_URL = `${APP_URL}/events/${event.id}`;
+  const EVENT_URL = `${APP_URL}/events/${event.id}`;
 
-    let plainTextMessage = `Hi there,\n\n${inviterFirstName} has invited you to the event: "${event.title}" on EventPulse!`;
+  let plainTextMessage = `Hi there,\n\n${inviterFirstName} has invited you to the event: "${event.title}" on EventPulse!`;
 
-    if (message && message.trim() !== '') {
-        plainTextMessage += `\n\n${inviterFirstName} added a message for you:\n"${message}"\n`;
-    }
+  if (message && message.trim() !== '') {
+    plainTextMessage += `\n\n${inviterFirstName} added a message for you:\n"${message}"\n`;
+  }
 
-    plainTextMessage += `\n\nView Event Details: ${EVENT_URL}`;
-    plainTextMessage += `\n\nWe hope this sounds interesting!\n\nBest regards,\nThe EventPulse Team`;
-    plainTextMessage += `\n\n© ${currentYear} EventPulse\n${WEBSITE_URL}`;
+  plainTextMessage += `\n\nView Event Details: ${EVENT_URL}`;
+  plainTextMessage += '\n\nWe hope this sounds interesting!\n\nBest regards,\nThe EventPulse Team';
+  plainTextMessage += `\n\n© ${currentYear} EventPulse\n${WEBSITE_URL}`;
 
-    return plainTextMessage;
+  return plainTextMessage;
 }
 
 export async function sendEventInvitationEmail(inviteeEmail, event, message, inviterFirstName) {
-    const emailStructure = {
-        from: 'EventPulse Team',
-        to: inviteeEmail,
-        subject: `${inviterFirstName} invited you to an event!`,
-        text: getInvitationPlainTextContent(event, message, inviterFirstName),
-        html: getInvitationHtmlContent(event, message, inviterFirstName)
-    };
+  const emailStructure = {
+    from: 'EventPulse Team',
+    to: inviteeEmail,
+    subject: `${inviterFirstName} invited you to an event!`,
+    text: getInvitationPlainTextContent(event, message, inviterFirstName),
+    html: getInvitationHtmlContent(event, message, inviterFirstName),
+  };
 
-    try {
-        await transporter.sendMail(emailStructure);
-    } catch (error) {
-        console.error(`Error while sending sign up confirmation to ${inviteeEmail}:`, error);
-    }
+  try {
+    await transporter.sendMail(emailStructure);
+  } catch (error) {
+    console.error(`Error while sending sign up confirmation to ${inviteeEmail}:`, error);
+  }
 }
