@@ -38,8 +38,8 @@ export default [
       },
     },
     rules: {
-      "import/extensions": ["error", "always", {
-        "ignorePackages": true,
+      'import/extensions': ['error', 'always', {
+        ignorePackages: true,
       }],
     },
   },
