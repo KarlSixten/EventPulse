@@ -1,3 +1,5 @@
+/* eslint-disable no-use-before-define */
+/* eslint-disable no-console */
 import { pgPool } from './connection.js';
 import { hashPassword } from '../util/passwordHasher.js';
 import { seedUsersData, seedEventsData } from './util/seedData.js';
@@ -5,42 +7,41 @@ import { seedUsersData, seedEventsData } from './util/seedData.js';
 const deleteMode = process.argv.includes('--delete');
 
 try {
-    console.log('Setting up database...');
-    console.log(`Delete mode is ${deleteMode ? "enabled" : "disabled"}.`);
+  console.log('Setting up database...');
+  console.log(`Delete mode is ${deleteMode ? 'enabled' : 'disabled'}.`);
 
-    if (deleteMode) {
-        console.log('Dropping tables...');
-        await dropAllTables();
-        console.log('Tables dropped.');
-    }
+  if (deleteMode) {
+    console.log('Dropping tables...');
+    await dropAllTables();
+    console.log('Tables dropped.');
+  }
 
-    const timeZone = await pgPool.query('SHOW TIMEZONE');
-    console.log('Timezone is:', timeZone.rows[0].TimeZone)
+  const timeZone = await pgPool.query('SHOW TIMEZONE');
+  console.log('Timezone is:', timeZone.rows[0].TimeZone);
 
-    console.log('Creating PostGIS extension...');
-    await createPostgis();
-    console.log('PostGIS created.');
+  console.log('Creating PostGIS extension...');
+  await createPostgis();
+  console.log('PostGIS created.');
 
-    console.log('Creating tables...');
-    await createTables();
-    console.log('Tables created or already exists.');
+  console.log('Creating tables...');
+  await createTables();
+  console.log('Tables created or already exists.');
 
-    if (deleteMode) {
-        console.log("Seeding the database...")
-        await seed()
-        console.log("Database has been seeded.")
-    }
-
+  if (deleteMode) {
+    console.log('Seeding the database...');
+    await seed();
+    console.log('Database has been seeded.');
+  }
 } catch (error) {
-    console.log("Error while setting up database:", error);
+  console.log('Error while setting up database:', error);
 } finally {
-    console.log('Closing database connection pool...');
-    await pgPool.end();
-    console.log('Database connection pool closed.');
+  console.log('Closing database connection pool...');
+  await pgPool.end();
+  console.log('Database connection pool closed.');
 }
 
 async function dropAllTables() {
-    await pgPool.query(`
+  await pgPool.query(`
         DROP TABLE IF EXISTS users CASCADE;
         DROP TABLE IF EXISTS events CASCADE;
         DROP TABLE IF EXISTS event_invitations CASCADE;
@@ -49,13 +50,13 @@ async function dropAllTables() {
 }
 
 async function createPostgis() {
-    await pgPool.query(`
+  await pgPool.query(`
         CREATE EXTENSION IF NOT EXISTS postgis;
-    `)
+    `);
 }
 
 async function createTables() {
-    await pgPool.query(`
+  await pgPool.query(`
         CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         email TEXT UNIQUE NOT NULL,
