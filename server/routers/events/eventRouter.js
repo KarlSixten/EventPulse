@@ -28,7 +28,8 @@ router.get("/api/events", async (req, res) => {
         sortOrder = 'ASC',
         userLat,
         userLon,
-        timeFilter = 'upcoming'
+        timeFilter = 'upcoming',
+        locationRequired = 'false'
     } = req.query;
 
     try {
@@ -64,6 +65,13 @@ router.get("/api/events", async (req, res) => {
         } else {
             query.andWhere('e.is_private', false);
         }
+
+        if (locationRequired === 'true') {
+            query.andWhere(function () {
+                this.whereNotNull('e.location_point');
+            });
+        }
+
 
         const validSortOrder = sortOrder.toUpperCase() === 'DESC' ? 'desc' : 'asc';
         let orderByColumn = 'e.date_time';
@@ -111,7 +119,7 @@ router.get("/api/events/:id", async (req, res) => {
     const currentUserId = req.session.user ? req.session.user.id : null;
     const eventId = req.params.id;
 
-    if (isNaN(eventId)) {
+    if (isNaN(parseInt(eventId))) { // Ensure eventId is a number before using in DB query
         return res.status(400).send({ message: "Invalid event ID format." });
     }
 
@@ -125,11 +133,12 @@ router.get("/api/events/:id", async (req, res) => {
             db.raw('ST_Y(e.location_point::geometry) as latitude')
         ];
 
+        // --- Privacy and User's RSVP Status Logic (mostly unchanged) ---
         if (currentUserId) {
             selectColumns.push('er.status as user_rsvp_status');
             query.leftJoin('event_rsvps as er', function () {
                 this.on('er.event_id', '=', 'e.id')
-                    .andOn('er.user_id', '=', db.raw('?', [currentUserId]));
+                    .andOn('er.user_id', '=', db.raw('?', [currentUserId])); // Correctly parameterized
             });
 
             query.andWhere(function () {
@@ -146,18 +155,18 @@ router.get("/api/events/:id", async (req, res) => {
                     });
             });
         } else {
-            selectColumns.push(db.raw('NULL as user_rsvp_status'));
-            query.andWhere('e.is_private', false);
+            selectColumns.push(db.raw('NULL as user_rsvp_status')); // No specific user RSVP status if not logged in
+            query.andWhere('e.is_private', false); // Only public events if not logged in
         }
 
         query.select(selectColumns);
-
         const eventRow = await query.first();
 
         if (!eventRow) {
             return res.status(404).send({ message: `No event found with ID: ${eventId}, or you do not have permission to view it.` });
         }
 
+        // --- Construct Base Event Data ---
         const eventData = {
             id: eventRow.id,
             title: eventRow.title,
@@ -165,12 +174,43 @@ router.get("/api/events/:id", async (req, res) => {
             dateTime: eventRow.date_time,
             isPrivate: eventRow.is_private,
             createdById: eventRow.created_by_id,
-            userRsvpStatus: eventRow.user_rsvp_status,
+            userRsvpStatus: eventRow.user_rsvp_status, // Current user's RSVP
             location: (eventRow.longitude !== null && eventRow.latitude !== null) ? {
                 latitude: eventRow.latitude,
                 longitude: eventRow.longitude
             } : null
+            // We will add attendeesCount or attendees list below
         };
+
+        // --- Fetch and Add Attendance Information ---
+        const rsvpStatusForGoing = 'going'; // Define this clearly, ensure it matches your DB value
+
+        if (eventRow.is_private) {
+            // For PRIVATE events, fetch the list of users who are 'going'
+            // (Assumes current user has permission to see this private event and its attendee list)
+            const attendeesList = await db('event_rsvps as er')
+                .join('users as u', 'er.user_id', '=', 'u.id')
+                .where('er.event_id', eventId)
+                .andWhere('er.status', rsvpStatusForGoing)
+                .select(
+                    'u.id as userId', // Alias to avoid conflict if eventData also has an 'id'
+                    'u.first_name as firstName',
+                    'u.last_name as lastName'
+                    // Add other user fields you want to expose, e.g., 'u.profile_image_url as profileImageUrl'
+                );
+            eventData.attendees = attendeesList;
+            eventData.attendeesCount = attendeesList.length;
+
+        } else {
+            // For PUBLIC events, fetch the count of users who are 'going'
+            const countResult = await db('event_rsvps')
+                .where('event_id', eventId)
+                .andWhere('status', rsvpStatusForGoing)
+                .count('* as goingCount') // Knex count returns an array with an object like [{ count: 'N' }]
+                .first(); // Use first to get the object directly, or handle the array
+            
+            eventData.attendeesCount = countResult ? parseInt(countResult.goingCount, 10) : 0;
+        }
 
         res.send({ data: eventData });
 

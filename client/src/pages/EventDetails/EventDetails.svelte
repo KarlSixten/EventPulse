@@ -1,7 +1,9 @@
 <script>
     import { onMount } from "svelte";
+    import { navigate } from "svelte-routing";
     import { BASE_URL } from "../../stores/generalStore";
     import { userStore } from "../../stores/userStore";
+    import { eventForEditing } from "../../stores/eventStore.js";
     import { fetchGet, fetchPost } from "../../util/fetch";
     import { formatDate } from "../../util/format";
     import toastr from "toastr";
@@ -18,6 +20,10 @@
 
     let inviteeEmail = $state("");
     let inviteeMessage = $state("");
+
+    let othersGoingCount = $derived((event?.attendeesCount ?? 0) - (event.userRsvpStatus === 'going' ? 1 : 0));
+    let displayCount = $derived(Math.max(0, othersGoingCount));
+    let othersText = $derived(displayCount === 1 ? 'other' : 'others');
 
     onMount(async () => {
         fetchEventDetails();
@@ -40,7 +46,6 @@
             if (result && result.data) {
                 event = result.data;
                 selectedRsvpStatus = event.userRsvpStatus;
-                console.log(event);
             } else {
                 console.error(
                     "Failed to fetch event data or data is not in expected format",
@@ -110,6 +115,11 @@
             console.log("Error sending invite:", error);
         }
     }
+
+    function handleEditClick() {
+        eventForEditing.set(event); 
+        navigate(`/events/${event.id}/edit`);
+    }
 </script>
 
 <svelte:head>
@@ -137,6 +147,7 @@
         {/if}
         <h3>{formatDate(event.dateTime)}</h3>
         <h3>RSVP</h3>
+        <h4>{displayCount} {othersText} going</h4>
         {#if isLoggedIn}
             <div class="rsvp-status-picker">
                 {#each rsvpOptions as option (option.status)}
@@ -190,6 +201,9 @@
             {/if}
         {:else}
             <p>You must <a href="/login">log in</a> to send invites.</p>
+        {/if}
+        {#if $userStore && event.createdById == $userStore.id}
+            <button onclick={handleEditClick}><ion-icon name="create-outline"></ion-icon>Edit Event</button>
         {/if}
         {#if event.location}
             <Map
