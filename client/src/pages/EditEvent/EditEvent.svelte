@@ -5,7 +5,6 @@
   import { fetchGet, fetchPut } from "../../util/fetch.js";
   import { BASE_URL } from "../../stores/generalStore.js";
   import {
-    formatDate,
     formatDateTimeForInput,
     getLocalDateTimeString,
   } from "../../util/format.js";
