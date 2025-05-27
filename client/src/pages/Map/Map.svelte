@@ -4,6 +4,7 @@
     import "leaflet/dist/leaflet.css";
     import { fetchGet } from "../../util/fetch";
     import { BASE_URL } from "../../stores/generalStore";
+    import toastr from "toastr";
 
     let mapContainer = $state(null);
     let mapInstance = $state(null);
@@ -48,17 +49,16 @@
         try {
             let apiUrl =
                 $BASE_URL +
-                `/api/events?timeFilter=upcoming&locationRequired=true`;
+                `/api/events?timeFilter=upcoming&locationRequired=true`;            
 
             const result = await fetchGet(apiUrl);
 
             if (result && result.data) {
                 events = result.data;
+                toastr.success(`Found ${result.data.length} nearby events.`)
             } else {
-                console.error(
-                    "Failed to fetch events or no data in response:",
-                    result,
-                );
+                toastr.error("Failed to fetch events or no data in response")
+                console.error("Failed to fetch events or no data in response:", result);
                 events = [];
             }
         } catch (error) {
@@ -120,12 +120,6 @@
         if (!currentMapInstance || !currentEventMarkersGroup) {
             return;
         }
-
-        console.log(
-            "Effect running to plot markers for",
-            currentEvents.length,
-            "events.",
-        );
         currentEventMarkersGroup.clearLayers();
 
         if (currentEvents && currentEvents.length > 0) {
