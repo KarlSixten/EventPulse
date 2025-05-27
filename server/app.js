@@ -34,12 +34,12 @@ const httpServer = createServer(app);
 
 initSocket(httpServer, sessionMiddleware);
 
-app.use(authRouter);
+app.use('/api/auth', authRouter);
 
 app.use(eventRouter);
 
 const PORT = process.env.PORT || 8080;
 httpServer.listen(PORT, () => {
   // eslint-disable-next-line no-console
-  console.log(`Server is running on port: ${PORT}`);
+  console.log('Server is running on port:', PORT);
 });
