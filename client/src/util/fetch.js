@@ -1,6 +1,7 @@
 export async function fetchGet(url) {
     try {
         const response = await fetch(url, {
+            method: "GET",
             credentials: "include"
         });
         const result = await response.json();
@@ -55,4 +56,19 @@ export function fetchPut(url, body) {
         console.error("fetchPost error:", error);
         throw error;
     });
+}
+
+export async function fetchDelete(url) {
+    try {
+        const response = await fetch(url, {
+            method: "DELETE",
+            credentials: "include"
+        });
+        const result = await response.json();
+        result.ok = response.ok;
+        return result;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
 }
