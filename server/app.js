@@ -14,7 +14,7 @@ const app = express();
 app.use(express.json());
 
 const corsMiddleware = cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: 'http://localhost:5173',
   credentials: true,
 });
 app.use(corsMiddleware);
@@ -36,7 +36,7 @@ initSocket(httpServer, sessionMiddleware);
 
 app.use('/api/auth', authRouter);
 
-app.use(eventRouter);
+app.use('/api/events/', eventRouter);
 
 const PORT = process.env.PORT || 8080;
 httpServer.listen(PORT, () => {
