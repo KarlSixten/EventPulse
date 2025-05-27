@@ -8,14 +8,13 @@ import { validateCreateEvent, validateUpdateEvent, validateEventIdParam } from '
 
 const router = Router();
 
-router.use('/api/events/:id/invitations', invitationsRouter);
+router.all('/:id', validateEventIdParam);
+router.all('/:id/{splat}', validateEventIdParam);
 
-router.use('/api/events/:id/rsvps', rsvpRouter);
+router.use('/:id/invitations', invitationsRouter);
+router.use('/:id/rsvps', rsvpRouter);
 
-router.all('/api/events/:id', validateEventIdParam);
-router.all('/api/events/:id/{splat}', validateEventIdParam);
-
-router.get('/api/events', async (req, res) => {
+router.get('/', async (req, res) => {
   const currentUserId = req.session.user ? req.session.user.id : null;
   const {
     sortBy = 'date',
@@ -104,7 +103,7 @@ router.get('/api/events', async (req, res) => {
   }
 });
 
-router.get('/api/events/:id', async (req, res) => {
+router.get('/:id', async (req, res) => {
   const currentUserId = req.session.user ? req.session.user.id : null;
   const eventId = req.params.id;
 
@@ -194,7 +193,7 @@ router.get('/api/events/:id', async (req, res) => {
   }
 });
 
-router.post('/api/events', isAuthenticated, validateCreateEvent, async (req, res) => {
+router.post('/', isAuthenticated, validateCreateEvent, async (req, res) => {
   const {
     title, description, dateTime, isPrivate, latitude, longitude,
   } = req.body;
@@ -232,7 +231,7 @@ router.post('/api/events', isAuthenticated, validateCreateEvent, async (req, res
   }
 });
 
-router.put('/api/events/:id', isAuthenticated, validateUpdateEvent, async (req, res) => {
+router.put('/:id', isAuthenticated, validateUpdateEvent, async (req, res) => {
   const eventId = req.params.id;
   const currentUserId = req.session.user.id;
 
@@ -304,7 +303,7 @@ router.put('/api/events/:id', isAuthenticated, validateUpdateEvent, async (req, 
   }
 });
 
-router.delete('/api/events/:id', isAuthenticated, async (req, res) => {
+router.delete('/:id', isAuthenticated, async (req, res) => {
   const eventId = req.params.id;
   const requestUserId = req.session.user.id;
 
