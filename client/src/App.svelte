@@ -29,6 +29,7 @@
   import About from "./pages/About/About.svelte";
   import EditEvent from "./pages/EditEvent/EditEvent.svelte";
   import Map from "./pages/Map/Map.svelte";
+    import Home from "./pages/Home/Home.svelte";
 
   export let url = "";
 
@@ -61,7 +62,8 @@
   <Router {url}>
     <Header />
     <div class="content-area">
-      <Route path="/"></Route>
+      <Route path="/"><Home></Home></Route>
+      <Route path="/home"><Home></Home></Route>
       <Route path="/discover"><Discover></Discover></Route>
       <Route path="/map"><Map></Map></Route>
       <Route path="/about"><About></About></Route>
@@ -83,8 +85,4 @@
     padding-top: 70px;
   }
 
-  .content-area {
-    flex-grow: 1;
-  }
-  
 </style>

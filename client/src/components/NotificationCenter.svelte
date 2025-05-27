@@ -45,7 +45,8 @@
 {#if $userStore}
     <div class="notification-center-wrapper">
         <button class="notification-button" onclick={toggleDropdown}>
-            <ion-icon name='notifications{!showDropdown ? '-outline' : ''}'></ion-icon>
+            <ion-icon name="notifications{!showDropdown ? '-outline' : ''}"
+            ></ion-icon>
             {#if $hasUnreadNotifications}
                 <span class="badge"
                     >{$notifications.filter((n) => !n.read).length || ""}</span
@@ -67,16 +68,16 @@
                 {#if $notifications.length > 0}
                     <ul class="notification-list">
                         {#each $notifications as notification (notification.timestamp + notification.message)}
-                            <li class="notification-item">
-                                <Link to='events/{notification.eventId}'>
+                            <Link to="events/{notification.eventId}">
+                                <li class="notification-item">
                                     <p>{notification.message}</p>
                                     <span class="timestamp"
                                         >{formatDate(
                                             notification.timestamp,
                                         )}</span
                                     >
-                                </Link>
-                            </li>
+                                </li>
+                            </Link>
                         {/each}
                     </ul>
                 {:else}
@@ -99,15 +100,16 @@
         font-size: 1.2rem;
         position: relative;
         padding: 2px;
-        color: white;
+        color: var(--ep-text-on-primary);
+        border: none;
     }
 
     .badge {
         position: absolute;
         top: 0px;
         right: 0px;
-        background-color: red;
-        color: white;
+        background-color: var(--ep-error);
+        color: var(--ep-text-on-primary);
         border-radius: 50%;
         font-size: 0.6rem;
         padding: 1px 3px;
@@ -124,9 +126,9 @@
         max-height: 300px;
         overflow-y: auto;
         z-index: 1000;
-        background-color: white;
-        border: 1px solid black;
-        color: black;
+        background-color: var(--ep-background-light);
+        border: 1px solid var(--ep-border);
+        color: var(--ep-text-primary);
     }
 
     .dropdown-header {
@@ -134,7 +136,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid black;
+        border-bottom: 1px solid var(--ep-border);
     }
 
     .dropdown-header h4 {
@@ -143,9 +145,9 @@
     }
 
     .clear-all-button {
-        background: #eee;
-        border: 1px solid black;
-        color: black;
+        background: var(--ep-accent);
+        border: 1px solid var(--ep-border);
+        color: var(--ep-text-primary);
         padding: 2px 5px;
         font-size: 0.7rem;
         cursor: pointer;
@@ -159,29 +161,33 @@
 
     .notification-item {
         padding: 5px;
-        border-bottom: 1px solid #ccc;
-
+        border-bottom: 1px solid var(--ep-border);
     }
+
     .notification-item:last-child {
         border-bottom: none;
+    }
+
+    .notification-item :global(a) {
+        text-decoration: none;
     }
 
     .notification-item p {
         margin: 0 0 2px 0;
         font-size: 0.8rem;
         line-height: 1.2;
-        color: black;
-
+        color: var(--ep-text-primary);
     }
 
     .notification-item .timestamp {
         font-size: 0.7rem;
-        color: #333;
+        color: var(--ep-text-secondary);
     }
 
     .no-notifications {
         padding: 10px;
         text-align: center;
         font-size: 0.8rem;
+        color: var(--ep-text-secondary);
     }
 </style>

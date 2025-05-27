@@ -1,5 +1,4 @@
 <script>
-
 </script>
 
 <svelte:head>
@@ -103,23 +102,19 @@
 
 <style>
     .about-container {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-            Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-            "Segoe UI Symbol";
-        line-height: 1.65;
         max-width: 720px;
         margin: 30px auto;
-        padding: 15px;
-        color: #212529;
+        padding: 20px;
+        color: var(--ep-text-primary);
     }
 
     h1 {
         font-size: 2rem;
         font-weight: 600;
         margin-bottom: 1.5rem;
-        color: #1a1a1a;
+        color: var(--ep-primary);
         text-align: center;
-        border-bottom: 1px solid #dee2e6;
+        border-bottom: 1px solid var(--ep-border);
         padding-bottom: 0.75rem;
     }
 
@@ -128,7 +123,7 @@
         font-weight: 600;
         margin-top: 2rem;
         margin-bottom: 1rem;
-        color: #343a40;
+        color: var(--ep-secondary);
     }
 
     h3 {
@@ -136,7 +131,7 @@
         font-weight: 600;
         margin-top: 1.5rem;
         margin-bottom: 0.5rem;
-        color: #495057;
+        color: var(--ep-text-secondary);
     }
 
     p {
@@ -152,7 +147,12 @@
         margin-bottom: 0.5rem;
     }
 
+    li::marker {
+        color: var(--ep-primary);
+    }
+
     strong {
         font-weight: 600;
+        color: var(--ep-text-primary);
     }
 </style>

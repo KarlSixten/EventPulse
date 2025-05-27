@@ -101,7 +101,7 @@
 
     {#if latitude !== null && longitude !== null}
         <p class="coordinates-display">
-            Selected: Lat: {latitude.toFixed(5)}, Lon: {longitude.toFixed(5)}
+            Selected: Lat: {latitude.toFixed(2)}, Lon: {longitude.toFixed(2)}
         </p>
     {/if}
 </main>

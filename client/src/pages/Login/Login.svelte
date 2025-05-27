@@ -30,7 +30,7 @@
                 }
 
                 toastr.success("Logged in");
-                navigate("/");
+                navigate("/discover");
             } else {
                 toastr.error(result.data.message, "Login failed");
             }

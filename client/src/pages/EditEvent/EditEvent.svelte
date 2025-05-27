@@ -2,19 +2,20 @@
   import { navigate } from "svelte-routing";
   import { onMount, onDestroy } from "svelte";
   import { eventForEditing } from "../../stores/eventStore.js";
-  import { fetchGet, fetchDelete, fetchPut } from "../../util/fetch.js";
-  import { BASE_URL } from "../../stores/generalStore.js";
+  import { userStore } from "../../stores/userStore.js";
+  import { fetchGet, fetchDelete, fetchPut } from "../../util/fetch.js"; //
+  import { BASE_URL } from "../../stores/generalStore.js"; //
   import {
     formatDateTimeForInput,
     getLocalDateTimeString,
-  } from "../../util/format.js";
+  } from "../../util/format.js"; //
 
   import toastr from "toastr";
 
   import EventLocationMapInput from "../../components/EventLocationMapInput.svelte";
   import ConfirmationModal from "../../components/ConfirmationModal.svelte";
 
-  let { id } = $props(); // param id
+  let { id } = $props();
 
   let title = $state("");
   let description = $state("");
@@ -29,20 +30,40 @@
 
   let showConfirmationModal = $state(false);
 
+  function checkAuthorizationAndInitialize(loadedEvent) {
+    if (!loadedEvent) {
+        toastr.error("Event data is missing. Cannot proceed with editing.");
+        navigate("/");
+        isLoading = false;
+        return false;
+    }
+
+    if (!$userStore || $userStore.id !== loadedEvent.createdById) {
+        toastr.error("You are not authorized to edit this event.");
+        navigate(`/events/${loadedEvent.id || id}`);
+        isLoading = false;
+        return false;
+    }
+
+    initializeFormFields(loadedEvent);
+    return true;
+  }
+
   onMount(async () => {
     storeSubscription = eventForEditing.subscribe(async (valueFromStore) => {
+      isLoading = true;
       if (valueFromStore && valueFromStore.id == id) {
         eventToEdit = valueFromStore;
-        initializeFormFields(eventToEdit);
-        isLoading = false;
+        if (checkAuthorizationAndInitialize(eventToEdit)) {
+            isLoading = false;
+        }
       } else {
         if (id) {
           await fetchEventDetails();
-          initializeFormFields(eventToEdit);
         } else {
-          console.warn(
-            "No valid ID prop available. Cannot fetch event details.",
-          );
+          toastr.error("No event ID provided. Cannot edit event.");
+          console.warn("No valid ID prop available. Cannot fetch event details.");
+          navigate("/");
           isLoading = false;
         }
       }
@@ -51,24 +72,24 @@
 
   async function fetchEventDetails() {
     isLoading = true;
-
     try {
-      const result = await fetchGet($BASE_URL + "/api/events/" + id);
-
+      const result = await fetchGet(`${$BASE_URL}/api/events/${id}`); //
       if (result && result.data) {
         eventToEdit = result.data;
+        checkAuthorizationAndInitialize(eventToEdit);
       } else {
-        toastr.error("Could not fetch event.");
-        console.error(
-          "Failed to fetch event data or data is not in expected format",
-          result,
-        );
+        toastr.error("Could not fetch event details to edit.");
+        console.error("Failed to fetch event data:", result);
+        navigate("/");
       }
     } catch (error) {
-      toastr.error("Could not fetch event.");
+      toastr.error("Error fetching event details.");
       console.error("Error fetching event:", error);
+      navigate("/");
     } finally {
-      isLoading = false;
+      if (eventToEdit === null && isLoading) {
+          isLoading = false;
+      }
     }
   }
 
@@ -77,9 +98,7 @@
       title = loadedEvent.title || "";
       description = loadedEvent.description || "";
       dateTime = formatDateTimeForInput(loadedEvent.dateTime);
-
       isPrivate = loadedEvent.isPrivate || false;
-
       latitude = loadedEvent.location?.latitude ?? null;
       longitude = loadedEvent.location?.longitude ?? null;
     } else {
@@ -89,9 +108,6 @@
       isPrivate = false;
       latitude = null;
       longitude = null;
-      console.log(
-        "initializeFormFields: No event data provided, form reset to defaults.",
-      );
     }
   }
 
@@ -124,7 +140,7 @@
     }
   }
 
-  async function handleDeleteEvent() {
+  function handleDeleteEvent() {
     showConfirmationModal = true;
   }
 
@@ -132,29 +148,23 @@
     showConfirmationModal = false;
   }
 
-  async function proceedWithActualDeletion() {
-    const eventIdToDelete = id;
-
-    if (eventIdToDelete !== null) {
-      try {
-        const result = await fetchDelete(
-          $BASE_URL + `/api/events/${eventIdToDelete}`,
-        );
-
-        console.log(result);
-
-        if (result.ok) {
-          toastr.success("Event deleted");
-          navigate('/');
-        } else {
-          toastr.error("Unable to delete event.", result.message);
-        }
-      } catch (error) {
-        console.error("Error deleting event:", error);
-        toastr.error("Unable to delete event.");
-      } finally {
-        showConfirmationModal = false;
+  async function confirmAndDeleteEvent() {
+    showConfirmationModal = false;
+    isLoading = true;
+    try {
+      const result = await fetchDelete(`${$BASE_URL}/api/events/${id}`); //
+      if (result.ok) {
+        toastr.success("Event deleted successfully.");
+        eventForEditing.set(null);
+        navigate("/home");
+      } else {
+        toastr.error(result.message || "Failed to delete event.");
       }
+    } catch (error) {
+      toastr.error("An error occurred while deleting the event.");
+      console.error("Error deleting event:", error);
+    } finally {
+      isLoading = false;
     }
   }
 
@@ -162,127 +172,222 @@
     if (storeSubscription) {
       storeSubscription();
     }
+    eventForEditing.set(null);
   });
 </script>
 
+<svelte:head>
+  <title>EventPulse | Edit: {title || "Event"}</title>
+</svelte:head>
+
 {#if isLoading}
-  <p>Loading event data...</p>
+  <p class="loading-message">Loading event data...</p>
 {:else if eventToEdit}
-  <div class="edit-event-container">
-    <h1>Editing Event: {eventToEdit.title}</h1>
+  <main>
+    <div class="edit-event-container">
+      <h1>
+        Editing Event: <span class="event-title-display"
+          >{eventToEdit.title}</span
+        >
+      </h1>
 
-    <form onsubmit={handleSubmit}>
-      <fieldset>
-        <legend>Event Details</legend>
-        <div>
-          <label for="event-title">Title:</label>
-          <input type="text" id="event-title" bind:value={title} required />
-        </div>
-        <div>
-          <label for="event-description">Description:</label>
-          <textarea
-            id="event-description"
-            rows="6"
-            bind:value={description}
-            required
-          ></textarea>
-        </div>
-        <div>
-          <label for="event-date">Date:</label>
-          <input
-            type="datetime-local"
-            min={getLocalDateTimeString()}
-            bind:value={dateTime}
-            required
-          />
-        </div>
-        <div>
-          <label for="event-is-private">Private event:</label>
-          <input type="checkbox" bind:checked={isPrivate} />
-        </div>
-      </fieldset>
+      <form onsubmit={handleSubmit}>
+        <fieldset>
+          <legend>Event Details</legend>
+          <div>
+            <label for="event-title">Title:</label>
+            <input type="text" id="event-title" bind:value={title} required />
+          </div>
+          <div>
+            <label for="event-description">Description:</label>
+            <textarea
+              id="event-description"
+              rows="6"
+              bind:value={description}
+              required
+            ></textarea>
+          </div>
+          <div>
+            <label for="event-date">Date & Time:</label>
+            <input
+              type="datetime-local"
+              id="event-date"
+              min={getLocalDateTimeString()}
+              bind:value={dateTime}
+              required
+            />
+          </div>
+          <div class="checkbox-group">
+            <input
+              type="checkbox"
+              id="event-is-private"
+              bind:checked={isPrivate}
+            />
+            <label for="event-is-private">This is a private event</label>
+          </div>
+        </fieldset>
 
-      <fieldset>
-        <legend>Location (Optional)</legend>
-        <EventLocationMapInput bind:latitude bind:longitude />
-      </fieldset>
-      <button type="submit">Save Event</button>
-    </form>
+        <fieldset>
+          <legend>Location (Optional)</legend>
+          <EventLocationMapInput bind:latitude bind:longitude />
+        </fieldset>
 
-    <button class="btn-delete" onclick={handleDeleteEvent}>Delete Event</button>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
 
-    <ConfirmationModal
-      isOpen={showConfirmationModal}
-      title="Confirm Event Deletion"
-      message="Are you sure you want to delete this event? This action cannot be undone."
-      onConfirm={proceedWithActualDeletion}
-      onCancel={cancelDeletion}
-    />
-  </div>
+      <div class="delete-action-section">
+        <button class="btn btn-danger" onclick={handleDeleteEvent}
+          >Delete Event</button
+        >
+      </div>
+
+      <ConfirmationModal
+        isOpen={showConfirmationModal}
+        title="Confirm Event Deletion"
+        message="Are you sure you want to delete this event? This action cannot be undone."
+        onConfirm={confirmAndDeleteEvent}
+        onCancel={cancelDeletion}
+      />
+    </div>
+  </main>
 {:else}
-  <p>
-    Event data could not be loaded. The event might not exist or there was an
-    issue.
+  <p class="error-message">
+    Event data could not be loaded or event not found.
   </p>
 {/if}
 
 <style>
   .edit-event-container {
-    max-width: 600px;
-    margin: 20px auto;
-    padding: 15px;
-    background-color: #f9f9f9;
-  }
-  h1 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px;
-  }
-  fieldset {
-    margin-bottom: 20px;
-    padding: 10px;
-    border: 1px solid #e0e0e0;
-    background-color: #fff;
-  }
-  legend {
-    color: #555;
-    padding-bottom: 5px;
+    max-width: 650px;
+    margin: 30px auto;
+    padding: 25px;
+    background-color: var(--ep-background-dark);
+    border-radius: 8px;
   }
 
-  fieldset > div {
-    margin-bottom: 10px;
+  h1 {
+    text-align: center;
+    color: var(--ep-text-primary);
+    margin-bottom: 25px;
+    font-size: 1.8em;
+  }
+  .event-title-display {
+    color: var(--ep-primary);
+    font-style: italic;
+  }
+
+  fieldset {
+    margin-bottom: 25px;
+    padding: 15px;
+    border: 1px solid var(--ep-border);
+    background-color: var(--ep-background-light);
+    border-radius: 6px;
+  }
+
+  legend {
+    color: var(--ep-primary);
+    font-weight: 600;
+    padding: 0 5px;
+    margin-left: 5px;
+  }
+
+  fieldset > div:not(.checkbox-group) {
+    margin-bottom: 15px;
+  }
+  fieldset > div:last-child {
+    margin-bottom: 0;
   }
 
   label {
     display: block;
-    margin-bottom: 3px;
-    color: #444;
+    margin-bottom: 5px;
+    color: var(--ep-text-primary);
+    font-weight: 500;
+    font-size: 0.95em;
   }
 
   input[type="text"],
+  input[type="datetime-local"],
   textarea {
     width: 100%;
-    padding: 5px;
-    border: 1px solid #e0e0e0;
-    background-color: #fff;
-    color: #333;
+    padding: 8px 10px;
+    border: 1px solid var(--ep-border);
+    background-color: var(--ep-background-light);
+    color: var(--ep-text-primary);
     box-sizing: border-box;
-    resize: none;
+    border-radius: 4px;
+    font-size: 1em;
   }
 
-  button[type="submit"] {
-    margin-top: 15px;
-    padding: 8px 12px;
-    background-color: #00adb5;
-    color: white;
-    border: none;
+  textarea {
+    resize: vertical;
+    min-height: 80px;
   }
 
-  .btn-delete {
-    margin-top: 15px;
-    padding: 8px 12px;
-    background-color: red;
-    color: white;
-    border: none;
+  input[type="text"]:focus,
+  input[type="datetime-local"]:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--ep-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ep-primary) 20%, transparent);
+  }
+
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  .checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+  }
+  .checkbox-group label {
+    margin-bottom: 0;
+    font-weight: normal;
+    font-size: 0.9em;
+    color: var(--ep-text-secondary);
+  }
+
+  .form-actions,
+  .delete-action-section {
+    margin-top: 20px;
+  }
+
+  .form-actions .btn-primary {
+    display: block;
+    width: 60%;
+    height: 50px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+    font-size: 1.3em;
+  }
+
+  .form-actions .btn-primary,
+  .delete-action-section .btn-danger {
+    display: block;
+  }
+  .delete-action-section .btn-danger {
+    margin-top: 100px;
+    width: 20%;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: var(--ep-error);
+    color: var(--ep-text-on-primary);
+  }
+  .delete-action-section .btn-danger:hover {
+    background-color: color-mix(in srgb, var(--ep-error) 85%, black);
+  }
+
+  .loading-message,
+  .error-message {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.1em;
+    color: var(--ep-text-secondary);
   }
 </style>
