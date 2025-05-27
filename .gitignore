@@ -426,4 +426,3 @@ dist-ssr
 *.sw?
 
 .env
-emailAuth.js
