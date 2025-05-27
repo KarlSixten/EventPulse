@@ -7,15 +7,19 @@
     import { fetchPost } from "../util/fetch"; //
     import NotificationCenter from "./NotificationCenter.svelte";
 
+    import toastr from "toastr";
+
     async function handleLogout() {
         try {
             const result = await fetchPost($BASE_URL + '/api/auth/logout');
             if (result.ok) {
-                console.log("Successfully log out from server.");
+                toastr.success("Successfully logged out from server.")
             } else {
+                toastr.error("An error occured while logging out.")
                 console.error("Backend logout failed:", result.status, result.data.message);
             }
         } catch (error) {
+            toastr.error("An error occured while logging out.")
             console.error("Error making logout request to backend:", error);
         } finally {
             userStore.set(null);
