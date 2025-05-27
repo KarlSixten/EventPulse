@@ -24,7 +24,7 @@
             dateTime: dateTime,
             latitude: latitude,
             longitude: longitude,
-            isPrivate: isPrivate
+            isPrivate: isPrivate,
         };
 
         try {
@@ -32,24 +32,31 @@
                 $BASE_URL + "/api/events",
                 eventData,
             );
-            const eventId = result.data.event.id;
-            toastr.success("Event created!");
 
-            title = "";
-            description = "";
-            dateTime = null;
-            latitude = null;
-            longitude = null;
+            if (result.ok) {
+                const eventId = result.data.event.id;
+                toastr.success("Event created!");
 
-            navigate(`/events/${eventId}`);
+                title = "";
+                description = "";
+                dateTime = null;
+                latitude = null;
+                longitude = null;
+
+                navigate(`/events/${eventId}`);
+            } else {
+                console.error("Submission error:", result.status, result.data.message);
+                toastr.error("An error occured while creating the event.");
+            }
         } catch (error) {
+            toastr.error("An error occured while creating the event.");
             console.error("Submission error:", error);
         }
     }
 </script>
 
 <svelte:head>
-    <title>EventPulse | Create Event </title>
+    <title>EventPulse | Create Event</title>
 </svelte:head>
 
 <main>
@@ -88,10 +95,7 @@
                 </div>
                 <div>
                     <label for="event-is-private">Private event:</label>
-                    <input
-                        type="checkbox"
-                        bind:checked={isPrivate}
-                    />
+                    <input type="checkbox" bind:checked={isPrivate} />
                 </div>
             </fieldset>
 
