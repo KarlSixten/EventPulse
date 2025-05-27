@@ -74,17 +74,17 @@
         selectedRsvpStatus = status;
 
         try {
-            const response = await fetchPost(
+            const result = await fetchPost(
                 $BASE_URL + `/api/events/${event.id}/rsvps`,
                 {
                     status: status,
                 },
             );
-            if (response.ok) {
+            if (result.ok) {
                 toastr.success(`RSVP status updated to ${label}!`);
             } else {
                 selectedRsvpStatus = oldStatus;
-                toastr.error("Error updating RSVP:", response.data.message);
+                toastr.error("Error updating RSVP:", result.data.message);
             }
         } catch (error) {
             selectedRsvpStatus = oldStatus;
@@ -95,7 +95,7 @@
 
     async function handleSendInvite() {
         try {
-            const response = await fetchPost(
+            const result = await fetchPost(
                 $BASE_URL + `/api/events/${event.id}/invitations`,
                 {
                     invitee_email: inviteeEmail,
@@ -103,12 +103,12 @@
                 },
             );
 
-            if (response.ok) {
-                toastr.success(response.data.message, "User invited!");
+            if (result.ok) {
+                toastr.success(result.data.message, "User invited!");
                 inviteeEmail = "";
                 inviteeMessage = "";
             } else {
-                toastr.error(response.data.message, "Unable to invite user:");
+                toastr.error(result.data.message, "Unable to invite user:");
             }
         } catch (error) {
             toastr.error("Error sending invite:", error);
