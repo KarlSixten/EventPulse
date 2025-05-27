@@ -19,7 +19,7 @@
                 lastName
             });
 
-            if (result.status === 201) {
+            if (result.ok) {
                 toastr.success("User created, you can now log in!");
                 navigate("/login");
             } else {
