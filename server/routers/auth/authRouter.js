@@ -10,21 +10,16 @@ const router = Router();
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-router.get('/api/auth/me', (req, res) => {
-  if (req.session && req.session.user && req.session.user.id) {
-    res.send({
-      isAuthenticated: true,
-      user: req.session.user,
-    });
-  } else {
-    res.send({
-      isAuthenticated: false,
-      user: null,
-    });
-  }
+router.get('/me', (req, res) => {
+  const hasValidSession = !!(req.session && req.session.user && req.session.user.id);
+
+  return res.send({
+    isAuthenticated: hasValidSession,
+    user: hasValidSession ? req.session.user : null,
+  });
 });
 
-router.post('/api/auth/sign-up', async (req, res) => {
+router.post('/sign-up', async (req, res) => {
   const {
     email, password, firstName, lastName,
   } = req.body || {};
@@ -67,7 +62,7 @@ router.post('/api/auth/sign-up', async (req, res) => {
   }
 });
 
-router.post('/api/auth/login', async (req, res) => {
+router.post('/login', async (req, res) => {
   if (!req.body || !req.body.email || !req.body.password) {
     return res.status(400).send({ message: 'Email and password are required' });
   }
@@ -112,17 +107,17 @@ router.post('/api/auth/login', async (req, res) => {
   }
 });
 
-router.post('/api/auth/logout', (req, res) => {
-  if (req.session) {
-    req.session.destroy((error) => {
-      if (error) {
-        return res.status(500).send({ message: 'Logout failed. Please try again.' });
-      }
-
+router.post('/logout', async (req, res) => {
+  if (req.session && req.session.user) {
+    try {
+      req.session.destroy();
       return res.status(200).send({ message: 'Logout successful' });
-    });
+    } catch (error) {
+      return res.status(500).send({ message: 'Logout failed. Please try again.' });
+    }
+  } else {
+    return res.status(200).send({ message: 'No active session to logout from.' });
   }
-  return res.status(200).send({ message: 'No active session to logout from.' });
 });
 
 export default router;
