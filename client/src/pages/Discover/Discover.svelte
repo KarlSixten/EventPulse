@@ -5,6 +5,7 @@
 
     import EventCard from "../../components/EventCard.svelte";
     import { Link } from "svelte-routing";
+    import toastr from "toastr";
 
     let events = [];
 
@@ -78,6 +79,7 @@
             if (result && result.data) {
                 events = result.data;
             } else {
+                toastr.error("Could not fetch events.");
                 console.error(
                     "Failed to fetch events or no data in response:",
                     result,
@@ -85,6 +87,7 @@
                 events = [];
             }
         } catch (error) {
+            toastr.error("Could not fetch events.");
             console.error("Error during actualFetchEvents:", error);
             events = [];
         }
