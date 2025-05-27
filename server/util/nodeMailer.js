@@ -1,10 +1,14 @@
 /* eslint-disable no-console */
 import nodemailer from 'nodemailer';
-import { emailAuth } from './emailAuth.js';
 
 const APP_URL = process.env.PORT || 'http://localhost:5173';
 const DISCOVER_PAGE_URL = `${APP_URL}/discover`;
 const WEBSITE_URL = APP_URL;
+
+const emailAuth = {
+  user: process.env.EMAILUSER,
+  pass: process.env.EMAILPASSWORD,
+};
 
 const currentYear = new Date().getFullYear();
 
