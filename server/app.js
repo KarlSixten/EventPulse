@@ -20,7 +20,7 @@ const corsMiddleware = cors({
 app.use(corsMiddleware);
 
 const sessionMiddleware = session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSIONSECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
