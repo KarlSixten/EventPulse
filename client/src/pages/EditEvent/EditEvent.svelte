@@ -2,7 +2,7 @@
   import { navigate } from "svelte-routing";
   import { onMount, onDestroy } from "svelte";
   import { eventForEditing } from "../../stores/eventStore.js";
-  import { fetchGet, fetchPut } from "../../util/fetch.js";
+  import { fetchGet, fetchDelete, fetchPut } from "../../util/fetch.js";
   import { BASE_URL } from "../../stores/generalStore.js";
   import {
     formatDateTimeForInput,
@@ -12,6 +12,7 @@
   import toastr from "toastr";
 
   import EventLocationMapInput from "../../components/EventLocationMapInput.svelte";
+  import ConfirmationModal from "../../components/ConfirmationModal.svelte";
 
   let { id } = $props(); // param id
 
@@ -25,6 +26,8 @@
   let eventToEdit = $state(null);
   let isLoading = $state(true);
   let storeSubscription;
+
+  let showConfirmationModal = $state(false);
 
   onMount(async () => {
     storeSubscription = eventForEditing.subscribe(async (valueFromStore) => {
@@ -55,12 +58,14 @@
       if (result && result.data) {
         eventToEdit = result.data;
       } else {
+        toastr.error("Could not fetch event.");
         console.error(
           "Failed to fetch event data or data is not in expected format",
           result,
         );
       }
     } catch (error) {
+      toastr.error("Could not fetch event.");
       console.error("Error fetching event:", error);
     } finally {
       isLoading = false;
@@ -104,12 +109,52 @@
 
     try {
       const result = await fetchPut($BASE_URL + "/api/events/" + id, eventData);
-      const eventId = result.data.event.id;
-      toastr.success("Event saved!");
 
-      navigate(`/events/${eventId}`);
+      if (result.ok) {
+        const eventId = result.data.event.id;
+        toastr.success("Event saved!");
+
+        navigate(`/events/${eventId}`);
+      } else {
+        toastr.error("Event could not be saved.", result.data.message);
+      }
     } catch (error) {
+      toastr.error("Event could not be saved.");
       console.error("Submission error:", error);
+    }
+  }
+
+  async function handleDeleteEvent() {
+    showConfirmationModal = true;
+  }
+
+  function cancelDeletion() {
+    showConfirmationModal = false;
+  }
+
+  async function proceedWithActualDeletion() {
+    const eventIdToDelete = id;
+
+    if (eventIdToDelete !== null) {
+      try {
+        const result = await fetchDelete(
+          $BASE_URL + `/api/events/${eventIdToDelete}`,
+        );
+
+        console.log(result);
+
+        if (result.ok) {
+          toastr.success("Event deleted");
+          navigate('/');
+        } else {
+          toastr.error("Unable to delete event.", result.message);
+        }
+      } catch (error) {
+        console.error("Error deleting event:", error);
+        toastr.error("Unable to delete event.");
+      } finally {
+        showConfirmationModal = false;
+      }
     }
   }
 
@@ -161,9 +206,18 @@
         <legend>Location (Optional)</legend>
         <EventLocationMapInput bind:latitude bind:longitude />
       </fieldset>
-
       <button type="submit">Save Event</button>
     </form>
+
+    <button class="btn-delete" onclick={handleDeleteEvent}>Delete Event</button>
+
+    <ConfirmationModal
+      isOpen={showConfirmationModal}
+      title="Confirm Event Deletion"
+      message="Are you sure you want to delete this event? This action cannot be undone."
+      onConfirm={proceedWithActualDeletion}
+      onCancel={cancelDeletion}
+    />
   </div>
 {:else}
   <p>
@@ -220,6 +274,14 @@
     margin-top: 15px;
     padding: 8px 12px;
     background-color: #00adb5;
+    color: white;
+    border: none;
+  }
+
+  .btn-delete {
+    margin-top: 15px;
+    padding: 8px 12px;
+    background-color: red;
     color: white;
     border: none;
   }
