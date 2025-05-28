@@ -27,7 +27,6 @@
     let displayCount = $derived(Math.max(0, othersGoingCount));
     let othersText = $derived(displayCount === 1 ? "other" : "others");
 
-    // Hvis ID opdateres skal der fetches på det nye ID
     $effect(() => {
         if (id) {
             fetchEventDetails();
@@ -138,12 +137,14 @@
     {:else if event}
         <h1>{event.title}</h1>
         <h2>{event.description}</h2>
-        {#if event.isPrivate}
-            <h2 class="event-type">Private Event</h2>
-        {:else}
-            <h2>Public Event</h2>
-        {/if}
-        <h3 class="event-datetime">{formatDate(event.dateTime)}</h3>
+        <h2
+            class="event-publicity"
+            class:public={!event.isPrivate}
+            class:private={event.isPrivate}
+        >
+            {event.isPrivate ? "Private Event" : "Public Event"}
+        </h2>
+        <h3 class="event-datetime"><ion-icon name="calendar"></ion-icon>{formatDate(event.dateTime)}</h3>
         <h3>RSVP</h3>
         <h4>{displayCount} {othersText} going</h4>
         {#if isLoggedIn}
@@ -246,12 +247,6 @@
         margin-bottom: 1.5em;
         text-align: center;
         font-weight: normal;
-    }
-    h2.event-type {
-        font-weight: bold;
-        font-size: 1.3em;
-        color: var(--ep-secondary);
-        margin-top: -1em;
     }
 
     h3 {
@@ -361,5 +356,25 @@
     }
     a:hover {
         color: color-mix(in srgb, var(--ep-primary) 80%, black);
+    }
+    .event-publicity {
+        display: inline-block;
+        font-size: 0.85em;
+        font-weight: 500;
+        padding: 4px 10px;
+        border-radius: 5px;
+        line-height: 1.4;
+        margin-top: -1em;
+        margin-bottom: 1.5em;
+    }
+
+    .event-publicity.public {
+        background-color: var(--ep-success);
+        color: var(--ep-text-on-primary);
+    }
+
+    .event-publicity.private {
+        background-color: var(--ep-secondary);
+        color: var(--ep-text-on-secondary);
     }
 </style>

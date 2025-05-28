@@ -1,18 +1,25 @@
 <script>
     import { formatDate, formatDistance } from "../util/format"; //
 
-    let { title, dateTime, distanceMeters } = $props();
+    let { event } = $props();
 </script>
 
 <article class="event-card">
     <div class="card-content">
-        <h3 class="event-title">{title}</h3>
+        <h3 class="event-title">{event.title}</h3>
+        <p
+            class="event-publicity"
+            class:public={!event.isPrivate}
+            class:private={event.isPrivate}
+        >
+            {event.isPrivate ? 'Private' : 'Public'}
+        </p>
     </div>
     <div class="card-footer">
-        <p class="event-date-time">{formatDate(dateTime)}</p>
-        {#if distanceMeters}
+        <p class="event-date-time">{formatDate(event.dateTime)}</p>
+        {#if event.distanceMeters}
             <p class="event-distance-from-user">
-                {formatDistance(distanceMeters)}
+                {formatDistance(event.distanceMeters)}
             </p>
         {/if}
     </div>
@@ -31,7 +38,7 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        min-height: 120px;
+        min-height: 160px;
         overflow: hidden;
     }
 
@@ -54,6 +61,27 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+
+    .event-publicity {
+        display: inline-block;
+        font-size: 0.75em;
+        font-weight: normal;
+        color: var(--ep-text-secondary);
+        background-color: var(--ep-accent);
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-bottom: 8px;
+    }
+
+    .event-publicity.public {
+        background-color: var(--ep-success);
+        color: var(--ep-text-on-primary);
+    }
+
+    .event-publicity.private {
+        background-color: var(--ep-secondary);
+        color: var(--ep-text-on-secondary);
     }
 
     .card-footer {
