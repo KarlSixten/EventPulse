@@ -49,15 +49,15 @@
         try {
             let apiUrl =
                 $BASE_URL +
-                `/api/events?timeFilter=upcoming&locationRequired=true`;            
+                `/api/events?timeFilter=upcoming&locationRequired=true`;
 
             const result = await fetchGet(apiUrl);
 
             if (result && result.data) {
                 events = result.data;
-                toastr.success(`Found ${result.data.length} nearby events.`)
+                toastr.success(`Found ${result.data.length} nearby events.`);
             } else {
-                toastr.error("Failed to fetch events or no data in response")
+                toastr.error("Failed to fetch events or no data in response");
                 console.error("Failed to fetch events or no data in response:", result);
                 events = [];
             }
@@ -123,7 +123,6 @@
         currentEventMarkersGroup.clearLayers();
 
         if (currentEvents && currentEvents.length > 0) {
-
             currentEvents.forEach((event) => {
                 if (
                     event &&
@@ -134,7 +133,6 @@
                 ) {
                     const marker = L.marker([event.latitude, event.longitude]);
 
-                    // Customize popup content
                     let popupContent = `<b>${event.title || "Event"}</b>`;
                     if (event.description) {
                         const shortDesc =
@@ -170,7 +168,6 @@
 </main>
 
 <style>
-
     h3 {
         text-align: center;
         color: var(--ep-primary);
@@ -192,7 +189,7 @@
         max-width: 95%;
         border: 1px solid var(--ep-border);
         margin: 0 auto 20px auto;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         border-radius: 8px;
     }
 
