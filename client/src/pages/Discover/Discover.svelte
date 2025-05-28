@@ -139,11 +139,7 @@
         <div class="event-list">
             {#each events as event (event.id || JSON.stringify(event))}
                 <Link class="event-card-link" to="/events/{event.id}">
-                    <EventCard
-                        title={event.title}
-                        dateTime={event.date_time}
-                        distanceMeters={event.distance_meters}
-                    />
+                    <EventCard event={event} />
                 </Link>
             {/each}
         </div>
