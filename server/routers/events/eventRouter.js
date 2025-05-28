@@ -29,7 +29,14 @@ router.get('/', async (req, res) => {
     const query = db('events as e');
 
     const selectColumns = [
-      'e.*',
+      'e.id',
+      'e.title',
+      'e.description',
+      'e.date_time as dateTime',
+      'e.created_by_id as createdById',
+      'e.is_private as isPrivate',
+      'e.created_at as createdAt',
+      'e.updated_at as updatedAt',
       db.raw('ST_X(e.location_point::geometry) as longitude'),
       db.raw('ST_Y(e.location_point::geometry) as latitude'),
     ];
@@ -77,11 +84,11 @@ router.get('/', async (req, res) => {
       if (!Number.isNaN(latitude) && !Number.isNaN(longitude)) {
         selectColumns.push(
           db.raw(
-            'ST_Distance(e.location_point, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) as distance_meters',
+            'ST_Distance(e.location_point, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) as "distanceMeters"',
             [longitude, latitude],
           ),
         );
-        orderByColumn = 'distance_meters';
+        orderByColumn = '"distanceMeters"';
         useOrderByRaw = true;
         orderByDirection = `${validSortOrder} NULLS LAST`;
       }
