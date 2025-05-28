@@ -9,17 +9,17 @@ This project was developed as an exam project for a full-stack development cours
 ## ✨ Features
 
 * **User Authentication:** Secure sign-up, login, and logout functionality.
-* **Event Creation & Management:** Users can create public or private events, providing details like title, description, date/time, and location.
+* **Event Creation & Management:** Users can create public or private events, providing details like title, description, date/time, and location (latitude/longitude).
 * **Event Discovery:**
     * Browse upcoming, past, or all events.
-    * Sort events by date or distance (if location services are enabled).
-    * View event details, including location on a map (for events with coordinates).
+    * Sort events by date or distance (if location services are enabled by the user).
+    * View event details, including location on a map (for events with coordinates) using Leaflet.js.
 * **RSVP System:** Users can RSVP to events (Going, Maybe, Not Going).
-* **Invitations:** Event creators can invite other registered users to their events.
-* **Real-time Notifications:** Users receive real-time notifications for event invitations using WebSockets.
+* **Invitations:** Event creators (and any user for public events) can invite other registered users to their events.
+* **Real-time Notifications:** Users receive real-time notifications for event invitations using WebSockets (Socket.IO).
 * **Location-Based Services:**
-    * Find events nearby.
-    * Display event locations on an interactive map (using Leaflet).
+    * Find events nearby by providing current location.
+    * Display event locations on an interactive map (using Leaflet.js).
 * **User Profiles & Event Ownership:** Users can edit or delete events they created.
 
 ---
@@ -28,26 +28,28 @@ This project was developed as an exam project for a full-stack development cours
 
 **Frontend:**
 
-* **Svelte 5:**
-* **Vite:**
-* **Svelte Routing:** Client-side routing for Svelte.
+* **Svelte 5**
+* **Vite:** Frontend tooling.
+* **Svelte Routing:** Client-side routing.
 * **Socket.IO Client:** For real-time WebSocket communication.
 * **Toastr.js:** For user notifications.
 * **Leaflet.js:** For interactive maps.
 * **Ionicons:** For UI icons.
-* **Plain CSS:**
+* **Plain CSS:** For styling.
 
 **Backend:**
 
-* **Node.js:**
-* **Express.js:**
-* **PostgreSQL:** For database.
-* **PostGIS:** Geospatial extension for PostgreSQL.
+* **Node.js**
+* **Express.js:** Web framework for Node.js.
+* **PostgreSQL:** Relational database.
+* **PostGIS:** Geospatial extension for PostgreSQL for location-based features.
 * **Knex.js:** SQL query builder for Node.js.
 * **Socket.IO:** For real-time WebSocket communication.
 * **express-session:** For session management.
 * **bcryptjs:** For password hashing.
 * **Nodemailer:** For sending emails (e.g., sign-up confirmations, invitations - currently commented out in parts).
+* **dotenv:** For environment variable management.
+* **cors:** For enabling Cross-Origin Resource Sharing.
 
 ---
 
@@ -55,7 +57,7 @@ This project was developed as an exam project for a full-stack development cours
 
 ### Prerequisites
 
-* Node.js (v18.x or later recommended)
+* Node.js (v18.x or later recommended, project uses >=16 for server, >=18 for client tooling)
 * npm (usually comes with Node.js)
 * PostgreSQL server installed and running with the PostGIS extension enabled.
 
@@ -63,12 +65,12 @@ This project was developed as an exam project for a full-stack development cours
 
 1.  **Clone the repository (if you haven't already):**
     ```bash
-    git clone http://github.com/karlsixten/eventpulse
+    git clone [http://github.com/karlsixten/eventpulse](http://github.com/karlsixten/eventpulse) # Replace with your repo URL if different
     cd eventpulse
     ```
 
 2.  **Backend Setup:**
-    * Navigate to the server directory:
+    * Navigate to the `server` directory:
         ```bash
         cd server
         ```
@@ -76,8 +78,9 @@ This project was developed as an exam project for a full-stack development cours
         ```bash
         npm install
         ```
+       
     * Create a `.env` file in the `server` directory by copying `.env.example`
-    * Ensure your PostgreSQL database (`eventpulse` or your chosen name) exists and the user has permissions.
+    * Ensure your PostgreSQL database (e.g., `eventpulse` or your chosen name) exists and the user has permissions.
     * Set up the database schema and seed initial data:
         ```bash
         npm run resetDatabase # This will drop existing tables and re-seed
@@ -87,7 +90,7 @@ This project was developed as an exam project for a full-stack development cours
         *(These scripts are defined in `server/package.json`)*
 
 3.  **Frontend Setup:**
-    * Navigate to the client directory from the project root:
+    * Navigate to the `client` directory from the project root:
         ```bash
         cd ../client
         # Or from server: cd ../client
@@ -96,6 +99,7 @@ This project was developed as an exam project for a full-stack development cours
         ```bash
         npm install
         ```
+       
 
 ### Running the Application
 
@@ -113,7 +117,7 @@ This project was developed as an exam project for a full-stack development cours
         *(This script is defined in `client/package.json`)*
     * Vite will typically start the development server on `http://localhost:5173`.
 
-Open your browser and navigate to `http://localhost:5173` (or your client's port).
+Open your browser and navigate to `http://localhost:5173` (or your client's configured port).
 
 ---
 
@@ -121,9 +125,19 @@ Open your browser and navigate to `http://localhost:5173` (or your client's port
 
 ### Server (`server/package.json`)
 
-* `npm run setupDatabase`: Creates database tables and PostGIS extension if they don't exist.
-* `npm run resetDatabase`: Drops all tables, recreates them, and seeds data. Useful for a clean start.
-* `npm run clearInvites`: (If you keep this script) Potentially for clearing or re-initializing the `event_invitations` table.
+* `npm run setupDatabase`: Creates database tables and the PostGIS extension if they don't exist. Does not delete existing data.
+* `npm run resetDatabase`: Drops all tables, recreates them, and seeds initial data. Useful for a clean start.
+* `npm run clearInvites`: Drops and recreates the `event_invitations` table.
+* `npm run dev`: Starts both the backend server (using nodemon) and the frontend development server concurrently.
+* `npm run prod`: Builds the client application and then starts the server in production mode, serving the built client files.
+
+### Client (`client/package.json`)
+
+* `npm run dev`: Starts the Vite development server for the frontend.
+* `npm run build`: Builds the frontend application for production.
+* `npm run preview`: Serves the production build locally for preview.
+
+---
 
 ## 📝 Project Status
 
