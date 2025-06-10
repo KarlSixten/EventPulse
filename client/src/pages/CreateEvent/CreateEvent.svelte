@@ -13,6 +13,7 @@
     let typeId = $state(null);
     let dateTime = $state(null);
     let isPrivate = $state(false);
+    let price = $state(0);
 
     let latitude = $state(null);
     let longitude = $state(null);
@@ -21,12 +22,12 @@
 
     onMount(async () => {
         try {
-            const result = await fetchGet($BASE_URL + '/api/events/types');
+            const result = await fetchGet($BASE_URL + "/api/events/types");
             eventTypes = result.data;
         } catch (error) {
             console.log(error);
         }
-    })
+    });
 
     async function handleSubmit(event) {
         event.preventDefault();
@@ -39,6 +40,7 @@
             longitude: longitude,
             isPrivate: isPrivate,
             typeId: typeId,
+            price: price
         };
 
         try {
@@ -135,6 +137,29 @@
                     <label for="event-is-private">This is a private event</label
                     >
                 </div>
+            </fieldset>
+
+            <fieldset class="form-fieldset">
+                <legend>Tickets & Pricing</legend>
+
+                <div class="field-group">
+                    <div class="form-field">
+                        <label for="event-price">Price</label>
+                        <div class="price-input-wrapper">
+                            <span class="currency-symbol">DKK</span>
+                            <input
+                                id="event-price"
+                                type="number"
+                                bind:value={price}
+                                min="0"
+                                step="1"
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <small class="field-hint"
+                            >Leave as 0 for a FREE event.</small
+                        >
+                    </div>
             </fieldset>
 
             <fieldset>

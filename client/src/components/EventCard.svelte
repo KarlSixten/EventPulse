@@ -1,5 +1,5 @@
 <script>
-    import { formatDate, formatDistance } from "../util/format";
+    import { formatDate, formatDistance, formatCurrency } from "../util/format";
 
     let { event } = $props();
 </script>
@@ -19,6 +19,7 @@
         </p>
     </div>
     <div class="card-footer">
+        <p class="event-price">{formatCurrency(event.price)}</p>
         <p class="event-date-time">{formatDate(event.dateTime)}</p>
         {#if event.distanceMeters}
             <p class="event-distance-from-user">

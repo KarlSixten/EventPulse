@@ -40,6 +40,7 @@ router.get('/', async (req, res) => {
       'e.date_time as dateTime',
       'e.created_by_id as createdById',
       'e.is_private as isPrivate',
+      'e.price',
       'e.created_at as createdAt',
       'e.updated_at as updatedAt',
       db.raw('ST_X(e.location_point::geometry) as longitude'),
@@ -119,6 +120,7 @@ router.get('/', async (req, res) => {
       },
       dateTime: eventRow.dateTime,
       isPrivate: eventRow.isPrivate,
+      price: eventRow.price,
       createdById: eventRow.createdById,
       distanceMeters: eventRow.distanceMeters,
       location: (eventRow.longitude !== null && eventRow.latitude !== null) ? {
@@ -150,6 +152,7 @@ router.get('/:id', async (req, res) => {
       'e.date_time as dateTime',
       'e.created_by_id as createdById',
       'e.is_private as isPrivate',
+      'e.price',
       'e.created_at as createdAt',
       'e.updated_at as updatedAt',
       db.raw('ST_X(e.location_point::geometry) as longitude'),
@@ -198,6 +201,7 @@ router.get('/:id', async (req, res) => {
       },
       dateTime: eventRow.dateTime,
       isPrivate: eventRow.isPrivate,
+      price: eventRow.price,
       createdById: eventRow.createdById,
       userRsvpStatus: eventRow.user_rsvp_status,
       location: (eventRow.longitude !== null && eventRow.latitude !== null) ? {
@@ -238,7 +242,7 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', isAuthenticated, validateCreateEvent, async (req, res) => {
   const {
-    title, description, typeId, dateTime, isPrivate, latitude, longitude,
+    title, description, typeId, dateTime, isPrivate, price, latitude, longitude,
   } = req.body;
 
   const eventCreatorId = req.session.user.id;
@@ -251,6 +255,7 @@ router.post('/', isAuthenticated, validateCreateEvent, async (req, res) => {
       created_by_id: eventCreatorId,
       date_time: dateTime,
       is_private: isPrivate,
+      price,
     };
 
     if (
@@ -280,7 +285,7 @@ router.put('/:id', isAuthenticated, validateUpdateEvent, async (req, res) => {
   const currentUserId = req.session.user.id;
 
   const {
-    title, description, typeId, dateTime, isPrivate, latitude, longitude,
+    title, description, typeId, dateTime, isPrivate, price, latitude, longitude,
   } = req.body;
   const updatePayload = {};
 
@@ -289,6 +294,7 @@ router.put('/:id', isAuthenticated, validateUpdateEvent, async (req, res) => {
   if (typeId !== undefined) updatePayload.type_id = typeId;
   if (dateTime !== undefined) updatePayload.date_time = dateTime;
   if (isPrivate !== undefined) updatePayload.is_private = isPrivate;
+  if (price !== undefined) updatePayload.price = price;
 
   if (latitude !== undefined || longitude !== undefined) {
     if (latitude === null && longitude === null) {

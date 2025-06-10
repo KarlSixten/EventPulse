@@ -2,7 +2,7 @@ import db from '../database/connection.js';
 
 export const validateCreateEvent = async (req, res, next) => {
   const {
-    title, description, typeId, dateTime, isPrivate,
+    title, description, typeId, dateTime, isPrivate, price,
   } = req.body;
 
   if (!title || title.trim() === ''
@@ -15,6 +15,10 @@ export const validateCreateEvent = async (req, res, next) => {
   const parsedDateTime = new Date(dateTime);
   if (Number.isNaN(parsedDateTime.getTime())) {
     return res.status(400).send({ message: `Invalid date/time format: "${dateTime}".` });
+  }
+
+  if (!price || !Number.isInteger(price)) {
+    return res.status(400).send({ message: "The 'price' field is required and must be an integer." });
   }
 
   if (!typeId || !Number.isInteger(typeId)) {

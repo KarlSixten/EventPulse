@@ -4,7 +4,7 @@
     import { userStore } from "../../stores/userStore";
     import { eventForEditing } from "../../stores/eventStore.js";
     import { fetchGet, fetchPost } from "../../util/fetch";
-    import { formatDate } from "../../util/format";
+    import { formatDate, formatCurrency } from "../../util/format";
     import toastr from "toastr";
 
     import Map from "./Map.svelte";
@@ -149,6 +149,7 @@
         <p class="event-type event-type-{event.type.name}">
             {event.type.name}
         </p>
+        <p class="event-price">{formatCurrency(event.price)}</p>
         <h3 class="event-datetime">
             <ion-icon name="calendar"></ion-icon>{formatDate(event.dateTime)}
         </h3>

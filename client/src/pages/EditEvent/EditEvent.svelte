@@ -24,6 +24,7 @@
   let latitude = $state(null);
   let longitude = $state(null);
   let typeId = $state(null);
+  let price = $state(null)
 
   let eventTypes = $state([]);
 
@@ -109,8 +110,9 @@
       typeId = loadedEvent.type.id || null;
       dateTime = formatDateTimeForInput(loadedEvent.dateTime);
       isPrivate = loadedEvent.isPrivate || false;
+      price = loadedEvent.price || 0;
       latitude = loadedEvent.location?.latitude ?? null;
-      longitude = loadedEvent.location?.longitude ?? null;      
+      longitude = loadedEvent.location?.longitude ?? null;
     } else {
       title = "";
       description = "";
@@ -133,6 +135,7 @@
       latitude: latitude,
       longitude: longitude,
       isPrivate: isPrivate,
+      price: price,
     };
 
     try {
@@ -247,6 +250,29 @@
             <label for="event-is-private">This is a private event</label>
           </div>
         </fieldset>
+
+        <fieldset class="form-fieldset">
+                <legend>Tickets & Pricing</legend>
+
+                <div class="field-group">
+                    <div class="form-field">
+                        <label for="event-price">Price</label>
+                        <div class="price-input-wrapper">
+                            <span class="currency-symbol">DKK</span>
+                            <input
+                                id="event-price"
+                                type="number"
+                                bind:value={price}
+                                min="0"
+                                step="1"
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <small class="field-hint"
+                            >Leave as 0 for a FREE event.</small
+                        >
+                    </div>
+            </fieldset>
 
         <fieldset>
           <legend>Location (Optional)</legend>

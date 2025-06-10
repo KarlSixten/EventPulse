@@ -43,3 +43,15 @@ export function formatDistance(distance) {
         return (distance / 1000).toFixed(0) + "km";
     }
 }
+
+export function formatCurrency(price) {
+  const numericPrice = Number(price);
+  if (!numericPrice || numericPrice === 0) {
+    return 'FREE';
+  }
+
+  return new Intl.NumberFormat('da-DK', {
+    style: 'currency',
+    currency: 'DKK',
+  }).format(numericPrice);
+}

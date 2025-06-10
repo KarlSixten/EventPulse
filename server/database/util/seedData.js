@@ -58,6 +58,8 @@ export const seedEventsData = [
     '2025-05-29T18:00', // date_time (upcoming)
     false, // is_private
     2, // Meetup
+    10, // Price
+    false, // is_ticketed
   ],
   [
     'Summer Jazz Night in Frederiksberg Have', // title
@@ -68,6 +70,8 @@ export const seedEventsData = [
     '2025-06-14T19:30', // date_time (upcoming)
     false, // is_private
     1, // Concert
+    0, // Price
+    false, // is_ticketed
   ],
   [
     'Private Birthday Bash for Alex', // title
@@ -78,6 +82,8 @@ export const seedEventsData = [
     '2025-06-07T20:00', // date_time (upcoming)
     true, // is_private
     3, // Birthday
+    0, // Price
+    false, // is_ticketed
   ],
   [
     'Refshaleøen Street Food Market - Opening Weekend', // title
@@ -88,6 +94,8 @@ export const seedEventsData = [
     '2025-05-24T12:00', // date_time (upcoming - this weekend!)
     false, // is_private
     4, // Food
+    0, // Price
+    false, // is_ticketed
   ],
   [
     'Advanced Svelte Workshop: Mastering Runes', // title
@@ -98,6 +106,8 @@ export const seedEventsData = [
     '2025-07-05T09:00', // date_time (upcoming - further out)
     false, // is_private
     5, // Workshop
+    50, // Price
+    false, // is_ticketed
   ],
 
   // Past Events
@@ -110,6 +120,8 @@ export const seedEventsData = [
     '2025-05-15T07:30', // date_time (past)
     false, // is_private
     6, // Workout
+    100, // Price
+    false, // is_ticketed
   ],
   [
     'Indie Game Devs - May Showcase (Members Only)', // title
@@ -120,6 +132,9 @@ export const seedEventsData = [
     '2025-05-08T19:00', // date_time (past) - Changed from April to make it more recent past
     true, // is_private
     7, // Presentation
+    0, // Price
+    false, // is_ticketed
+
   ],
   [
     'Nyhavn Historical Walking Tour', // title
@@ -130,6 +145,8 @@ export const seedEventsData = [
     '2025-05-04T14:00', // date_time (past)
     false, // is_private
     7, // Presentation
+    10, // Price
+    false, // is_ticketed
   ],
 
   // Event with No Location
@@ -142,6 +159,8 @@ export const seedEventsData = [
     '2025-06-10T16:00', // date_time (upcoming)
     false, // is_private
     7, // Presentation
+    0, // Price
+    false, // is_ticketed
   ],
 
   // Another Community Event
@@ -154,5 +173,7 @@ export const seedEventsData = [
     '2025-04-20T10:00', // date_time (past) - Made it further in the past for variety
     false, // is_private
     2, // Meetup
+    0, // Price
+    false, // is_ticketed
   ],
 ];

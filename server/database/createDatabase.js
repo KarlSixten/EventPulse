@@ -86,6 +86,9 @@ async function createTables() {
         date_time TIMESTAMPTZ NOT NULL,
         created_by_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         is_private BOOLEAN NOT NULL,
+        price NUMERIC(10, 2) DEFAULT 0.00,
+        is_ticketed BOOLEAN DEFAULT FALSE NOT NULL,
+        ticket_url TEXT,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
@@ -176,7 +179,7 @@ async function seedEvents() {
   for (const eventData of seedEventsData) {
     try {
       await pgPool.query(
-        'INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private, type_id) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7, $8) RETURNING id',
+        'INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private, type_id, price, is_ticketed) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7, $8, $9, $10) RETURNING id',
         eventData,
       );
       console.log(`Inserted event: ${eventData[0]}`);
