@@ -2,11 +2,14 @@ import { Router } from 'express';
 import db from '../../database/connection.js';
 import rsvpRouter from './rsvpRouter.js';
 import invitationsRouter from './invitationsRouter.js';
+import typesRouter from './typesRouter.js';
 import isAuthenticated from '../../middleware/authMiddleware.js';
 
 import { validateCreateEvent, validateUpdateEvent, validateEventIdParam } from '../../middleware/eventValidationMiddleware.js';
 
 const router = Router();
+
+router.use('/types', typesRouter);
 
 router.all('/:id', validateEventIdParam);
 router.all('/:id/{splat}', validateEventIdParam);
@@ -26,11 +29,13 @@ router.get('/', async (req, res) => {
   } = req.query;
 
   try {
-    const query = db('events as e');
+    const query = db('events as e').leftJoin('event_types as et', 'e.type_id', 'et.id');
 
     const selectColumns = [
       'e.id',
       'e.title',
+      'et.id as typeId',
+      'et.name as typeName',
       'e.description',
       'e.date_time as dateTime',
       'e.created_by_id as createdById',
@@ -102,9 +107,27 @@ router.get('/', async (req, res) => {
       query.orderBy(orderByColumn, orderByDirection);
     }
 
-    const events = await query;
+    const flatEvents = await query;
 
-    return res.send({ data: events });
+    const nestedEvents = flatEvents.map((eventRow) => ({
+      id: eventRow.id,
+      title: eventRow.title,
+      description: eventRow.description,
+      type: {
+        id: eventRow.typeId,
+        name: eventRow.typeName,
+      },
+      dateTime: eventRow.dateTime,
+      isPrivate: eventRow.isPrivate,
+      createdById: eventRow.createdById,
+      distanceMeters: eventRow.distanceMeters,
+      location: (eventRow.longitude !== null && eventRow.latitude !== null) ? {
+        latitude: eventRow.latitude,
+        longitude: eventRow.longitude,
+      } : null,
+    }));
+
+    return res.send({ data: nestedEvents });
   } catch (error) {
     return res.status(500).send({ message: 'Error fetching events. Check server logs.' });
   }
@@ -115,11 +138,20 @@ router.get('/:id', async (req, res) => {
   const eventId = req.params.id;
 
   try {
-    const query = db('events as e')
+    const query = db('events as e').leftJoin('event_types as et', 'e.type_id', 'et.id')
       .where('e.id', eventId);
 
     const selectColumns = [
-      'e.*',
+      'e.id',
+      'e.title',
+      'et.id as typeId',
+      'et.name as typeName',
+      'e.description',
+      'e.date_time as dateTime',
+      'e.created_by_id as createdById',
+      'e.is_private as isPrivate',
+      'e.created_at as createdAt',
+      'e.updated_at as updatedAt',
       db.raw('ST_X(e.location_point::geometry) as longitude'),
       db.raw('ST_Y(e.location_point::geometry) as latitude'),
     ];
@@ -160,9 +192,13 @@ router.get('/:id', async (req, res) => {
       id: eventRow.id,
       title: eventRow.title,
       description: eventRow.description,
-      dateTime: eventRow.date_time,
-      isPrivate: eventRow.is_private,
-      createdById: eventRow.created_by_id,
+      type: {
+        id: eventRow.typeId,
+        name: eventRow.typeName,
+      },
+      dateTime: eventRow.dateTime,
+      isPrivate: eventRow.isPrivate,
+      createdById: eventRow.createdById,
       userRsvpStatus: eventRow.user_rsvp_status,
       location: (eventRow.longitude !== null && eventRow.latitude !== null) ? {
         latitude: eventRow.latitude,
@@ -202,7 +238,7 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', isAuthenticated, validateCreateEvent, async (req, res) => {
   const {
-    title, description, dateTime, isPrivate, latitude, longitude,
+    title, description, typeId, dateTime, isPrivate, latitude, longitude,
   } = req.body;
 
   const eventCreatorId = req.session.user.id;
@@ -211,6 +247,7 @@ router.post('/', isAuthenticated, validateCreateEvent, async (req, res) => {
     const eventToInsert = {
       title,
       description,
+      type_id: typeId,
       created_by_id: eventCreatorId,
       date_time: dateTime,
       is_private: isPrivate,
@@ -243,12 +280,13 @@ router.put('/:id', isAuthenticated, validateUpdateEvent, async (req, res) => {
   const currentUserId = req.session.user.id;
 
   const {
-    title, description, dateTime, isPrivate, latitude, longitude,
+    title, description, typeId, dateTime, isPrivate, latitude, longitude,
   } = req.body;
   const updatePayload = {};
 
   if (title !== undefined) updatePayload.title = title.trim();
   if (description !== undefined) updatePayload.description = description.trim();
+  if (typeId !== undefined) updatePayload.type_id = typeId;
   if (dateTime !== undefined) updatePayload.date_time = dateTime;
   if (isPrivate !== undefined) updatePayload.is_private = isPrivate;
 

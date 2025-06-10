@@ -1,6 +1,8 @@
-export const validateCreateEvent = (req, res, next) => {
+import db from '../database/connection.js';
+
+export const validateCreateEvent = async (req, res, next) => {
   const {
-    title, description, dateTime, isPrivate,
+    title, description, typeId, dateTime, isPrivate,
   } = req.body;
 
   if (!title || title.trim() === ''
@@ -14,7 +16,22 @@ export const validateCreateEvent = (req, res, next) => {
   if (Number.isNaN(parsedDateTime.getTime())) {
     return res.status(400).send({ message: `Invalid date/time format: "${dateTime}".` });
   }
-  return next();
+
+  if (!typeId || !Number.isInteger(typeId)) {
+    return res.status(400).send({ message: "The 'typeId' field is required and must be an integer." });
+  }
+
+  try {
+    const typeExists = await db('event_types').where({ id: typeId }).first();
+
+    if (!typeExists) {
+      return res.status(400).send({ message: `Invalid event type ID: ${typeId}. This type does not exist.` });
+    }
+
+    return next();
+  } catch (error) {
+    return res.status(500).send({ message: 'An internal error occurred while validating the event type.' });
+  }
 };
 
 export const validateUpdateEvent = (req, res, next) => {

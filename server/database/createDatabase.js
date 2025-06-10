@@ -4,7 +4,7 @@
 /* eslint-disable no-console */
 import { pgPool } from './connection.js';
 import { hashPassword } from '../util/passwordHasher.js';
-import { seedUsersData, seedEventsData } from './util/seedData.js';
+import { seedUsersData, seedEventTypesData, seedEventsData } from './util/seedData.js';
 
 const deleteMode = process.argv.includes('--delete');
 
@@ -48,6 +48,7 @@ async function dropAllTables() {
         DROP TABLE IF EXISTS events CASCADE;
         DROP TABLE IF EXISTS event_invitations CASCADE;
         DROP TABLE IF EXISTS event_rsvps CASCADE;
+        DROP TABLE IF EXISTS event_types;
     `);
 }
 
@@ -69,9 +70,16 @@ async function createTables() {
         updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
 
+        CREATE TABLE IF NOT EXISTS event_types (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE TABLE IF NOT EXISTS events (
         id SERIAL PRIMARY KEY,
         title TEXT NOT NULL,
+        type_id INTEGER NOT NULL REFERENCES event_types(id) ON DELETE CASCADE,
         description TEXT,
         location_point GEOGRAPHY(Point, 4326),
         date_time TIMESTAMPTZ NOT NULL,
@@ -109,8 +117,11 @@ async function seed() {
   // USERS
   await seedUsers();
 
+  // EVENT TYPES
+  await seedEventTypes();
+
   // EVENTS
-  await seedDatabaseEvents();
+  await seedEvents();
 }
 
 async function seedUsers() {
@@ -135,11 +146,26 @@ async function seedUsers() {
   console.log('User seeding process complete.');
 }
 
-async function seedDatabaseEvents() {
+async function seedEventTypes() {
+  for (const eventType of seedEventTypesData) {
+    try {
+      await pgPool.query(
+        'INSERT INTO event_types (name) VALUES ($1) RETURNING id',
+        eventType,
+      );
+      console.log(`Inserted event type: ${eventType[0]}`);
+    } catch (error) {
+      console.error(`Error inserting event type "${eventType[0]}":`, error);
+    }
+  }
+  console.log('Database seeding attempted.');
+}
+
+async function seedEvents() {
   for (const eventData of seedEventsData) {
     try {
       await pgPool.query(
-        'INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7) RETURNING id',
+        'INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private, type_id) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7, $8) RETURNING id',
         eventData,
       );
       console.log(`Inserted event: ${eventData[0]}`);
