@@ -126,12 +126,12 @@
             currentEvents.forEach((event) => {
                 if (
                     event &&
-                    typeof event.latitude === "number" &&
-                    typeof event.longitude === "number" &&
-                    !isNaN(event.latitude) &&
-                    !isNaN(event.longitude)
+                    typeof event.location.latitude === "number" &&
+                    typeof event.location.longitude === "number" &&
+                    !isNaN(event.location.latitude) &&
+                    !isNaN(event.location.longitude)
                 ) {
-                    const marker = L.marker([event.latitude, event.longitude]);
+                    const marker = L.marker([event.location.latitude, event.location.longitude]);
 
                     let popupContent = `<b>${event.title || "Event"}</b>`;
                     if (event.description) {

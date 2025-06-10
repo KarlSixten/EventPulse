@@ -144,7 +144,12 @@
         >
             {event.isPrivate ? "Private Event" : "Public Event"}
         </h2>
-        <h3 class="event-datetime"><ion-icon name="calendar"></ion-icon>{formatDate(event.dateTime)}</h3>
+        <p class="event-type event-type-{event.type.name}">
+            {event.type.name}
+        </p>
+        <h3 class="event-datetime">
+            <ion-icon name="calendar"></ion-icon>{formatDate(event.dateTime)}
+        </h3>
         <h3>RSVP</h3>
         <h4>{displayCount} {othersText} going</h4>
         {#if isLoggedIn}
@@ -376,5 +381,62 @@
     .event-publicity.private {
         background-color: var(--ep-secondary);
         color: var(--ep-text-on-secondary);
+    }
+
+    .event-type {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.75em;
+        font-weight: normal;
+        border: 1px solid;
+    }
+
+    .event-type-Concert {
+        background-color: #f3e8ff;
+        color: #581c87;
+        border-color: #d8b4fe;
+    }
+
+    .event-type-Meetup {
+        background-color: #e0f2fe;
+        color: #0c4a6e;
+        border-color: #7dd3fc;
+    }
+
+    .event-type-Birthday {
+        background-color: #fef9c3;
+        color: #713f12;
+        border-color: #fde047;
+    }
+
+    .event-type-Food {
+        background-color: #ffe4e6;
+        color: #881337;
+        border-color: #fda4af;
+    }
+
+    .event-type-Workshop {
+        background-color: #fefce8;
+        color: #854d0e;
+        border-color: #facc15;
+    }
+
+    .event-type-Workout {
+        background-color: #dcfce7;
+        color: #166534;
+        border-color: #86efac;
+    }
+
+    .event-type-Presentation {
+        background-color: #eef2ff;
+        color: #312e81;
+        border-color: #a5b4fc;
+    }
+
+    .event-type-Other {
+        background-color: #f3f4f6;
+        color: #374151;
+        border-color: #d1d5db;
     }
 </style>

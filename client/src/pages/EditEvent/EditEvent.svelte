@@ -3,8 +3,8 @@
   import { onMount, onDestroy } from "svelte";
   import { eventForEditing } from "../../stores/eventStore.js";
   import { userStore } from "../../stores/userStore.js";
-  import { fetchGet, fetchDelete, fetchPut } from "../../util/fetch.js"; //
-  import { BASE_URL } from "../../stores/generalStore.js"; //
+  import { fetchGet, fetchDelete, fetchPut } from "../../util/fetch.js";
+  import { BASE_URL } from "../../stores/generalStore.js";
   import {
     formatDateTimeForInput,
     getLocalDateTimeString,
@@ -23,6 +23,9 @@
   let isPrivate = $state(false);
   let latitude = $state(null);
   let longitude = $state(null);
+  let typeId = $state(null);
+
+  let eventTypes = $state([]);
 
   let eventToEdit = $state(null);
   let isLoading = $state(true);
@@ -54,7 +57,7 @@
       isLoading = true;
       if (valueFromStore && valueFromStore.id == id) {
         eventToEdit = valueFromStore;
-        if (checkAuthorizationAndInitialize(eventToEdit)) {
+        if (checkAuthorizationAndInitialize(eventToEdit)) {          
             isLoading = false;
         }
       } else {
@@ -67,7 +70,13 @@
           isLoading = false;
         }
       }
-    });
+    })
+    try {
+            const result = await fetchGet($BASE_URL + '/api/events/types');
+            eventTypes = result.data;
+        } catch (error) {
+            console.log(error);
+        };
   });
 
   async function fetchEventDetails() {
@@ -97,13 +106,15 @@
     if (loadedEvent) {
       title = loadedEvent.title || "";
       description = loadedEvent.description || "";
+      typeId = loadedEvent.type.id || null;
       dateTime = formatDateTimeForInput(loadedEvent.dateTime);
       isPrivate = loadedEvent.isPrivate || false;
       latitude = loadedEvent.location?.latitude ?? null;
-      longitude = loadedEvent.location?.longitude ?? null;
+      longitude = loadedEvent.location?.longitude ?? null;      
     } else {
       title = "";
       description = "";
+      typeId = null;
       dateTime = "";
       isPrivate = false;
       latitude = null;
@@ -117,6 +128,7 @@
     const eventData = {
       title: title.trim(),
       description: description.trim(),
+      typeId: typeId,
       dateTime: dateTime,
       latitude: latitude,
       longitude: longitude,
@@ -206,6 +218,15 @@
               bind:value={description}
               required
             ></textarea>
+            <div>
+                    <label for="event-type">Type:</label>
+                    <select bind:value={typeId} required>
+                        <option value="" disabled>Select a type...</option>
+                        {#each eventTypes as type}
+                            <option value={type.id}>{type.name}</option>
+                        {/each}
+                    </select>
+                </div>
           </div>
           <div>
             <label for="event-date">Date & Time:</label>

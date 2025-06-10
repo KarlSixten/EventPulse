@@ -1,19 +1,32 @@
 <script>
     import { navigate } from "svelte-routing";
-    import { fetchPost } from "../../util/fetch"; //
-    import { BASE_URL } from "../../stores/generalStore"; //
-    import { getLocalDateTimeString } from "../../util/format"; //
+    import { fetchGet, fetchPost } from "../../util/fetch";
+    import { BASE_URL } from "../../stores/generalStore";
+    import { getLocalDateTimeString } from "../../util/format";
 
     import EventLocationMapInput from "../../components/EventLocationMapInput.svelte";
     import toastr from "toastr";
+    import { onMount } from "svelte";
 
     let title = $state("");
     let description = $state("");
+    let typeId = $state(null);
     let dateTime = $state(null);
     let isPrivate = $state(false);
 
     let latitude = $state(null);
     let longitude = $state(null);
+
+    let eventTypes = $state([]);
+
+    onMount(async () => {
+        try {
+            const result = await fetchGet($BASE_URL + '/api/events/types');
+            eventTypes = result.data;
+        } catch (error) {
+            console.log(error);
+        }
+    })
 
     async function handleSubmit(event) {
         event.preventDefault();
@@ -25,6 +38,7 @@
             latitude: latitude,
             longitude: longitude,
             isPrivate: isPrivate,
+            typeId: typeId,
         };
 
         try {
@@ -39,6 +53,7 @@
 
                 title = "";
                 description = "";
+                typeId = null;
                 dateTime = null;
                 latitude = null;
                 longitude = null;
@@ -91,6 +106,15 @@
                         bind:value={description}
                         required
                     ></textarea>
+                </div>
+                <div>
+                    <label for="event-type">Type:</label>
+                    <select bind:value={typeId} required>
+                        <option value="" disabled>Select a type...</option>
+                        {#each eventTypes as type}
+                            <option value={type.id}>{type.name}</option>
+                        {/each}
+                    </select>
                 </div>
                 <div>
                     <label for="event-date">Date & Time:</label>
@@ -195,9 +219,7 @@
     input[type="datetime-local"]:focus,
     textarea:focus {
         outline: none;
-        border-color: var(
-            --ep-primary
-        );
+        border-color: var(--ep-primary);
         box-shadow: 0 0 0 2px
             color-mix(in srgb, var(--ep-primary) 20%, transparent);
     }
