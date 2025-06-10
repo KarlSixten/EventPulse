@@ -2,6 +2,7 @@ import { writable, get } from 'svelte/store';
 import { io } from 'socket.io-client';
 import { userStore } from './userStore.js';
 import { BASE_URL } from './generalStore.js';
+import { fetchGet, fetchPut } from '../util/fetch.js';
 import toastr from 'toastr';
 
 let socket = null;
@@ -14,7 +15,24 @@ export const isSocketConnected = writable(false);
 
 userStore.subscribe(currentUser => {
   initializeSocket();
+  if (currentUser) {
+    fetchAndLoadNotifications();
+  } else {
+    notifications.set([]);
+    hasUnreadNotifications.set(false);
+  }
 });
+
+async function fetchAndLoadNotifications() {
+  const serverUrlValue = get(BASE_URL);
+  const result = await fetchGet(serverUrlValue + '/api/notifications');
+  if (result && result.data) {
+    notifications.set(result.data);
+    if (result.data.length > 0) {
+      hasUnreadNotifications.set(true);
+    }
+  }
+}
 
 function initializeSocket() {
   const serverUrlValue = get(BASE_URL);
@@ -71,27 +89,42 @@ function setupSocketListeners(currentSocket) {
   }
 
   newNotificationListener = (notification) => {
-    console.log(`NotificationStore: Received new_notification on socket ID ${currentSocket?.id}:`, notification);
-    notifications.update(currentNotifications => {
-      const updatedNotifications = [notification, ...currentNotifications].slice(0, 20);
-      return updatedNotifications;
-    });
+    const newNotification = {
+      message: notification.message,
+      is_read: false,
+      created_at: new Date().toISOString(),
+    };
+
+    notifications.update(currentNotifications => [newNotification, ...currentNotifications]);
     hasUnreadNotifications.set(true);
     toastr.info(notification.message || 'You have a new notification!');
-  };
-
-  currentSocket.on('new_notification', newNotificationListener);
+  }
 }
 
+export async function markNotificationRead(notificationId) {
+    const serverUrlValue = get(BASE_URL);
 
-
-export function markNotificationsAsRead() {
-  hasUnreadNotifications.set(false);
-  // Might also want to update the notifications themselves
-  // notifications.update(all => all.map(n => ({ ...n, read: true })));
+    const result = await fetchPut(`${serverUrlValue}/api/notifications/${notificationId}/mark-read`, {});
+    if (result.ok) {
+        notifications.update(currentNotifications =>
+            currentNotifications.filter(notification => notification.id !== notificationId)
+        );
+    } else {
+        toastr.error('Could not mark notification as read. Please try again.');
+    }
 }
 
-export function clearNotifications() {
-  notifications.set([]);
-  hasUnreadNotifications.set(false);
+export async function dismissAllNotifications() {
+  const serverUrlValue = get(BASE_URL);
+  const currentNotifications = get(notifications);
+
+  if (currentNotifications.length > 0) {
+    const result = await fetchPut(`${serverUrlValue}/api/notifications/read-all`);
+    if (result.ok) {
+      notifications.set([]);
+      hasUnreadNotifications.set(false);
+    } else {
+      toastr.error('Could not clear notifications. Please try again.');
+    }
+  }
 }

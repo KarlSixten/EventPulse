@@ -5,8 +5,10 @@ import cors from 'cors';
 import { createServer } from 'http';
 import path from 'path';
 import { initSocket } from './socket.js';
+
 import authRouter from './routers/auth/authRouter.js';
 import eventRouter from './routers/events/eventRouter.js';
+import notificationsRouter from './routers/notifications/notificationsRouter.js';
 
 const prodMode = process.argv.includes('--prod');
 
@@ -38,6 +40,8 @@ initSocket(httpServer, sessionMiddleware);
 app.use('/api/auth', authRouter);
 
 app.use('/api/events/', eventRouter);
+
+app.use('/api/notifications', notificationsRouter);
 
 if (prodMode) {
   app.use(express.static(path.resolve('../client/dist/')));

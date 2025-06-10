@@ -89,6 +89,14 @@ router.post('/', isAuthenticated, async (req, res) => {
         inviterName: inviterFirstName,
         timestamp: new Date().toISOString(),
       };
+
+      await db('notifications').insert({
+        user_id: actualInviteeId,
+        type: 'event_invitation',
+        message: notificationPayload.message,
+        related_event_id: eventDetails.id,
+      });
+
       io.to(actualInviteeId.toString()).emit('new_notification', notificationPayload);
 
       // Commented out to lessen spam

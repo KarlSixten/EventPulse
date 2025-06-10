@@ -3,8 +3,8 @@
     import {
         notifications,
         hasUnreadNotifications,
-        markNotificationsAsRead,
-        clearNotifications,
+        dismissAllNotifications,
+        markNotificationRead,
     } from "../stores/notificationStore.js";
     import { formatDate } from "../util/format.js";
     import { onMount, onDestroy } from "svelte";
@@ -14,9 +14,6 @@
 
     function toggleDropdown() {
         showDropdown = !showDropdown;
-        if (showDropdown && $hasUnreadNotifications) {
-            markNotificationsAsRead();
-        }
     }
 
     function handleClickOutside(event) {
@@ -29,7 +26,7 @@
     }
 
     onMount(() => {
-        window.addEventListener("click", handleClickOutside);
+        window.addEventListener("click", handleClickOutside);        
     });
 
     onDestroy(() => {
@@ -37,7 +34,7 @@
     });
 
     function handleClearNotifications() {
-        clearNotifications();
+        dismissAllNotifications();
         showDropdown = false;
     }
 </script>
@@ -68,12 +65,12 @@
                 {#if $notifications.length > 0}
                     <ul class="notification-list">
                         {#each $notifications as notification (notification.timestamp + notification.message)}
-                            <Link to="events/{notification.eventId}">
+                            <Link to="events/{notification.related_event_id}" onclick={() => markNotificationRead(notification.id)}>
                                 <li class="notification-item">
                                     <p>{notification.message}</p>
                                     <span class="timestamp"
                                         >{formatDate(
-                                            notification.timestamp,
+                                            notification.created_at,
                                         )}</span
                                     >
                                 </li>

@@ -44,11 +44,12 @@ try {
 
 async function dropAllTables() {
   await pgPool.query(`
+        DROP TABLE IF EXISTS notifications CASCADE;
         DROP TABLE IF EXISTS users CASCADE;
         DROP TABLE IF EXISTS events CASCADE;
         DROP TABLE IF EXISTS event_invitations CASCADE;
         DROP TABLE IF EXISTS event_rsvps CASCADE;
-        DROP TABLE IF EXISTS event_types;
+        DROP TABLE IF EXISTS event_types CASCADE;
     `);
 }
 
@@ -109,6 +110,16 @@ async function createTables() {
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
         UNIQUE (event_id, user_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS notifications (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        type VARCHAR(50) NOT NULL,
+        message TEXT NOT NULL,
+        is_read BOOLEAN DEFAULT FALSE NOT NULL,
+        related_event_id INTEGER REFERENCES events(id) ON DELETE SET NULL,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
 `);
 }
