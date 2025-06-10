@@ -110,6 +110,7 @@
         <select id="sort-by" bind:value={sortBy}>
             <option value="date">Date</option>
             <option value="distance">Distance</option>
+            <option value="price">Price</option>
         </select>
         {#if sortBy === "distance" && (userLatitude == null || userLongitude == null)}
             <button

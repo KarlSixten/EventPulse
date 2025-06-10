@@ -79,14 +79,10 @@ router.get('/', async (req, res) => {
     }
 
     const validSortOrder = sortOrder.toUpperCase() === 'DESC' ? 'desc' : 'asc';
-    let orderByColumn = 'e.date_time';
-    let useOrderByRaw = false;
-    let orderByDirection = validSortOrder;
 
     if (sortBy === 'distance' && userLat != null && userLon != null) {
       const latitude = parseFloat(userLat);
       const longitude = parseFloat(userLon);
-
       if (!Number.isNaN(latitude) && !Number.isNaN(longitude)) {
         selectColumns.push(
           db.raw(
@@ -94,19 +90,15 @@ router.get('/', async (req, res) => {
             [longitude, latitude],
           ),
         );
-        orderByColumn = '"distanceMeters"';
-        useOrderByRaw = true;
-        orderByDirection = `${validSortOrder} NULLS LAST`;
+        query.orderByRaw(`"distanceMeters" ${validSortOrder} NULLS LAST`);
       }
+    } else if (sortBy === 'price') {
+      query.orderByRaw(`e.price::numeric ${validSortOrder}`);
+    } else {
+      query.orderBy('e.date_time', validSortOrder);
     }
 
     query.select(selectColumns);
-
-    if (useOrderByRaw) {
-      query.orderByRaw(`${orderByColumn} ${orderByDirection}`);
-    } else {
-      query.orderBy(orderByColumn, orderByDirection);
-    }
 
     const flatEvents = await query;
 
