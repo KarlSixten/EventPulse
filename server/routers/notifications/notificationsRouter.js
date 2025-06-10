@@ -8,8 +8,11 @@ router.get('/', isAuthenticated, async (req, res) => {
   const userId = req.session.user.id;
   try {
     const notifications = await db('notifications')
-      .where({ user_id: userId, is_read: false })
-      .orderBy('created_at', 'desc');
+      .where({ user_id: userId })
+      .orderBy([
+        { column: 'is_read', order: 'asc' },
+        { column: 'created_at', order: 'desc' },
+      ]);
     res.send({ data: notifications });
   } catch (error) {
     res.status(500).send({ message: 'Error fetching notifications.' });

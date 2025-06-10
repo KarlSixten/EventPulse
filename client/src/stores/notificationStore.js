@@ -13,6 +13,11 @@ export const notifications = writable([]);
 export const hasUnreadNotifications = writable(false);
 export const isSocketConnected = writable(false);
 
+function updateUnreadStatus() {
+    const unreadCount = get(notifications).filter(n => !n.is_read).length;
+    hasUnreadNotifications.set(unreadCount > 0);
+}
+
 userStore.subscribe(currentUser => {
   initializeSocket();
   if (currentUser) {
@@ -28,9 +33,7 @@ async function fetchAndLoadNotifications() {
   const result = await fetchGet(serverUrlValue + '/api/notifications');
   if (result && result.data) {
     notifications.set(result.data);
-    if (result.data.length > 0) {
-      hasUnreadNotifications.set(true);
-    }
+    updateUnreadStatus();
   }
 }
 
@@ -89,26 +92,30 @@ function setupSocketListeners(currentSocket) {
   }
 
   newNotificationListener = (notification) => {
-    const newNotification = {
-      message: notification.message,
-      is_read: false,
-      created_at: new Date().toISOString(),
-    };
-
-    notifications.update(currentNotifications => [newNotification, ...currentNotifications]);
-    hasUnreadNotifications.set(true);
+    notifications.update(currentNotifications => [notification, ...currentNotifications]);
+    updateUnreadStatus();
     toastr.info(notification.message || 'You have a new notification!');
-  }
+  };
+
+  currentSocket.on('new_notification', newNotificationListener);
 }
 
 export async function markNotificationRead(notificationId) {
     const serverUrlValue = get(BASE_URL);
 
+    const notification = get(notifications).find(n => n.id === notificationId);
+    if (!notification || notification.is_read) {
+        return;
+    }
+
     const result = await fetchPut(`${serverUrlValue}/api/notifications/${notificationId}/mark-read`, {});
     if (result.ok) {
         notifications.update(currentNotifications =>
-            currentNotifications.filter(notification => notification.id !== notificationId)
+            currentNotifications.map(n =>
+                n.id === notificationId ? { ...n, is_read: true } : n
+            )
         );
+        updateUnreadStatus();
     } else {
         toastr.error('Could not mark notification as read. Please try again.');
     }
@@ -118,11 +125,13 @@ export async function dismissAllNotifications() {
   const serverUrlValue = get(BASE_URL);
   const currentNotifications = get(notifications);
 
-  if (currentNotifications.length > 0) {
-    const result = await fetchPut(`${serverUrlValue}/api/notifications/read-all`);
+  if (currentNotifications.filter(n => !n.is_read).length > 0) {
+    const result = await fetchPut(`${serverUrlValue}/api/notifications/read-all`, {});
     if (result.ok) {
-      notifications.set([]);
-      hasUnreadNotifications.set(false);
+        notifications.update(all =>
+            all.map(n => ({ ...n, is_read: true }))
+        );
+        hasUnreadNotifications.set(false);
     } else {
       toastr.error('Could not clear notifications. Please try again.');
     }

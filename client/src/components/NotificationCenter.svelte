@@ -12,6 +12,8 @@
 
     let showDropdown = false;
 
+    $: unreadCount = $notifications.filter((n) => !n.is_read).length;
+
     function toggleDropdown() {
         showDropdown = !showDropdown;
     }
@@ -26,7 +28,8 @@
     }
 
     onMount(() => {
-        window.addEventListener("click", handleClickOutside);        
+        window.addEventListener("click", handleClickOutside);
+
     });
 
     onDestroy(() => {
@@ -37,17 +40,19 @@
         dismissAllNotifications();
         showDropdown = false;
     }
+
+    function handleNotificationClick(id) {
+        markNotificationRead(id);
+        showDropdown = false; 
+    }
 </script>
 
 {#if $userStore}
     <div class="notification-center-wrapper">
-        <button class="notification-button" onclick={toggleDropdown}>
-            <ion-icon name="notifications{!showDropdown ? '-outline' : ''}"
-            ></ion-icon>
-            {#if $hasUnreadNotifications}
-                <span class="badge"
-                    >{$notifications.filter((n) => !n.read).length || ""}</span
-                >
+        <button class="notification-button" on:click={toggleDropdown}>
+            <ion-icon name="notifications{!showDropdown ? '-outline' : ''}"></ion-icon>
+            {#if unreadCount > 0}
+                <span class="badge">{unreadCount}</span>
             {/if}
         </button>
 
@@ -55,24 +60,22 @@
             <div class="dropdown">
                 <div class="dropdown-header">
                     <h4>Notifications</h4>
-                    {#if $notifications.length > 0}
+                    {#if unreadCount > 0}
                         <button
                             class="clear-all-button"
-                            onclick={handleClearNotifications}>Clear All</button
+                            on:click={handleClearNotifications}>Mark all as read</button
                         >
                     {/if}
                 </div>
                 {#if $notifications.length > 0}
                     <ul class="notification-list">
-                        {#each $notifications as notification (notification.timestamp + notification.message)}
-                            <Link to="events/{notification.related_event_id}" onclick={() => markNotificationRead(notification.id)}>
-                                <li class="notification-item">
+                        {#each $notifications as notification (notification.id)}
+                            <Link to="events/{notification.related_event_id}" on:click={() => handleNotificationClick(notification.id)}>
+                                <li class="notification-item" class:read={notification.is_read}>
                                     <p>{notification.message}</p>
-                                    <span class="timestamp"
-                                        >{formatDate(
-                                            notification.created_at,
-                                        )}</span
-                                    >
+                                    <span class="timestamp">
+                                        {formatDate(notification.created_at)}
+                                    </span>
                                 </li>
                             </Link>
                         {/each}
@@ -174,6 +177,16 @@
         font-size: 0.8rem;
         line-height: 1.2;
         color: var(--ep-text-primary);
+    }
+
+    .notification-item.read {
+        background-color: #f8f9fa;
+        opacity: 0.7;
+    }
+
+    .notification-item.read p,
+    .notification-item.read .timestamp {
+        color: #6c757d;
     }
 
     .notification-item .timestamp {

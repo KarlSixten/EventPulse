@@ -30,7 +30,9 @@
     $effect(() => {
         if (id) {
             fetchEventDetails();
+            
         }
+        
     });
 
     async function fetchEventDetails() {
