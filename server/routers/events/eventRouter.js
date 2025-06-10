@@ -22,10 +22,12 @@ router.get('/', async (req, res) => {
   const {
     sortBy = 'date',
     sortOrder = 'ASC',
+    typeFilter,
     userLat,
     userLon,
     timeFilter = 'upcoming',
     locationRequired = 'false',
+    searchQuery = null,
   } = req.query;
 
   try {
@@ -46,6 +48,14 @@ router.get('/', async (req, res) => {
       db.raw('ST_X(e.location_point::geometry) as longitude'),
       db.raw('ST_Y(e.location_point::geometry) as latitude'),
     ];
+
+    if (searchQuery && searchQuery.trim() !== '') {
+      const searchTerm = searchQuery.trim();
+      query.andWhere(function search() {
+        this.where('e.title', 'ilike', `%${searchTerm}%`)
+          .orWhere('e.description', 'ilike', `%${searchTerm}%`);
+      });
+    }
 
     const now = db.raw('NOW()');
     if (timeFilter === 'upcoming') {
@@ -76,6 +86,13 @@ router.get('/', async (req, res) => {
       query.andWhere(function filterByLocationPoint() {
         this.whereNotNull('e.location_point');
       });
+    }
+
+    if (typeFilter) {
+      const typeIds = typeFilter.split(',').map((id) => parseInt(id, 10));
+      if (typeIds.length > 0) {
+        query.whereIn('e.type_id', typeIds);
+      }
     }
 
     const validSortOrder = sortOrder.toUpperCase() === 'DESC' ? 'desc' : 'asc';
