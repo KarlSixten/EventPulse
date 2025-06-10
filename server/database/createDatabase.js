@@ -87,8 +87,6 @@ async function createTables() {
         created_by_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         is_private BOOLEAN NOT NULL,
         price NUMERIC(10, 2) DEFAULT 0.00,
-        is_ticketed BOOLEAN DEFAULT FALSE NOT NULL,
-        ticket_url TEXT,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
