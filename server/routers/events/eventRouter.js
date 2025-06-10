@@ -81,6 +81,9 @@ router.get('/', async (req, res) => {
     const validSortOrder = sortOrder.toUpperCase() === 'DESC' ? 'desc' : 'asc';
 
     if (sortBy === 'distance' && userLat != null && userLon != null) {
+      query.andWhere(function filterByLocationPoint() {
+        this.whereNotNull('e.location_point');
+      });
       const latitude = parseFloat(userLat);
       const longitude = parseFloat(userLon);
       if (!Number.isNaN(latitude) && !Number.isNaN(longitude)) {

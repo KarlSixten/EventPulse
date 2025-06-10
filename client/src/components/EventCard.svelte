@@ -42,7 +42,7 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        min-height: 180px;
+        min-height: 220px;
         overflow: hidden;
     }
 
@@ -97,9 +97,7 @@
         color: var(--ep-text-primary);
         margin-bottom: 4px;
         line-height: 1.2;
-        
     }
-
     .event-date-time:last-child, 
     .event-distance-from-user:last-child {
         margin-bottom: 0;
