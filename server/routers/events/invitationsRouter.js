@@ -76,32 +76,28 @@ router.post('/', isAuthenticated, async (req, res) => {
         inviter_id: inviterId,
         invitee_id: actualInviteeId,
         message: messageContent,
-        status: 'pending',
       })
-      .returning(['id', 'event_id', 'inviter_id', 'invitee_id', 'status', 'message', 'created_at']);
+      .returning(['id', 'event_id', 'inviter_id', 'invitee_id', 'message', 'created_at']);
 
     if (newInvitation) {
-      const notificationPayload = {
-        type: 'event_invitation',
-        message: `${inviterFirstName} invited you to the event: "${eventDetails.title}".`,
-        eventId: eventDetails.id,
-        eventName: eventDetails.title,
-        inviterName: inviterFirstName,
-        timestamp: new Date().toISOString(),
-      };
-
-      await db('notifications').insert({
+      const [dbNotification] = await db('notifications').insert({
         user_id: actualInviteeId,
         type: 'event_invitation',
-        message: notificationPayload.message,
+        message: `${inviterFirstName} invited you to the event: "${eventDetails.title}".`,
         related_event_id: eventDetails.id,
-      });
+      }).returning('*');
 
-      io.to(actualInviteeId.toString()).emit('new_notification', notificationPayload);
+      const finalNotificationPayload = {
+        id: dbNotification.id,
+        type: dbNotification.type,
+        message: dbNotification.message,
+        isRead: dbNotification.is_read,
+        eventId: dbNotification.related_event_id,
+        eventName: eventDetails.title,
+        timestamp: dbNotification.created_at,
+      };
 
-      // Commented out to lessen spam
-      // eslint-disable-next-line max-len
-      // sendEventInvitationEmail(normalizedInviteeEmail, eventDetails, messageContent, inviterFirstName);
+      io.to(actualInviteeId.toString()).emit('new_notification', finalNotificationPayload);
 
       return res.status(201).send({
         message: `Invitation sent successfully to ${inviteeEmailInput}.`,

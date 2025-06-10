@@ -17,7 +17,7 @@ export const validateCreateEvent = async (req, res, next) => {
     return res.status(400).send({ message: `Invalid date/time format: "${dateTime}".` });
   }
 
-  if (!price || !Number.isInteger(price)) {
+  if (price === undefined || (typeof price !== 'number')) {
     return res.status(400).send({ message: "The 'price' field is required and must be an integer." });
   }
 
@@ -40,7 +40,7 @@ export const validateCreateEvent = async (req, res, next) => {
 
 export const validateUpdateEvent = (req, res, next) => {
   const {
-    title, description, dateTime, isPrivate, latitude, longitude,
+    title, description, price, dateTime, isPrivate, latitude, longitude,
   } = req.body;
 
   if (title !== undefined && (typeof title !== 'string' || title.trim() === '')) {
@@ -49,6 +49,11 @@ export const validateUpdateEvent = (req, res, next) => {
   if (description !== undefined && (typeof description !== 'string' || description.trim() === '')) {
     return res.status(400).send({ message: 'Description, if provided, cannot be empty or just whitespace.' });
   }
+
+  if (price !== undefined && (typeof price !== 'number')) {
+    return res.status(400).send({ message: "The 'price' field is required and must be an integer." });
+  }
+
   if (dateTime !== undefined) {
     const parsedDateTime = new Date(dateTime);
     if (Number.isNaN(parsedDateTime.getTime())) {

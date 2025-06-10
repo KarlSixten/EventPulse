@@ -7,12 +7,23 @@ const router = Router();
 router.get('/', isAuthenticated, async (req, res) => {
   const userId = req.session.user.id;
   try {
-    const notifications = await db('notifications')
-      .where({ user_id: userId })
+    const notifications = await db('notifications as n')
+      .leftJoin('events as e', 'n.related_event_id', 'e.id')
+      .where({ 'n.user_id': userId })
+      .select(
+        'n.id',
+        'n.type',
+        'n.message',
+        'n.is_read as isRead',
+        'n.related_event_id as eventId',
+        'e.title as eventName',
+        'n.created_at as timestamp',
+      )
       .orderBy([
-        { column: 'is_read', order: 'asc' },
-        { column: 'created_at', order: 'desc' },
+        { column: 'n.is_read', order: 'asc' },
+        { column: 'n.created_at', order: 'desc' },
       ]);
+
     res.send({ data: notifications });
   } catch (error) {
     res.status(500).send({ message: 'Error fetching notifications.' });
@@ -21,8 +32,8 @@ router.get('/', isAuthenticated, async (req, res) => {
 
 router.put('/:id/mark-read', isAuthenticated, async (req, res) => {
   const userId = req.session.user.id;
-
   const notificationId = Number(req.params.id);
+
   if (Number.isNaN(notificationId) || notificationId <= 0) {
     return res.status(400).send({ message: 'Invalid notification ID parameter.' });
   }

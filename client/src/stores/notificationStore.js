@@ -5,133 +5,94 @@ import { BASE_URL } from './generalStore.js';
 import { fetchGet, fetchPut } from '../util/fetch.js';
 import toastr from 'toastr';
 
-let socket = null;
-
-let newNotificationListener = null;
-
 export const notifications = writable([]);
 export const hasUnreadNotifications = writable(false);
 export const isSocketConnected = writable(false);
 
 function updateUnreadStatus() {
-    const unreadCount = get(notifications).filter(n => !n.is_read).length;
-    hasUnreadNotifications.set(unreadCount > 0);
+  const unreadCount = get(notifications).filter((n) => !n.isRead).length;
+  hasUnreadNotifications.set(unreadCount > 0);
 }
 
-userStore.subscribe(currentUser => {
-  initializeSocket();
-  if (currentUser) {
-    fetchAndLoadNotifications();
-  } else {
-    notifications.set([]);
-    hasUnreadNotifications.set(false);
-  }
-});
-
 async function fetchAndLoadNotifications() {
-  const serverUrlValue = get(BASE_URL);
-  const result = await fetchGet(serverUrlValue + '/api/notifications');
+  const serverUrl = get(BASE_URL);
+  const result = await fetchGet(`${serverUrl}/api/notifications`);
   if (result && result.data) {
     notifications.set(result.data);
     updateUnreadStatus();
   }
 }
 
-function initializeSocket() {
-  const serverUrlValue = get(BASE_URL);
-  const currentUser = get(userStore);
+const socket = io(get(BASE_URL), {
+  autoConnect: false,
+  withCredentials: true,
+});
 
-  if (currentUser && serverUrlValue) {
-    if (!socket || socket.disconnected) {
+socket.on('connect', () => {
+  isSocketConnected.set(true);
+});
 
-      if (socket) {
-        if (newNotificationListener) {
-          socket.off('new_notification', newNotificationListener);
-        }
-        socket.disconnect();
-      }
+socket.on('disconnect', () => {
+  isSocketConnected.set(false);
+});
 
-      socket = io(serverUrlValue, {
-        withCredentials: true,
-      });
-      setupSocketListeners(socket);
+socket.on('connect_error', (error) => {
+  console.error('Socket connection error:', error);
+  isSocketConnected.set(false);
+});
 
-    } else {
-      setupSocketListeners(socket);
-    }
-  } else {
-    if (socket) {
-      if (newNotificationListener) {
-        socket.off('new_notification', newNotificationListener);
-        newNotificationListener = null;
-      }
-      socket.disconnect();
-      socket = null;
-      isSocketConnected.set(false);
-      notifications.set([]);
-      hasUnreadNotifications.set(false);
-    }
+socket.on('new_notification', (notification) => {
+  console.log(notification);
+  
+  notifications.update((currentNotifications) => [
+    notification,
+    ...currentNotifications,
+  ]);
+  updateUnreadStatus();
+  toastr.info(notification.message || 'You have a new notification!');
+});
+
+userStore.subscribe((currentUser) => {
+  if (currentUser && !socket.connected) {
+    socket.connect();
+    fetchAndLoadNotifications();
+  } else if (!currentUser && socket.connected) {
+    socket.disconnect();
+    notifications.set([]);
+    hasUnreadNotifications.set(false);
   }
-}
+});
 
-function setupSocketListeners(currentSocket) {
-  currentSocket.on('connect', () => {
-    isSocketConnected.set(true);
-  });
-
-  currentSocket.on('disconnect', (reason) => {
-    isSocketConnected.set(false);
-  });
-
-  currentSocket.on('connect_error', (error) => {
-    isSocketConnected.set(false);
-  });
-
-  if (newNotificationListener) {
-    currentSocket.off('new_notification', newNotificationListener);
-  }
-
-  newNotificationListener = (notification) => {
-    notifications.update(currentNotifications => [notification, ...currentNotifications]);
-    updateUnreadStatus();
-    toastr.info(notification.message || 'You have a new notification!');
-  };
-
-  currentSocket.on('new_notification', newNotificationListener);
-}
 
 export async function markNotificationRead(notificationId) {
-    const serverUrlValue = get(BASE_URL);
+  const serverUrl = get(BASE_URL);
+  const notification = get(notifications).find((n) => n.id === notificationId);
 
-    const notification = get(notifications).find(n => n.id === notificationId);
-    if (!notification || notification.is_read) {
-        return;
-    }
+  if (!notification || notification.is_read) {
+    return;
+  }
 
-    const result = await fetchPut(`${serverUrlValue}/api/notifications/${notificationId}/mark-read`, {});
-    if (result.ok) {
-        notifications.update(currentNotifications =>
-            currentNotifications.map(n =>
-                n.id === notificationId ? { ...n, is_read: true } : n
-            )
-        );
-        updateUnreadStatus();
-    } else {
-        toastr.error('Could not mark notification as read. Please try again.');
-    }
+  const result = await fetchPut(`${serverUrl}/api/notifications/${notificationId}/mark-read`, {});
+
+  if (result.ok) {
+    notifications.update((current) =>
+      current.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
+    );
+    updateUnreadStatus();
+  } else {
+    toastr.error('Could not mark notification as read. Please try again.');
+  }
 }
 
 export async function dismissAllNotifications() {
-  const serverUrlValue = get(BASE_URL);
-  const currentNotifications = get(notifications);
+  const serverUrl = get(BASE_URL);
+  const unreadExists = get(notifications).some((n) => !n.isRead);
 
-  if (currentNotifications.filter(n => !n.is_read).length > 0) {
-    const result = await fetchPut(`${serverUrlValue}/api/notifications/read-all`, {});
+  if (unreadExists) {
+    const result = await fetchPut(`${serverUrl}/api/notifications/read-all`, {});
     if (result.ok) {
-        notifications.update(all =>
-            all.map(n => ({ ...n, is_read: true }))
-        );
-        hasUnreadNotifications.set(false);
+      notifications.update((all) => all.map((n) => ({ ...n, isRead: true })));
+      hasUnreadNotifications.set(false);
     } else {
       toastr.error('Could not clear notifications. Please try again.');
     }

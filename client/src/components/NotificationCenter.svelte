@@ -2,17 +2,16 @@
     import { userStore } from "../stores/userStore.js";
     import {
         notifications,
-        hasUnreadNotifications,
         dismissAllNotifications,
         markNotificationRead,
     } from "../stores/notificationStore.js";
     import { formatDate } from "../util/format.js";
     import { onMount, onDestroy } from "svelte";
-    import { Link } from "svelte-routing";
+    import { navigate } from "svelte-routing";
 
     let showDropdown = false;
 
-    $: unreadCount = $notifications.filter((n) => !n.is_read).length;
+    $: unreadCount = $notifications.filter((n) => !n.isRead).length;
 
     function toggleDropdown() {
         showDropdown = !showDropdown;
@@ -29,7 +28,6 @@
 
     onMount(() => {
         window.addEventListener("click", handleClickOutside);
-
     });
 
     onDestroy(() => {
@@ -41,15 +39,16 @@
         showDropdown = false;
     }
 
-    function handleNotificationClick(id) {
-        markNotificationRead(id);
-        showDropdown = false; 
+    function handleNotificationClick(notification) {
+        markNotificationRead(notification.id);
+        navigate(`/events/${notification.eventId}`);
+        showDropdown = false;
     }
 </script>
 
 {#if $userStore}
     <div class="notification-center-wrapper">
-        <button class="notification-button" on:click={toggleDropdown}>
+        <button class="notification-button" onclick={toggleDropdown}>
             <ion-icon name="notifications{!showDropdown ? '-outline' : ''}"></ion-icon>
             {#if unreadCount > 0}
                 <span class="badge">{unreadCount}</span>
@@ -63,21 +62,21 @@
                     {#if unreadCount > 0}
                         <button
                             class="clear-all-button"
-                            on:click={handleClearNotifications}>Mark all as read</button
+                            onclick={handleClearNotifications}>Mark all as read</button
                         >
                     {/if}
                 </div>
                 {#if $notifications.length > 0}
                     <ul class="notification-list">
+                        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
                         {#each $notifications as notification (notification.id)}
-                            <Link to="events/{notification.related_event_id}" on:click={() => handleNotificationClick(notification.id)}>
-                                <li class="notification-item" class:read={notification.is_read}>
-                                    <p>{notification.message}</p>
-                                    <span class="timestamp">
-                                        {formatDate(notification.created_at)}
-                                    </span>
-                                </li>
-                            </Link>
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <li class="notification-item" class:read={notification.isRead} onclick={() => handleNotificationClick(notification)}>
+                                <p>{notification.message}</p>
+                                <span class="timestamp">
+                                    {formatDate(notification.timestamp)}
+                                </span>
+                            </li>
                         {/each}
                     </ul>
                 {:else}
