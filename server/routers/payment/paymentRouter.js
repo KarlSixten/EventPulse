@@ -23,7 +23,11 @@ router.post('/events/:id/create-payment-intent', async (req, res) => {
         enabled: true,
       },
     });
-    return res.send({ clientSecret: paymentIntent.client_secret });
+    return res.send({
+      data: {
+        clientSecret: paymentIntent.client_secret,
+      },
+    });
   } catch (error) {
     return res.status(500).send({ message: 'Failed to create payment intent.' });
   }

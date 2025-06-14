@@ -14,8 +14,10 @@ router.get('/me', (req, res) => {
   const hasValidSession = !!(req.session && req.session.user && req.session.user.id);
 
   return res.send({
-    isAuthenticated: hasValidSession,
-    user: hasValidSession ? req.session.user : null,
+    data: {
+      isAuthenticated: hasValidSession,
+      user: hasValidSession ? req.session.user : null,
+    },
   });
 });
 
@@ -100,7 +102,9 @@ router.post('/login', async (req, res) => {
 
     return res.status(200).send({
       message: 'Login successful',
-      user: userInfo,
+      data: {
+        user: userInfo,
+      },
     });
   } catch (error) {
     return res.status(500).send({ message: 'An internal error occurred during login' });

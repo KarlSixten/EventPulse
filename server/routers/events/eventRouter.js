@@ -303,7 +303,12 @@ router.post('/', isAuthenticated, validateCreateEvent, async (req, res) => {
       .returning('*');
 
     if (newEvent) {
-      return res.status(201).send({ message: 'Event created successfully.', event: newEvent });
+      return res.status(201).send({
+        message: 'Event created successfully.',
+        data: {
+          event: newEvent,
+        },
+      });
     }
     return res.status(500).send({ message: 'Event created, but could not retrieve confirmation data.' });
   } catch (error) {
@@ -391,7 +396,12 @@ router.put('/:id', isAuthenticated, validateUpdateEvent, async (req, res) => {
       .select('e.*', db.raw('ST_X(e.location_point::geometry) as longitude'), db.raw('ST_Y(e.location_point::geometry) as latitude'))
       .first();
 
-    return res.status(200).send({ message: 'Event updated successfully.', event: finalEventDetails });
+    return res.status(200).send({
+      message: 'Event updated successfully.',
+      data: {
+        event: finalEventDetails,
+      },
+    });
   } catch (error) {
     return res.status(500).send({ message: 'An error occurred while updating the event.' });
   }
