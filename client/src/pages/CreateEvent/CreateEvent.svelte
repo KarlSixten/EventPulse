@@ -14,6 +14,8 @@
     let dateTime = $state(null);
     let isPrivate = $state(false);
     let price = $state(0);
+    let acceptsOnlinePayment = $state(false);
+    let acceptsVenuePayment = $state(false);
 
     let latitude = $state(null);
     let longitude = $state(null);
@@ -29,6 +31,13 @@
         }
     });
 
+    $effect(() => {
+        if (price <= 0) {
+            acceptsOnlinePayment = false;
+            acceptsVenuePayment = false;
+        }
+    });
+
     async function handleSubmit(event) {
         event.preventDefault();
 
@@ -40,8 +49,10 @@
             longitude: longitude,
             isPrivate: isPrivate,
             typeId: typeId,
-            price: price
-        };
+            price: price,
+            acceptsOnlinePayment: acceptsOnlinePayment,
+            acceptsVenuePayment: acceptsVenuePayment,
+        };        
 
         try {
             const result = await fetchPost(
@@ -159,7 +170,37 @@
                         <small class="field-hint"
                             >Leave as 0 for a FREE event.</small
                         >
+                        <div class="checkbox-group">
+                            <div class="form-group">
+                                <label>Ticket Sales Method</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input
+                                            type="checkbox"
+                                            id="accepts-online-payment"
+                                            disabled={price <= 0}
+                                            bind:checked={acceptsOnlinePayment}
+                                        />
+                                        <label for="accepts-online-payment"
+                                            >Tickets sold online</label
+                                        >
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input
+                                            type="checkbox"
+                                            id="accepts-venue-payment"
+                                            disabled={price <= 0}
+                                            bind:checked={acceptsVenuePayment}
+                                        />
+                                        <label for="accepts-venue-payment"
+                                            >Tickets sold at venue</label
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </div>
             </fieldset>
 
             <fieldset>

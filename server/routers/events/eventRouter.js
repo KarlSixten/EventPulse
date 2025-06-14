@@ -134,7 +134,7 @@ router.get('/', async (req, res) => {
       },
       dateTime: eventRow.dateTime,
       isPrivate: eventRow.isPrivate,
-      price: eventRow.price,
+      price: Number(eventRow.price),
       acceptsOnlinePayment: eventRow.acceptsOnlinePayment,
       acceptsVenuePayment: eventRow.acceptsVenuePayment,
       createdById: eventRow.createdById,
@@ -219,7 +219,7 @@ router.get('/:id', async (req, res) => {
       },
       dateTime: eventRow.dateTime,
       isPrivate: eventRow.isPrivate,
-      price: eventRow.price,
+      price: Number(eventRow.price),
       acceptsOnlinePayment: eventRow.acceptsOnlinePayment,
       acceptsVenuePayment: eventRow.acceptsVenuePayment,
       createdById: eventRow.createdById,
@@ -262,7 +262,16 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', isAuthenticated, validateCreateEvent, async (req, res) => {
   const {
-    title, description, typeId, dateTime, isPrivate, price, latitude, longitude,
+    title,
+    description,
+    typeId,
+    dateTime,
+    isPrivate,
+    price,
+    latitude,
+    longitude,
+    acceptsOnlinePayment,
+    acceptsVenuePayment,
   } = req.body;
 
   const eventCreatorId = req.session.user.id;
@@ -276,6 +285,8 @@ router.post('/', isAuthenticated, validateCreateEvent, async (req, res) => {
       date_time: dateTime,
       is_private: isPrivate,
       price,
+      accepts_online_payment: acceptsOnlinePayment,
+      accepts_venue_payment: acceptsVenuePayment,
     };
 
     if (
@@ -305,7 +316,16 @@ router.put('/:id', isAuthenticated, validateUpdateEvent, async (req, res) => {
   const currentUserId = req.session.user.id;
 
   const {
-    title, description, typeId, dateTime, isPrivate, price, latitude, longitude,
+    title,
+    description,
+    typeId,
+    dateTime,
+    isPrivate,
+    price,
+    acceptsOnlinePayment,
+    acceptsVenuePayment,
+    latitude,
+    longitude,
   } = req.body;
   const updatePayload = {};
 
@@ -315,6 +335,9 @@ router.put('/:id', isAuthenticated, validateUpdateEvent, async (req, res) => {
   if (dateTime !== undefined) updatePayload.date_time = dateTime;
   if (isPrivate !== undefined) updatePayload.is_private = isPrivate;
   if (price !== undefined) updatePayload.price = price;
+  // eslint-disable-next-line max-len
+  if (acceptsOnlinePayment !== undefined) updatePayload.accepts_online_payment = acceptsOnlinePayment;
+  if (acceptsVenuePayment !== undefined) updatePayload.accepts_venue_payment = acceptsVenuePayment;
 
   if (latitude !== undefined || longitude !== undefined) {
     if (latitude === null && longitude === null) {

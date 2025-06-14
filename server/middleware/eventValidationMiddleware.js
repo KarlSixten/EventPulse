@@ -2,7 +2,14 @@ import db from '../database/connection.js';
 
 export const validateCreateEvent = async (req, res, next) => {
   const {
-    title, description, typeId, dateTime, isPrivate, price,
+    title,
+    description,
+    typeId,
+    dateTime,
+    isPrivate,
+    price,
+    acceptsOnlinePayment,
+    acceptsVenuePayment,
   } = req.body;
 
   if (!title || title.trim() === ''
@@ -12,6 +19,11 @@ export const validateCreateEvent = async (req, res, next) => {
   if (typeof isPrivate !== 'boolean') {
     return res.status(400).send({ message: "The 'isPrivate' field must be a boolean." });
   }
+
+  if (!typeId || !Number.isInteger(typeId)) {
+    return res.status(400).send({ message: "The 'typeId' field is required and must be an integer." });
+  }
+
   const parsedDateTime = new Date(dateTime);
   if (Number.isNaN(parsedDateTime.getTime())) {
     return res.status(400).send({ message: `Invalid date/time format: "${dateTime}".` });
@@ -21,8 +33,12 @@ export const validateCreateEvent = async (req, res, next) => {
     return res.status(400).send({ message: "The 'price' field is required and must be an integer." });
   }
 
-  if (!typeId || !Number.isInteger(typeId)) {
-    return res.status(400).send({ message: "The 'typeId' field is required and must be an integer." });
+  if (typeof acceptsOnlinePayment !== 'boolean' || typeof acceptsVenuePayment !== 'boolean') {
+    return res.status(400).send({ message: "The 'acceptsOnlinePayment' and 'acceptsVenuePayment' fields must be booleans." });
+  }
+
+  if (price > 0 && (!acceptsOnlinePayment && !acceptsVenuePayment)) {
+    return res.status(400).send({ message: 'Specify where guests can purchase tickets.' });
   }
 
   try {
@@ -40,7 +56,16 @@ export const validateCreateEvent = async (req, res, next) => {
 
 export const validateUpdateEvent = (req, res, next) => {
   const {
-    title, description, price, dateTime, isPrivate, latitude, longitude,
+    title,
+    description,
+    typeId,
+    dateTime,
+    isPrivate,
+    price,
+    acceptsOnlinePayment,
+    acceptsVenuePayment,
+    latitude,
+    longitude,
   } = req.body;
 
   if (title !== undefined && (typeof title !== 'string' || title.trim() === '')) {
@@ -54,6 +79,14 @@ export const validateUpdateEvent = (req, res, next) => {
     return res.status(400).send({ message: "The 'price' field is required and must be an integer." });
   }
 
+  if (!(acceptsOnlinePayment === undefined && acceptsVenuePayment === undefined) && (typeof acceptsOnlinePayment !== 'boolean' || typeof acceptsVenuePayment !== 'boolean')) {
+    return res.status(400).send({ message: "The 'acceptsOnlinePayment' and 'acceptsVenuePayment' fields must be booleans." });
+  }
+
+  if (price !== undefined && (price > 0 && (!acceptsOnlinePayment && !acceptsVenuePayment))) {
+    return res.status(400).send({ message: 'Specify where guests can purchase tickets.' });
+  }
+
   if (dateTime !== undefined) {
     const parsedDateTime = new Date(dateTime);
     if (Number.isNaN(parsedDateTime.getTime())) {
@@ -62,6 +95,10 @@ export const validateUpdateEvent = (req, res, next) => {
   }
   if (isPrivate !== undefined && typeof isPrivate !== 'boolean') {
     return res.status(400).send({ message: 'isPrivate field must be a boolean.' });
+  }
+
+  if (typeId !== undefined && (!typeId || !Number.isInteger(typeId))) {
+    return res.status(400).send({ message: "The 'typeId' field is required and must be an integer." });
   }
 
   if (latitude !== undefined || longitude !== undefined) {
