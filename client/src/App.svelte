@@ -30,6 +30,7 @@
   import EditEvent from "./pages/EditEvent/EditEvent.svelte";
   import Map from "./pages/Map/Map.svelte";
     import Home from "./pages/Home/Home.svelte";
+    import AuthGuard from "./components/AuthGuard.svelte";
 
   export let url = "";
 
@@ -69,9 +70,20 @@
       <Route path="/about"><About></About></Route>
       <Route path="/login"><Login></Login></Route>
       <Route path="/sign-up"><SignUp></SignUp></Route>
-      <Route path="/create-event"><CreateEvent></CreateEvent></Route>
+      
+      <Route path="/create-event">
+        <AuthGuard>
+            <CreateEvent />
+        </AuthGuard>
+      </Route>
+
       <Route path="/events/:id" let:params><EventDetails id={params.id}></EventDetails></Route>
-      <Route path="/events/:id/edit" let:params><EditEvent id={params.id}></EditEvent></Route>
+
+      <Route path="/events/:id/edit" let:params>
+        <AuthGuard>
+          <EditEvent id={params.id}></EditEvent>
+        </AuthGuard>
+      </Route>
     </div>
     <Footer />
   </Router>
