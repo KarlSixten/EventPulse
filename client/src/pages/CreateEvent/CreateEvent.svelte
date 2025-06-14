@@ -1,12 +1,12 @@
 <script>
+    import { onMount } from "svelte";
     import { navigate } from "svelte-routing";
-    import { fetchGet, fetchPost } from "../../util/fetch";
     import { BASE_URL } from "../../stores/generalStore";
+    import { apiFetch } from "../../util/fetch";
     import { getLocalDateTimeString } from "../../util/format";
+    import toastr from "toastr";
 
     import EventLocationMapInput from "../../components/EventLocationMapInput.svelte";
-    import toastr from "toastr";
-    import { onMount } from "svelte";
 
     let title = $state("");
     let description = $state("");
@@ -23,11 +23,15 @@
     let eventTypes = $state([]);
 
     onMount(async () => {
-        try {
-            const result = await fetchGet($BASE_URL + "/api/events/types");
+        const { result, error, ok } = await apiFetch(
+            `${$BASE_URL}/api/events/types`,
+        );
+
+        if (ok) {
             eventTypes = result.data;
-        } catch (error) {
-            console.log(error);
+        } else {
+            toastr.error("Could not load event types.");
+            console.error("Failed to fetch event types:", error);
         }
     });
 
@@ -52,41 +56,31 @@
             price: price,
             acceptsOnlinePayment: acceptsOnlinePayment,
             acceptsVenuePayment: acceptsVenuePayment,
-        };        
+        };
 
-        try {
-            const result = await fetchPost(
-                $BASE_URL + "/api/events",
-                eventData,
-            );
+        const { result, ok, error } = await apiFetch(`${$BASE_URL}/api/events`, {
+            method: "POST",
+            body: eventData,
+        });
 
-            if (result.ok) {
-                const eventId = result.data.event.id;
-                toastr.success("Event created!");
+        if (ok) {
+            const eventId = result.data.event.id;
+            toastr.success("Event created!");
 
-                title = "";
-                description = "";
-                typeId = null;
-                dateTime = null;
-                latitude = null;
-                longitude = null;
-                isPrivate = false;
+            title = "";
+            description = "";
+            typeId = null;
+            dateTime = null;
+            latitude = null;
+            longitude = null;
+            isPrivate = false;
 
-                navigate(`/events/${eventId}`);
-            } else {
-                console.error(
-                    "Submission error:",
-                    result.status,
-                    result.data.message,
-                );
-                toastr.error(
-                    result.data.message ||
-                        "An error occurred while creating the event.",
-                );
-            }
-        } catch (error) {
-            toastr.error("An error occurred while creating the event.");
+            navigate(`/events/${eventId}`);
+        } else {
             console.error("Submission error:", error);
+            toastr.error(
+                error?.message || "An error occurred while creating the event.",
+            );
         }
     }
 </script>

@@ -1,7 +1,7 @@
 <script>
-    import toastr from 'toastr';
-    import { userStore } from '../stores/userStore.js';
     import { navigate } from 'svelte-routing';
+    import { userStore } from '../stores/userStore.js';
+    import toastr from 'toastr';
 
     $: {
         if ($userStore === null) {

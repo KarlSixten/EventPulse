@@ -1,10 +1,10 @@
 <script>
     import { tick } from "svelte";
-    import { loadStripe } from "@stripe/stripe-js";
     import { BASE_URL, STRIPE_PUBLISHABLE_KEY } from "../../stores/generalStore.js";
-    import { fetchPost } from "../../util/fetch.js";
+    import { apiFetch } from "../../util/fetch.js";
     import { formatCurrency } from "../../util/format.js";
     import toastr from "toastr";
+    import { loadStripe } from "@stripe/stripe-js";
 
     let { isOpen, event } = $props();
 
@@ -23,36 +23,38 @@
         }
     });
 
-    async function setupStripe() {
-        try {
-            isInitialized = true;
-            await tick();
-            
-            stripe = await loadStripe($STRIPE_PUBLISHABLE_KEY);
-            const res = await fetchPost(`${$BASE_URL}/api/payments/events/${event.id}/create-payment-intent`, {});
-            
-            if (!res.ok || !res.data.clientSecret) {
-                errorMessage = 'Could not initialize payment.';
-                return;
-            }
-            
-            clientSecret = res.data.clientSecret;
-            elements = stripe.elements({ clientSecret });
-            
-            const addressElement = elements.create('address', {
-                mode: 'billing'
-            });
+async function setupStripe() {
+    try {
+        isInitialized = true;
+        await tick();
+        
+        stripe = await loadStripe($STRIPE_PUBLISHABLE_KEY);
 
-            const paymentElement = elements.create('payment');
+        const { result, ok, error } = await apiFetch(
+            `${$BASE_URL}/api/payments/events/${event.id}/create-payment-intent`, 
+            { method: "POST" }
+        );
 
-            addressElement.mount('#address-element');
-            paymentElement.mount('#payment-element');
-            
-        } catch (error) {
-            console.error('Failed to setup payment form:', error);
-            errorMessage = 'A network error occurred. Please try again later.';
+        if (!ok) {
+            errorMessage = error?.message || 'Could not initialize payment.';
+            console.error("Failed to create payment intent:", error);
+            return;
         }
+
+        const clientSecret = result.data.clientSecret;
+        const elements = stripe.elements({ clientSecret });
+        
+        const addressElement = elements.create('address', { mode: 'billing' });
+        const paymentElement = elements.create('payment');
+
+        addressElement.mount('#address-element');
+        paymentElement.mount('#payment-element');
+        
+    } catch (error) {
+        console.error('Failed to setup Stripe Elements:', error);
+        errorMessage = 'A critical error occurred while setting up the payment form.';
     }
+}
 
     async function handleSubmit(event) {
         event.preventDefault();

@@ -1,23 +1,23 @@
 <script>
   import { onMount } from "svelte";
   import { userStore } from "./stores/userStore.js";
-  import { fetchGet } from "./util/fetch.js";
+  import { apiFetch } from "./util/fetch.js";
   import { BASE_URL } from "./stores/generalStore.js";
   import { Router, Route } from "svelte-routing";
-  
-  import './stores/notificationStore.js'
+
+  import "./stores/notificationStore.js";
 
   import "toastr/build/toastr.min.css";
 
-  import toastr from 'toastr';
+  import toastr from "toastr";
 
-    toastr.options = {
-      "closeButton": true,
-      "progressBar": true,
-      "positionClass": "toast-bottom-right",
-      "timeOut": "4000",
-      "extendedTimeOut": "1000",
-    };
+  toastr.options = {
+    closeButton: true,
+    progressBar: true,
+    positionClass: "toast-bottom-right",
+    timeOut: "4000",
+    extendedTimeOut: "1000",
+  };
 
   import Header from "./components/Header.svelte";
   import Footer from "./components/Footer.svelte";
@@ -35,26 +35,28 @@
   export let url = "";
 
   onMount(async () => {
-    try {
-      const result = await fetchGet($BASE_URL + "/api/auth/me");
-
-      if (!result.isAuthenticated) {
-        userStore.set(null);
+    const storedUser = sessionStorage.getItem("currentUser");
+    if (storedUser) {
+      try {
+        userStore.set(JSON.parse(storedUser));
+      } catch (error) {
         sessionStorage.removeItem("currentUser");
-      } else {
-        const user = result.user;
-        if (user && user.id) {
-          userStore.set(user);
-          sessionStorage.setItem("currentUser", JSON.stringify(user));
-        } else {
-          userStore.set(null);
-          sessionStorage.removeItem("currentUser");
-        }
       }
-    } catch (error) {
-      console.error("Error verifying user session with backend:", error.message, error);
+    }
+
+    const { result, ok, error } = await apiFetch(`${$BASE_URL}/api/auth/me`);
+
+    if (ok && result.data.isAuthenticated) {
+      const user = result.data.user;
+
+      userStore.set(user);
+      sessionStorage.setItem("currentUser", JSON.stringify(user));
+    } else {
       userStore.set(null);
       sessionStorage.removeItem("currentUser");
+      if (error) {
+        console.error("Error verifying user session with backend:", error);
+      }
     }
   });
 </script>
@@ -70,14 +72,16 @@
       <Route path="/about"><About></About></Route>
       <Route path="/login"><Login></Login></Route>
       <Route path="/sign-up"><SignUp></SignUp></Route>
-      
+
       <Route path="/create-event">
         <AuthGuard>
-            <CreateEvent />
+          <CreateEvent />
         </AuthGuard>
       </Route>
 
-      <Route path="/events/:id" let:params><EventDetails id={params.id}></EventDetails></Route>
+      <Route path="/events/:id" let:params
+        ><EventDetails id={params.id}></EventDetails></Route
+      >
 
       <Route path="/events/:id/edit" let:params>
         <AuthGuard>
@@ -96,5 +100,4 @@
     flex-grow: 1;
     padding-top: 70px;
   }
-
 </style>

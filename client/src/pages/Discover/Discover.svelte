@@ -1,11 +1,11 @@
 <script>
-    import { fetchGet } from "../../util/fetch"; //
-    import { BASE_URL } from "../../stores/generalStore"; //
+    import { onMount } from "svelte";
+    import { Link } from "svelte-routing";
+    import { BASE_URL } from "../../stores/generalStore";
+    import { apiFetch } from "../../util/fetch";
+    import toastr from "toastr";
 
     import EventCard from "../../components/EventCard.svelte";
-    import { Link } from "svelte-routing";
-    import toastr from "toastr";
-    import { onMount } from "svelte";
 
     let events = $state([]);
     let eventTypes = $state([]);
@@ -27,69 +27,67 @@
     );
 
     onMount(async () => {
-        try {
-            const result = await fetchGet(`${$BASE_URL}/api/events/types`);
-            if (result && result.data) {
-                eventTypes = result.data;
-            }
-        } catch (error) {
+        const { result, error, ok } = await apiFetch(`${$BASE_URL}/api/events/types`);
+
+        if (ok) {
+            eventTypes = result.data;
+        } else {
             toastr.error("Could not load event types.");
+            console.error("Failed to fetch event types:", error);
         }
     });
 
     $effect(() => {
-        async function fetchData() {
-            isLoading = true;
-            let apiUrl = "";
-            let shouldFetch = true;
+    async function fetchData() {
+        isLoading = true;
+        let shouldFetch = true;
 
-            const params = new URLSearchParams({
-                timeFilter,
-                sortBy,
-                sortOrder,
-            });
+        const params = new URLSearchParams({
+            timeFilter,
+            sortBy,
+            sortOrder,
+        });
 
-            if (searchQuery.trim()) {
-                params.append("searchQuery", searchQuery);
-            }
+        if (searchQuery.trim()) {
+            params.append("searchQuery", searchQuery);
+        }
 
-            if (selectedTypes.length > 0) {
-                params.append("typeFilter", selectedTypes.join(","));
-            }
+        if (selectedTypes.length > 0) {
+            params.append("typeFilter", selectedTypes.join(","));
+        }
 
-            if (sortBy === "distance") {
-                if (canSortByDistance) {
-                    params.append("userLat", userLatitude);
-                    params.append("userLon", userLongitude);
-                } else {
-                    shouldFetch = false;
-                }
-            }
-
-            apiUrl = `${$BASE_URL}/api/events?${params.toString()}`;
-
-            if (!shouldFetch) {
-                isLoading = false;
-                return;
-            }
-
-            try {
-                const result = await fetchGet(apiUrl);
-                if (result && result.data) {
-                    events = result.data;
-                } else {
-                    events = [];
-                }
-            } catch (error) {
-                events = [];
-                toastr.error("Error fetching events.");
-            } finally {
-                isLoading = false;
+        if (sortBy === "distance") {
+            if (canSortByDistance) {
+                params.append("userLat", userLatitude);
+                params.append("userLon", userLongitude);
+            } else {
+                shouldFetch = false;
             }
         }
 
-        fetchData();
-    });
+        if (!shouldFetch) {
+            events = [];
+            isLoading = false;
+            return;
+        }
+
+        const apiUrl = `${$BASE_URL}/api/events?${params.toString()}`;
+
+        const { result, error, ok } = await apiFetch(apiUrl);
+
+        if (ok) {
+            events = result.data; 
+        } else {
+            events = [];
+            toastr.error("Error fetching events.");
+            console.error("Failed to fetch events:", error);
+        }
+
+        isLoading = false;
+    }
+
+    fetchData();
+});
 
     async function requestLocationAndThenFetch() {
         if (!navigator.geolocation) {

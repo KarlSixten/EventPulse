@@ -52,31 +52,31 @@ a {
   font-weight: 500;
   color: var(--ep-primary);
   text-decoration: inherit;
-  transition: color0.2sease-in-out, filter0.2sease-in-out;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-  color: var(--ep-text-primary);
+  transition: color 0.2s ease-in-out, filter 0.2s ease-in-out;
 }
 
 .card {
   padding: 2em;
   background-color: var(--ep-background-dark);
-  border: 1pxsolidvar(--ep-border);
+  border: 1px solid var(--ep-border);
   border-radius: 8px;
-  box-shadow: 02px4pxrgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 button {
   border-radius: 8px;
-  padding: 0.6em1.2em;
+  padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
   background-color: var(--ep-primary);
   color: var(--ep-text-on-primary);
   cursor: pointer;
-  transition: background-color0.25s, border-color0.25s;
+  transition: background-color 0.25s, border-color 0.25s;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+  color: var(--ep-text-primary);
 }

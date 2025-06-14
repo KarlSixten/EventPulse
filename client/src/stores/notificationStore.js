@@ -2,7 +2,7 @@ import { writable, get } from 'svelte/store';
 import { io } from 'socket.io-client';
 import { userStore } from './userStore.js';
 import { BASE_URL } from './generalStore.js';
-import { fetchGet, fetchPut } from '../util/fetch.js';
+import { apiFetch } from '../util/fetch.js';
 import toastr from 'toastr';
 
 export const notifications = writable([]);
@@ -16,10 +16,15 @@ function updateUnreadStatus() {
 
 async function fetchAndLoadNotifications() {
   const serverUrl = get(BASE_URL);
-  const result = await fetchGet(`${serverUrl}/api/notifications`);
-  if (result && result.data) {
-    notifications.set(result.data);
+  
+  const { result, error, ok } = await apiFetch(`${serverUrl}/api/notifications`);
+
+  if (ok) {
+    notifications.set(result.data); 
     updateUnreadStatus();
+  } else {
+    toastr.error("Could not load notifications.");
+    console.error("Failed to fetch notifications:", error);
   }
 }
 
@@ -65,36 +70,45 @@ userStore.subscribe((currentUser) => {
 
 
 export async function markNotificationRead(notificationId) {
-  const serverUrl = get(BASE_URL);
-  const notification = get(notifications).find((n) => n.id === notificationId);
+    const serverUrl = get(BASE_URL);
+    const notification = get(notifications).find((n) => n.id === notificationId);
 
-  if (!notification || notification.is_read) {
-    return;
-  }
-
-  const result = await fetchPut(`${serverUrl}/api/notifications/${notificationId}/mark-read`, {});
-
-  if (result.ok) {
-    notifications.update((current) =>
-      current.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
+    if (!notification || notification.isRead) {
+        return;
+    }
+    
+    const { ok, error } = await apiFetch(
+        `${serverUrl}/api/notifications/${notificationId}/mark-read`, 
+        { method: "PUT" }
     );
-    updateUnreadStatus();
-  } else {
-    toastr.error('Could not mark notification as read. Please try again.');
-  }
+
+    if (ok) {
+        notifications.update((current) =>
+            current.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
+        );
+        updateUnreadStatus();
+    } else {
+        toastr.error(error?.message || 'Could not mark notification as read.');
+        console.error("Failed to mark notification as read:", error);
+    }
 }
 
 export async function dismissAllNotifications() {
-  const serverUrl = get(BASE_URL);
-  const unreadExists = get(notifications).some((n) => !n.isRead);
+    const serverUrl = get(BASE_URL);
+    const unreadExists = get(notifications).some((n) => !n.isRead);
 
-  if (unreadExists) {
-    const result = await fetchPut(`${serverUrl}/api/notifications/read-all`, {});
-    if (result.ok) {
-      notifications.update((all) => all.map((n) => ({ ...n, isRead: true })));
-      hasUnreadNotifications.set(false);
-    } else {
-      toastr.error('Could not clear notifications. Please try again.');
+    if (unreadExists) {
+        const { ok, error } = await apiFetch(
+            `${serverUrl}/api/notifications/read-all`, 
+            { method: "PUT" }
+        );
+
+        if (ok) {
+            notifications.update((all) => all.map((n) => ({ ...n, isRead: true })));
+            hasUnreadNotifications.set(false);
+        } else {
+            toastr.error(error?.message || 'Could not clear notifications.');
+            console.error("Failed to clear notifications:", error);
+        }
     }
-  }
 }

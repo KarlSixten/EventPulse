@@ -3,7 +3,7 @@
     import { BASE_URL } from "../../stores/generalStore";
     import { userStore } from "../../stores/userStore";
     import { eventForEditing } from "../../stores/eventStore.js";
-    import { fetchGet, fetchPost } from "../../util/fetch";
+    import { apiFetch } from "../../util/fetch";
     import { formatDate, formatCurrency } from "../../util/format";
     import toastr from "toastr";
 
@@ -32,34 +32,24 @@
     $effect(() => {
         if (id) {
             fetchEventDetails();
-            
         }
-        
     });
 
     async function fetchEventDetails() {
         isLoading = true;
         error = null;
 
-        try {
-            const result = await fetchGet($BASE_URL + "/api/events/" + id);
+        const {result, ok, error: apiError, } = await apiFetch(`${$BASE_URL}/api/events/${id}`);
 
-            if (result && result.data) {
-                event = result.data;
-                selectedRsvpStatus = event.userRsvpStatus;
-            } else {
-                console.error(
-                    "Failed to fetch event data or data is not in expected format",
-                    result,
-                );
-                error = "Event data not found.";
-            }
-        } catch (error) {
-            console.error("Error fetching event:", error);
-            error = "Failed to load event details.";
-        } finally {
-            isLoading = false;
+        if (ok) {
+            event = result.data;
+            selectedRsvpStatus = event.userRsvpStatus;
+        } else {
+            error = apiError?.message || "Failed to load event details.";
+            console.error("Error fetching event:", apiError);
         }
+
+        isLoading = false;
     }
 
     let selectedRsvpStatus = $state(null);
@@ -74,46 +64,50 @@
         const oldStatus = selectedRsvpStatus;
         selectedRsvpStatus = status;
 
-        try {
-            const result = await fetchPost(
-                $BASE_URL + `/api/events/${event.id}/rsvps`,
-                {
-                    status: status,
-                },
-            );
-            if (result.ok) {
-                toastr.success(`RSVP status updated to ${label}!`);
-            } else {
-                selectedRsvpStatus = oldStatus;
-                toastr.error("Error updating RSVP:", result.data.message);
-            }
-        } catch (error) {
+        const { ok, error } = await apiFetch(
+            `${$BASE_URL}/api/events/${event.id}/rsvps`,
+            {
+                method: "POST",
+                body: { status },
+            },
+        );
+
+        if (ok) {
+            toastr.success(`RSVP status updated to ${label}!`);
+        } else {
             selectedRsvpStatus = oldStatus;
-            toastr.error("Error updating RSVP: " + error.message, "RSVP Error");
-            console.log("Error updating RSVP:", error);
+            toastr.error(
+                error?.message || "Error updating RSVP.",
+                "RSVP Error",
+            );
+            console.error("Error updating RSVP:", error);
         }
     }
 
     async function handleSendInvite() {
-        try {
-            const result = await fetchPost(
-                $BASE_URL + `/api/events/${event.id}/invitations`,
-                {
-                    invitee_email: inviteeEmail,
-                    message: inviteeMessage,
-                },
-            );
+        const inviteDetails = {
+            invitee_email: inviteeEmail,
+            message: inviteeMessage,
+        };
 
-            if (result.ok) {
-                toastr.success(result.data.message, "User invited!");
-                inviteeEmail = "";
-                inviteeMessage = "";
-            } else {
-                toastr.error(result.data.message, "Unable to invite user:");
-            }
-        } catch (error) {
-            toastr.error("Error sending invite:", error);
-            console.log("Error sending invite:", error);
+        const { result, ok, error } = await apiFetch(
+            `${$BASE_URL}/api/events/${event.id}/invitations`,
+            {
+                method: "POST",
+                body: inviteDetails,
+            },
+        );
+
+        if (ok) {
+            toastr.success(result.message, "User invited!");
+            inviteeEmail = "";
+            inviteeMessage = "";
+        } else {
+            toastr.error(
+                error?.message || "Error sending invite.",
+                "Unable to invite user:",
+            );
+            console.error("Error sending invite:", error);
         }
     }
 
@@ -166,7 +160,10 @@
                 <div class="payment-options">
                     {#if event.acceptsOnlinePayment}
                         <div class="option">
-                            <button class="buy-button" onclick={() => paymentModalVisible = true}>
+                            <button
+                                class="buy-button"
+                                onclick={() => (paymentModalVisible = true)}
+                            >
                                 Buy Ticket Online
                             </button>
                         </div>

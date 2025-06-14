@@ -1,9 +1,9 @@
 <script>
     import { onMount, onDestroy } from "svelte";
+    import { BASE_URL } from "../../stores/generalStore";
     import L from "leaflet";
     import "leaflet/dist/leaflet.css";
-    import { fetchGet } from "../../util/fetch";
-    import { BASE_URL } from "../../stores/generalStore";
+    import { apiFetch } from "../../util/fetch";
     import toastr from "toastr";
 
     let mapContainer = $state(null);
@@ -46,27 +46,22 @@
 
     async function loadEventsWithLocations() {
         isLoadingEvents = true;
-        try {
-            let apiUrl =
-                $BASE_URL +
-                `/api/events?timeFilter=upcoming&locationRequired=true`;
 
-            const result = await fetchGet(apiUrl);
+        const apiUrl = `${$BASE_URL}/api/events?timeFilter=upcoming&locationRequired=true`;
+        const { result, ok, error } = await apiFetch(apiUrl);
 
-            if (result && result.data) {
-                events = result.data;
-                toastr.success(`Found ${result.data.length} nearby events.`);
-            } else {
-                toastr.error("Failed to fetch events or no data in response");
-                console.error("Failed to fetch events or no data in response:", result);
-                events = [];
-            }
-        } catch (error) {
+        if (ok) {
+            events = result.data;
+            toastr.success(`Found ${result.data.length} nearby events.`);
+        } else {
+            toastr.error(
+                error?.message || "Failed to fetch events for the map.",
+            );
             console.error("Error fetching events for map:", error);
             events = [];
-        } finally {
-            isLoadingEvents = false;
         }
+
+        isLoadingEvents = false;
     }
 
     onMount(() => {
@@ -131,7 +126,10 @@
                     !isNaN(event.location.latitude) &&
                     !isNaN(event.location.longitude)
                 ) {
-                    const marker = L.marker([event.location.latitude, event.location.longitude]);
+                    const marker = L.marker([
+                        event.location.latitude,
+                        event.location.longitude,
+                    ]);
 
                     let popupContent = `<b>${event.title || "Event"}</b>`;
                     if (event.description) {

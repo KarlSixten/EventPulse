@@ -1,4 +1,6 @@
 <script>
+    import { onMount, onDestroy } from "svelte";
+    import { navigate } from "svelte-routing";
     import { userStore } from "../stores/userStore.js";
     import {
         notifications,
@@ -6,8 +8,6 @@
         markNotificationRead,
     } from "../stores/notificationStore.js";
     import { formatDate } from "../util/format.js";
-    import { onMount, onDestroy } from "svelte";
-    import { navigate } from "svelte-routing";
 
     let showDropdown = false;
 

@@ -1,31 +1,30 @@
 <script>
     import { Link, navigate } from "svelte-routing";
+    import { BASE_URL } from "../stores/generalStore";
     import { userStore } from "../stores/userStore";
     import { eventForEditing } from "../stores/eventStore";
-    import { BASE_URL } from "../stores/generalStore";
-    import { fetchPost } from "../util/fetch";
-    import NotificationCenter from "./NotificationCenter.svelte";
-
+    import { apiFetch } from "../util/fetch";
     import toastr from "toastr";
 
+    import NotificationCenter from "./NotificationCenter.svelte";
+
     async function handleLogout() {
-        try {
-            const result = await fetchPost($BASE_URL + '/api/auth/logout');
-            if (result.ok) {
-                toastr.success("Successfully logged out.")
-            } else {
-                toastr.error("An error occured while logging out.")
-                console.error("Backend logout failed:", result.status, result.data.message);
-            }
-        } catch (error) {
-            toastr.error("An error occured while logging out.")
-            console.error("Error making logout request to backend:", error);
-        } finally {
-            userStore.set(null);
-            eventForEditing.set(null);
-            sessionStorage.removeItem("currentUser");
-            navigate("/");
+        const { ok, error } = await apiFetch(`${$BASE_URL}/api/auth/logout`, {
+            method: "POST",
+        });
+
+        if (ok) {
+            toastr.success("Successfully logged out.");
+        } else {
+            toastr.error(
+                error.message || "An error occurred while logging out.",
+            );
         }
+
+        userStore.set(null);
+        eventForEditing.set(null);
+        sessionStorage.removeItem("currentUser");
+        navigate("/");
     }
 </script>
 
@@ -34,18 +33,28 @@
         <img src="/logo.png" class="logo-img" alt="EventPulse logo" />
     </Link>
     <Link to="/" class="nav-link"><ion-icon name="home"></ion-icon>Home</Link>
-    <Link to="/discover" class="nav-link"><ion-icon name="planet"></ion-icon>Discover</Link>
+    <Link to="/discover" class="nav-link"
+        ><ion-icon name="planet"></ion-icon>Discover</Link
+    >
     <Link to="/map" class="nav-link"><ion-icon name="map"></ion-icon>Map</Link>
-    <Link to="/about" class="nav-link"><ion-icon name="reader"></ion-icon>About</Link>
+    <Link to="/about" class="nav-link"
+        ><ion-icon name="reader"></ion-icon>About</Link
+    >
 
     <div class="nav-spacer"></div>
 
     <div class="nav-links-auth">
         {#if !$userStore}
-            <Link to="/login" class="nav-link"><ion-icon name="log-in"></ion-icon>Login</Link>
-            <Link to="/sign-up" class="nav-link"><ion-icon name="person-add"></ion-icon>Sign up</Link>
+            <Link to="/login" class="nav-link"
+                ><ion-icon name="log-in"></ion-icon>Login</Link
+            >
+            <Link to="/sign-up" class="nav-link"
+                ><ion-icon name="person-add"></ion-icon>Sign up</Link
+            >
         {:else}
-            <Link to="/create-event" class="nav-link"><ion-icon name="add-circle"></ion-icon>Create Event</Link>
+            <Link to="/create-event" class="nav-link"
+                ><ion-icon name="add-circle"></ion-icon>Create Event</Link
+            >
             <span class="welcome-message">
                 Welcome, {$userStore.firstName}!
             </span>
@@ -82,7 +91,7 @@
     .navbar :global(a.nav-link:hover) {
         filter: brightness(80%);
     }
-    
+
     .navbar :global(a.nav-link ion-icon) {
         margin-right: 5px;
     }
@@ -121,7 +130,7 @@
         display: inline-flex;
         align-items: center;
     }
-    
+
     .logout-button ion-icon {
         margin-left: 5px;
     }

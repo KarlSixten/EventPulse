@@ -1,15 +1,14 @@
 <script>
-  import { navigate } from "svelte-routing";
   import { onMount, onDestroy } from "svelte";
-  import { eventForEditing } from "../../stores/eventStore.js";
-  import { userStore } from "../../stores/userStore.js";
-  import { fetchGet, fetchDelete, fetchPut } from "../../util/fetch.js";
+  import { navigate } from "svelte-routing";
   import { BASE_URL } from "../../stores/generalStore.js";
+  import { userStore } from "../../stores/userStore.js";
+  import { eventForEditing } from "../../stores/eventStore.js";
+  import { apiFetch } from "../../util/fetch.js";
   import {
     formatDateTimeForInput,
     getLocalDateTimeString,
   } from "../../util/format.js"; //
-
   import toastr from "toastr";
 
   import EventLocationMapInput from "../../components/EventLocationMapInput.svelte";
@@ -24,7 +23,7 @@
   let latitude = $state(null);
   let longitude = $state(null);
   let typeId = $state(null);
-  let price = $state(null)
+  let price = $state(null);
   let acceptsOnlinePayment = $state(false);
   let acceptsVenuePayment = $state(false);
 
@@ -37,25 +36,25 @@
   let showConfirmationModal = $state(false);
 
   $effect(() => {
-        if (price <= 0) {
-            acceptsOnlinePayment = false;
-            acceptsVenuePayment = false;
-        }
-    });
+    if (price <= 0) {
+      acceptsOnlinePayment = false;
+      acceptsVenuePayment = false;
+    }
+  });
 
   function checkAuthorizationAndInitialize(loadedEvent) {
     if (!loadedEvent) {
-        toastr.error("Event data is missing. Cannot proceed with editing.");
-        navigate("/");
-        isLoading = false;
-        return false;
+      toastr.error("Event data is missing. Cannot proceed with editing.");
+      navigate("/");
+      isLoading = false;
+      return false;
     }
 
     if (!$userStore || $userStore.id !== loadedEvent.createdById) {
-        toastr.error("You are not authorized to edit this event.");
-        navigate(`/events/${loadedEvent.id || id}`);
-        isLoading = false;
-        return false;
+      toastr.error("You are not authorized to edit this event.");
+      navigate(`/events/${loadedEvent.id || id}`);
+      isLoading = false;
+      return false;
     }
 
     initializeFormFields(loadedEvent);
@@ -67,48 +66,50 @@
       isLoading = true;
       if (valueFromStore && valueFromStore.id == id) {
         eventToEdit = valueFromStore;
-        if (checkAuthorizationAndInitialize(eventToEdit)) {          
-            isLoading = false;
+        if (checkAuthorizationAndInitialize(eventToEdit)) {
+          isLoading = false;
         }
       } else {
         if (id) {
           await fetchEventDetails();
         } else {
           toastr.error("No event ID provided. Cannot edit event.");
-          console.warn("No valid ID prop available. Cannot fetch event details.");
+          console.warn(
+            "No valid ID prop available. Cannot fetch event details.",
+          );
           navigate("/");
           isLoading = false;
         }
       }
-    })
-    try {
-            const result = await fetchGet($BASE_URL + '/api/events/types');
-            eventTypes = result.data;
-        } catch (error) {
-            console.log(error);
-        };
+    });
+    const { result, error, ok } = await apiFetch(
+      `${$BASE_URL}/api/events/types`,
+    );
+
+    if (ok) {
+      eventTypes = result.data;
+    } else {
+      toastr.error("Could not load event types.");
+      console.error("Failed to fetch event types:", error);
+    }
   });
 
   async function fetchEventDetails() {
     isLoading = true;
-    try {
-      const result = await fetchGet(`${$BASE_URL}/api/events/${id}`); //
-      if (result && result.data) {
-        eventToEdit = result.data;
-        checkAuthorizationAndInitialize(eventToEdit);
-      } else {
-        toastr.error("Could not fetch event details to edit.");
-        console.error("Failed to fetch event data:", result);
-        navigate("/");
-      }
-    } catch (error) {
-      toastr.error("Error fetching event details.");
-      console.error("Error fetching event:", error);
+
+    const { result, ok, error } = await apiFetch(
+      `${$BASE_URL}/api/events/${id}`,
+    );
+
+    isLoading = false;
+
+    if (ok) {
+      eventToEdit = result.data;
+      checkAuthorizationAndInitialize(eventToEdit);
+    } else {
+      toastr.error(error?.message || "Could not fetch event details.");
+      console.error("Failed to fetch event data:", error);
       navigate("/");
-    } finally {
-      if (eventToEdit === null && isLoading) {
-          isLoading = false;
-      }
     }
   }
 
@@ -151,19 +152,20 @@
       acceptsVenuePayment: acceptsVenuePayment,
     };
 
-    try {
-      const result = await fetchPut($BASE_URL + "/api/events/" + id, eventData);
+    const { result, ok, error } = await apiFetch(
+      `${$BASE_URL}/api/events/${id}`,
+      {
+        method: "PUT",
+        body: eventData,
+      },
+    );
 
-      if (result.ok) {
-        const eventId = result.data.event.id;
-        toastr.success("Event saved!");
-
-        navigate(`/events/${eventId}`);
-      } else {
-        toastr.error("Event could not be saved.", result.data.message);
-      }
-    } catch (error) {
-      toastr.error("Event could not be saved.");
+    if (ok) {
+      const eventId = result.data.event.id;
+      toastr.success("Event saved!");
+      navigate(`/events/${eventId}`);
+    } else {
+      toastr.error(error?.message || "Event could not be saved.");
       console.error("Submission error:", error);
     }
   }
@@ -179,20 +181,24 @@
   async function confirmAndDeleteEvent() {
     showConfirmationModal = false;
     isLoading = true;
-    try {
-      const result = await fetchDelete(`${$BASE_URL}/api/events/${id}`); //
-      if (result.ok) {
-        toastr.success("Event deleted successfully.");
-        eventForEditing.set(null);
-        navigate("/home");
-      } else {
-        toastr.error(result.message || "Failed to delete event.");
+
+    const { ok, error } = await apiFetch(`${$BASE_URL}/api/events/${id}`, {
+      method: "DELETE",
+    });
+
+    isLoading = false;
+
+    if (ok) {
+      if (storeSubscription) {
+        storeSubscription();
       }
-    } catch (error) {
-      toastr.error("An error occurred while deleting the event.");
+
+      toastr.success("Event deleted successfully.");
+      eventForEditing.set(null);
+      navigate("/home");
+    } else {
+      toastr.error(error?.message || "Failed to delete event.");
       console.error("Error deleting event:", error);
-    } finally {
-      isLoading = false;
     }
   }
 
@@ -235,14 +241,14 @@
               required
             ></textarea>
             <div>
-                    <label for="event-type">Type:</label>
-                    <select bind:value={typeId} required>
-                        <option value="" disabled>Select a type...</option>
-                        {#each eventTypes as type}
-                            <option value={type.id}>{type.name}</option>
-                        {/each}
-                    </select>
-                </div>
+              <label for="event-type">Type:</label>
+              <select bind:value={typeId} required>
+                <option value="" disabled>Select a type...</option>
+                {#each eventTypes as type}
+                  <option value={type.id}>{type.name}</option>
+                {/each}
+              </select>
+            </div>
           </div>
           <div>
             <label for="event-date">Date & Time:</label>
@@ -265,56 +271,55 @@
         </fieldset>
 
         <fieldset class="form-fieldset">
-                <legend>Tickets & Pricing</legend>
+          <legend>Tickets & Pricing</legend>
 
-                <div class="field-group">
-                    <div class="form-field">
-                        <label for="event-price">Price</label>
-                        <div class="price-input-wrapper">
-                            <span class="currency-symbol">DKK</span>
-                            <input
-                                id="event-price"
-                                type="number"
-                                bind:value={price}
-                                min="0"
-                                step="1"
-                                placeholder="0.00"
-                            />
-                        </div>
-                        <small class="field-hint"
-                            >Leave as 0 for a FREE event.</small
-                        >
-                        <div class="checkbox-group">
-                            <div class="form-group">
-                                <label>Ticket Sales Method</label>
-                                <div class="checkbox-group">
-                                    <div class="checkbox-item">
-                                        <input
-                                            type="checkbox"
-                                            id="accepts-online-payment"
-                                            disabled={price <= 0}
-                                            bind:checked={acceptsOnlinePayment}
-                                        />
-                                        <label for="accepts-online-payment"
-                                            >Tickets sold online</label
-                                        >
-                                    </div>
-                                    <div class="checkbox-item">
-                                        <input
-                                            type="checkbox"
-                                            id="accepts-venue-payment"
-                                            disabled={price <= 0}
-                                            bind:checked={acceptsVenuePayment}
-                                        />
-                                        <label for="accepts-venue-payment"
-                                            >Tickets sold at venue</label
-                                        >
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+          <div class="field-group">
+            <div class="form-field">
+              <label for="event-price">Price</label>
+              <div class="price-input-wrapper">
+                <span class="currency-symbol">DKK</span>
+                <input
+                  id="event-price"
+                  type="number"
+                  bind:value={price}
+                  min="0"
+                  step="1"
+                  placeholder="0.00"
+                />
+              </div>
+              <small class="field-hint">Leave as 0 for a FREE event.</small>
+              <div class="checkbox-group">
+                <div class="form-group">
+                  <label>Ticket Sales Method</label>
+                  <div class="checkbox-group">
+                    <div class="checkbox-item">
+                      <input
+                        type="checkbox"
+                        id="accepts-online-payment"
+                        disabled={price <= 0}
+                        bind:checked={acceptsOnlinePayment}
+                      />
+                      <label for="accepts-online-payment"
+                        >Tickets sold online</label
+                      >
                     </div>
-            </fieldset>
+                    <div class="checkbox-item">
+                      <input
+                        type="checkbox"
+                        id="accepts-venue-payment"
+                        disabled={price <= 0}
+                        bind:checked={acceptsVenuePayment}
+                      />
+                      <label for="accepts-venue-payment"
+                        >Tickets sold at venue</label
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </fieldset>
 
         <fieldset>
           <legend>Location (Optional)</legend>

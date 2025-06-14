@@ -1,6 +1,3 @@
-<script>
-</script>
-
 <svelte:head>
     <title>EventPulse | About </title>
 </svelte:head>
