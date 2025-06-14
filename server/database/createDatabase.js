@@ -50,6 +50,7 @@ async function dropAllTables() {
         DROP TABLE IF EXISTS event_invitations CASCADE;
         DROP TABLE IF EXISTS event_rsvps CASCADE;
         DROP TABLE IF EXISTS event_types CASCADE;
+        DROP TABLE IF EXISTS tickets CASCADE;
     `);
 }
 
@@ -87,8 +88,23 @@ async function createTables() {
         created_by_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         is_private BOOLEAN NOT NULL,
         price NUMERIC(10, 2) DEFAULT 0.00,
+        accepts_online_payment BOOLEAN DEFAULT FALSE NOT NULL,
+        accepts_venue_payment BOOLEAN DEFAULT FALSE NOT NULL,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS tickets (
+        id SERIAL PRIMARY KEY,
+        public_id UUID DEFAULT gen_random_uuid() NOT NULL UNIQUE,
+        event_id INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+        customer_name TEXT NOT NULL,
+        customer_email TEXT NOT NULL,
+        customer_address TEXT,
+        customer_postal_code VARCHAR(4),
+        amount_paid INTEGER NOT NULL,
+        stripe_payment_intent_id TEXT UNIQUE NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
 
         CREATE TABLE IF NOT EXISTS event_invitations (
@@ -176,7 +192,7 @@ async function seedEvents() {
   for (const eventData of seedEventsData) {
     try {
       await pgPool.query(
-        'INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private, type_id, price, is_ticketed) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7, $8, $9, $10) RETURNING id',
+        'INSERT INTO events (title, description, created_by_id, location_point, date_time, is_private, type_id, price, accepts_online_payment, accepts_venue_payment) VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326)::geography, $6, $7, $8, $9, $10, $11) RETURNING id',
         eventData,
       );
       console.log(`Inserted event: ${eventData[0]}`);

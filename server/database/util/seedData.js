@@ -48,132 +48,108 @@ export const seedEventTypesData = [
 ];
 
 export const seedEventsData = [
-  // Upcoming Events
   [
-    'Copenhagen Tech Meetup - AI Ethics', // title
-    'Join us for an engaging discussion on the ethics of Artificial Intelligence. Networking session included.', // description
-    1, // created_by_id
-    12.5600, // longitude (Nørrebro area)
-    55.6870, // latitude (Nørrebro area)
-    '2025-05-29T18:00', // date_time (upcoming)
-    false, // is_private
-    2, // Meetup
-    10, // Price
-    false, // is_ticketed
-  ],
-  [
-    'Summer Jazz Night in Frederiksberg Have', // title
-    'Enjoy a relaxing evening of live jazz music under the stars in the beautiful Frederiksberg Gardens.', // description
+    'Sankt Hans Bonfire on the Beach', // title
+    'Join us for a traditional Danish Midsummer celebration with a huge bonfire, songs, and a beautiful sunset over the water.', // description
     2, // created_by_id
-    12.5255, // longitude (Frederiksberg Have)
-    55.6775, // latitude (Frederiksberg Have)
-    '2025-06-14T19:30', // date_time (upcoming)
+    12.6491, // longitude
+    55.6429, // latitude
+    '2025-06-23 20:00:00+02', // date_time
     false, // is_private
-    1, // Concert
-    0, // Price
-    false, // is_ticketed
+    8, // type_id (Other)
+    0.00, // price
+    false, // accepts_online_payment
+    false, // accepts_venue_payment
   ],
   [
-    'Private Birthday Bash for Alex', // title
-    "Celebrating Alex's 30th! A private gathering for friends and family. Invitation only.", // description
+    'Open Air Cinema: Modern Classics', // title
+    'Enjoy a movie under the stars. We are showing a beloved modern classic. Bring blankets and snacks for a cozy evening.', // description
     3, // created_by_id
-    12.5580, // longitude (Vesterbro area, e.g., a rented venue)
-    55.6700, // latitude (Vesterbro area)
-    '2025-06-07T20:00', // date_time (upcoming)
+    12.5786, // longitude
+    55.6738, // latitude
+    '2025-08-01 21:30:00+02', // date_time
+    false, // is_private
+    1, // type_id (Concert - repurposed for outdoor screening)
+    50.00, // price
+    true, // accepts_online_payment
+    true, // accepts_venue_payment
+  ],
+  [
+    'Startup Pitch Night CPH', // title
+    'Local startups pitch their latest ideas. A great opportunity for networking with founders, investors, and tech talents.', // description
+    1, // created_by_id
+    12.5878, // longitude
+    55.6698, // latitude
+    '2025-07-10 18:00:00+02', // date_time
+    false, // is_private
+    7, // type_id (Presentation)
+    25.00, // price
+    true, // accepts_online_payment
+    false, // accepts_venue_payment
+  ],
+  [
+    'Morning Run & Coffee', // title
+    'A social 5k run around the Copenhagen lakes, followed by coffee and conversation at a nearby cafe. All paces welcome!', // description
+    2, // created_by_id
+    12.5623, // longitude
+    55.6836, // latitude
+    '2025-06-21 09:00:00+02', // date_time
+    false, // is_private
+    6, // type_id (Workout)
+    0.00, // price
+    false, // accepts_online_payment
+    true, // accepts_venue_payment
+  ],
+  [
+    'Sofie\'s Summer Grill Party', // title
+    'Private garden party to celebrate summer. I\'ll provide the grill and some basics, you bring your favorite grilling food and drinks.', // description
+    3, // created_by_id
+    12.5298, // longitude
+    55.6755, // latitude
+    '2025-07-19 18:00:00+02', // date_time
     true, // is_private
-    3, // Birthday
-    0, // Price
-    false, // is_ticketed
+    4, // type_id (Food)
+    0.00, // price
+    false, // accepts_online_payment
+    false, // accepts_venue_payment
   ],
   [
-    'Refshaleøen Street Food Market - Opening Weekend', // title
-    "Explore diverse culinary delights from Copenhagen's best food trucks and stalls at the new Refshaleøen market area. Live music on Saturday!", // description
+    'Advanced Javascript Workshop', // title
+    'Deep dive into advanced Javascript concepts including async/await, generators, and performance optimization. For experienced developers.', // description
     1, // created_by_id
-    12.6180, // longitude (Refshaleøen)
-    55.6925, // latitude (Refshaleøen)
-    '2025-05-24T12:00', // date_time (upcoming - this weekend!)
+    12.5896, // longitude
+    55.6782, // latitude
+    '2025-08-16 10:00:00+02', // date_time
     false, // is_private
-    4, // Food
-    0, // Price
-    false, // is_ticketed
+    5, // type_id (Workshop)
+    650.00, // price
+    true, // accepts_online_payment
+    false, // accepts_venue_payment
   ],
   [
-    'Advanced Svelte Workshop: Mastering Runes', // title
-    'Deep dive into Svelte 5 runes, advanced state management, and performance optimization techniques. Limited seats available.', // description
+    'Indie Game Developers Meetup', // title
+    'A casual get-together for indie game developers in Copenhagen. Show off your projects, share experiences, and find collaborators.', // description
     2, // created_by_id
-    12.5750, // longitude (City Center, near a tech hub)
-    55.6780, // latitude (City Center)
-    '2025-07-05T09:00', // date_time (upcoming - further out)
+    12.5656, // longitude
+    55.6826, // latitude
+    '2025-07-29 19:00:00+02', // date_time
     false, // is_private
-    5, // Workshop
-    50, // Price
-    false, // is_ticketed
-  ],
-
-  // Past Events
-  [
-    'Østerbro Morning Yoga Flow', // title
-    'Start your day with an invigorating Vinyasa yoga session in the serene Fælledparken. All levels welcome, bring your own mat.', // description
-    3, // created_by_id
-    12.5710, // longitude (Fælledparken, Østerbro)
-    55.7025, // latitude (Fælledparken, Østerbro)
-    '2025-05-15T07:30', // date_time (past)
-    false, // is_private
-    6, // Workout
-    100, // Price
-    false, // is_ticketed
+    2, // type_id (Meetup)
+    0.00, // price
+    false, // accepts_online_payment
+    true, // accepts_venue_payment
   ],
   [
-    'Indie Game Devs - May Showcase (Members Only)', // title
-    'Local indie game developers share their latest projects, prototypes, and gather feedback. An exclusive event for community members.', // description
-    1, // created_by_id
-    12.5780, // longitude (City Center, e.g., a small venue near Strøget)
-    55.6790, // latitude (City Center)
-    '2025-05-08T19:00', // date_time (past) - Changed from April to make it more recent past
+    'Kristian\'s Housewarming', // title
+    'I finally moved! Come see my new place and celebrate with me. There will be drinks, snacks, and music.', // description
+    2, // created_by_id
+    12.5511, // longitude
+    55.6901, // latitude
+    '2025-09-06 19:30:00+02', // date_time
     true, // is_private
-    7, // Presentation
-    0, // Price
-    false, // is_ticketed
-
-  ],
-  [
-    'Nyhavn Historical Walking Tour', // title
-    'Discover the rich history, colorful facades, and maritime tales of the iconic Nyhavn harbor. Led by local historian Anders Jensen.', // description
-    2, // created_by_id
-    12.5905, // longitude (Nyhavn)
-    55.6798, // latitude (Nyhavn)
-    '2025-05-04T14:00', // date_time (past)
-    false, // is_private
-    7, // Presentation
-    10, // Price
-    false, // is_ticketed
-  ],
-
-  // Event with No Location
-  [
-    'Online Webinar: The Future of Sustainable Urban Living', // title
-    'Experts discuss innovative solutions, green technologies, and policy changes for creating sustainable cities. Fully online.', // description
-    3, // created_by_id
-    null, // longitude (no physical location)
-    null, // latitude (no physical location)
-    '2025-06-10T16:00', // date_time (upcoming)
-    false, // is_private
-    7, // Presentation
-    0, // Price
-    false, // is_ticketed
-  ],
-
-  // Another Community Event
-  [
-    'Christianshavn Canal Cleanup - Spring Edition', // title
-    'Join your neighbors and local volunteers to help keep the beautiful canals of Christianshavn clean. Equipment and refreshments provided.', // description
-    1, // created_by_id
-    12.5940, // longitude (Christianshavn, meeting point near a canal)
-    55.6725, // latitude (Christianshavn)
-    '2025-04-20T10:00', // date_time (past) - Made it further in the past for variety
-    false, // is_private
-    2, // Meetup
-    0, // Price
-    false, // is_ticketed
+    3, // type_id (Birthday - repurposed for housewarming)
+    0.00, // price
+    false, // accepts_online_payment
+    false, // accepts_venue_payment
   ],
 ];
