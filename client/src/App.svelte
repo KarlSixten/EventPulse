@@ -29,8 +29,8 @@
   import About from "./pages/About/About.svelte";
   import EditEvent from "./pages/EditEvent/EditEvent.svelte";
   import Map from "./pages/Map/Map.svelte";
-    import Home from "./pages/Home/Home.svelte";
-    import AuthGuard from "./components/AuthGuard.svelte";
+  import Home from "./pages/Home/Home.svelte";
+  import AuthGuard from "./components/AuthGuard.svelte";
 
   export let url = "";
 
