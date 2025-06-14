@@ -41,8 +41,9 @@ async function setupStripe() {
             return;
         }
 
-        const clientSecret = result.data.clientSecret;
-        const elements = stripe.elements({ clientSecret });
+        clientSecret = result.data.clientSecret;
+        
+        elements = stripe.elements({ clientSecret });
         
         const addressElement = elements.create('address', { mode: 'billing' });
         const paymentElement = elements.create('payment');
