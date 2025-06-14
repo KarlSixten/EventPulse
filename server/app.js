@@ -6,6 +6,7 @@ import { createServer } from 'http';
 import path from 'path';
 import { initSocket } from './socket.js';
 
+import paymentRouter from './routers/payment/paymentRouter.js';
 import authRouter from './routers/auth/authRouter.js';
 import eventRouter from './routers/events/eventRouter.js';
 import notificationsRouter from './routers/notifications/notificationsRouter.js';
@@ -13,8 +14,6 @@ import notificationsRouter from './routers/notifications/notificationsRouter.js'
 const prodMode = process.argv.includes('--prod');
 
 const app = express();
-
-app.use(express.json());
 
 const corsMiddleware = cors({
   origin: 'http://localhost:5173',
@@ -32,6 +31,10 @@ const sessionMiddleware = session({
   },
 });
 app.use(sessionMiddleware);
+
+app.use('/api/payments', paymentRouter); // bruger ikke express.json()
+
+app.use(express.json());
 
 const httpServer = createServer(app);
 
