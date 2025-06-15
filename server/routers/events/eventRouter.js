@@ -232,7 +232,7 @@ router.get('/:id', async (req, res) => {
 
     const rsvpStatusForGoing = 'going';
 
-    if (eventRow.is_private) {
+    if (eventData.isPrivate) {
       const attendeesList = await db('event_rsvps as er')
         .join('users as u', 'er.user_id', '=', 'u.id')
         .where('er.event_id', eventId)
