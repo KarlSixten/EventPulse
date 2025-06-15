@@ -5,7 +5,7 @@
     import { apiFetch } from "../../util/fetch";
     import toastr from "toastr";
 
-    import EventCard from "../../components/EventCard.svelte";
+    import EventCard from "./EventCard.svelte";
 
     let events = $state([]);
     let eventTypes = $state([]);

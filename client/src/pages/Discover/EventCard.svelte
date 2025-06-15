@@ -1,5 +1,5 @@
 <script>
-    import { formatDate, formatDistance, formatCurrency } from "../util/format";
+    import { formatDate, formatDistance, formatCurrency } from "../../util/format";
 
     let { event } = $props();
 </script>

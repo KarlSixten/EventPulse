@@ -5,22 +5,18 @@
     import { eventForEditing } from "../../stores/eventStore.js";
     import { apiFetch } from "../../util/fetch";
     import { formatDate, formatCurrency } from "../../util/format";
-    import toastr from "toastr";
 
+    import RsvpPicker from "./RsvpPicker.svelte";
     import Map from "./Map.svelte";
-    import CheckoutForm from "./CheckoutForm.svelte";
+    import InviteForm from "./InviteForm.svelte";
+    import TicketInfo from "./TicketInfo.svelte";
+    import PeopleGoing from "./PeopleGoing.svelte";
 
     let { id } = $props();
 
     let event = $state(null);
     let isLoading = $state(true);
     let error = $state(null);
-
-    let isLoggedIn = $derived(!!$userStore);
-    let paymentModalVisible = $state(false);
-
-    let inviteeEmail = $state("");
-    let inviteeMessage = $state("");
 
     let othersGoingCount = $derived(
         (event?.attendeesCount ?? 0) -
@@ -43,7 +39,8 @@
 
         if (ok) {
             event = result.data;
-            selectedRsvpStatus = event.userRsvpStatus;
+            console.log(event);
+
         } else {
             error = apiError?.message || "Failed to load event details.";
             console.error("Error fetching event:", apiError);
@@ -52,69 +49,12 @@
         isLoading = false;
     }
 
-    let selectedRsvpStatus = $state(null);
-
-    const rsvpOptions = [
-        { status: "going", label: "Going" },
-        { status: "maybe", label: "Maybe" },
-        { status: "not_going", label: "Not Going" },
-    ];
-
-    async function handleStatusSelect(status, label) {
-        const oldStatus = selectedRsvpStatus;
-        selectedRsvpStatus = status;
-
-        const { ok, error } = await apiFetch(
-            `${$BASE_URL}/api/events/${event.id}/rsvps`,
-            {
-                method: "POST",
-                body: { status },
-            },
-        );
-
-        if (ok) {
-            toastr.success(`RSVP status updated to ${label}!`);
-        } else {
-            selectedRsvpStatus = oldStatus;
-            toastr.error(
-                error?.message || "Error updating RSVP.",
-                "RSVP Error",
-            );
-            console.error("Error updating RSVP:", error);
-        }
-    }
-
-    async function handleSendInvite() {
-        const inviteDetails = {
-            invitee_email: inviteeEmail,
-            message: inviteeMessage,
-        };
-
-        const { result, ok, error } = await apiFetch(
-            `${$BASE_URL}/api/events/${event.id}/invitations`,
-            {
-                method: "POST",
-                body: inviteDetails,
-            },
-        );
-
-        if (ok) {
-            toastr.success(result.message, "User invited!");
-            inviteeEmail = "";
-            inviteeMessage = "";
-        } else {
-            toastr.error(
-                error?.message || "Error sending invite.",
-                "Unable to invite user:",
-            );
-            console.error("Error sending invite:", error);
-        }
-    }
-
     function handleEditClick() {
         eventForEditing.set(event);
         navigate(`/events/${event.id}/edit`);
     }
+
+    
 </script>
 
 <svelte:head>
@@ -146,115 +86,17 @@
             {event.type.name}
         </p>
         <p class="event-price">{formatCurrency(event.price)}</p>
-        {#if event.price > 0}
-            <div class="ticket-info-box">
-                <h3 class="ticket-header">
-                    <ion-icon name="ticket-outline"></ion-icon>
-                    Tickets
-                </h3>
-
-                <div class="price-display">
-                    {formatCurrency(event.price)}
-                </div>
-
-                <div class="payment-options">
-                    {#if event.acceptsOnlinePayment}
-                        <div class="option">
-                            <button
-                                class="buy-button"
-                                onclick={() => (paymentModalVisible = true)}
-                            >
-                                Buy Ticket Online
-                            </button>
-                        </div>
-                        <CheckoutForm isOpen={paymentModalVisible} {event} />
-                    {/if}
-
-                    {#if event.acceptsVenuePayment}
-                        <div class="option venue-info">
-                            <ion-icon name="business-outline"></ion-icon>
-                            <span>
-                                {#if event.acceptsOnlinePayment}
-                                    Tickets also available at the venue.
-                                {:else}
-                                    Tickets sold at the venue only.
-                                {/if}
-                            </span>
-                        </div>
-                    {/if}
-                </div>
-            </div>
-        {/if}
+        <TicketInfo event={event}></TicketInfo>
         <h3 class="event-datetime">
             <ion-icon name="calendar"></ion-icon>{formatDate(event.dateTime)}
         </h3>
         <h3>RSVP</h3>
         <h4>{displayCount} {othersText} going</h4>
-        {#if isLoggedIn}
-            <div class="rsvp-status-picker">
-                {#each rsvpOptions as option (option.status)}
-                    <button
-                        type="button"
-                        class="rsvp-box"
-                        class:selected={selectedRsvpStatus === option.status}
-                        onclick={() =>
-                            handleStatusSelect(option.status, option.label)}
-                        role="radio"
-                        aria-checked={selectedRsvpStatus === option.status}
-                    >
-                        <span class="label">{option.label}</span>
-                        {#if selectedRsvpStatus === option.status}
-                            <ion-icon name="checkmark-circle"></ion-icon>
-                        {/if}
-                    </button>
-                {/each}
-            </div>
-        {:else}
-            <p>You must <a href="/login">log in</a> to RSVP.</p>
-        {/if}
-        {#if event.attendees && event.attendees.length > 0}
-            <h3>People going:</h3>
-            <ul class="attendee-list">
-                {#each event.attendees as attendee}
-                    <li class="attendee-item">
-                        <ion-icon name="person-circle-outline"></ion-icon>
-                        {attendee.firstName}
-                        {attendee.lastName}
-                        {#if attendee.userId == $userStore.id}
-                            (You)
-                        {/if}
-                    </li>
-                {/each}
-            </ul>
-        {/if}
+        <RsvpPicker eventId={event.id} initialStatus={event.userRsvpStatus} />
+        
+        <PeopleGoing attendees={event.attendees} />
         <h3>Invite Others</h3>
-        {#if isLoggedIn}
-            {#if !event.isPrivate || ($userStore && event.createdById === $userStore.id)}
-                <div class="invite-form">
-                    <input
-                        type="email"
-                        placeholder="Email to invite"
-                        bind:value={inviteeEmail}
-                        required
-                    />
-                    <textarea
-                        placeholder="Message to invitee (optional)"
-                        bind:value={inviteeMessage}
-                    ></textarea>
-                    <button
-                        class="btn btn-primary"
-                        type="button"
-                        onclick={handleSendInvite}>Send Invite</button
-                    >
-                </div>
-            {:else if event.isPrivate && $userStore && event.createdById !== $userStore.id}
-                <p>
-                    Only the event creator can invite people to private events.
-                </p>
-            {/if}
-        {:else}
-            <p>You must <a href="/login">log in</a> to send invites.</p>
-        {/if}
+        <InviteForm event={event}/>
         {#if event.location}
             <Map
                 latitude={event.location.latitude}
@@ -308,71 +150,13 @@
         margin-bottom: 1em;
     }
 
-    .rsvp-status-picker {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 1em;
-        justify-content: center;
-    }
-    .rsvp-box {
-        padding: 8px 15px;
-        border: 1px solid var(--ep-border);
-        background-color: var(--ep-background-light);
-        color: var(--ep-text-secondary);
-        border-radius: 6px;
-        cursor: pointer;
-        transition:
-            background-color 0.2s,
-            color 0.2s,
-            border-color 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 0.9em;
-    }
-    .rsvp-box:hover {
-        border-color: var(--ep-primary);
-        background-color: var(--ep-accent);
-    }
-    .rsvp-box.selected {
-        background-color: var(--ep-primary);
-        color: var(--ep-text-on-primary);
-        border-color: var(--ep-primary);
-        font-weight: bold;
-    }
+    
     h4 {
         text-align: center;
         font-size: 0.9em;
         color: var(--ep-text-secondary);
         margin-bottom: 1em;
         font-weight: normal;
-    }
-    .invite-form {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    input[type="email"],
-    textarea {
-        width: 100%;
-        padding: 8px 10px;
-        border: 1px solid var(--ep-border);
-        background-color: var(--ep-background-light);
-        color: var(--ep-text-primary);
-        box-sizing: border-box;
-        border-radius: 4px;
-        font-size: 1em;
-    }
-    textarea {
-        resize: vertical;
-        min-height: 60px;
-    }
-    input[type="email"]:focus,
-    textarea:focus {
-        outline: none;
-        border-color: var(--ep-primary);
-        box-shadow: 0 0 0 2px
-            color-mix(in srgb, var(--ep-primary) 20%, transparent);
     }
     main > :global(button.btn) {
         display: block;
@@ -392,13 +176,6 @@
         text-align: center;
         padding: 20px;
         font-size: 1.1em;
-    }
-    a {
-        color: var(--ep-primary);
-        text-decoration: underline;
-    }
-    a:hover {
-        color: color-mix(in srgb, var(--ep-primary) 80%, black);
     }
     .event-publicity {
         display: inline-block;
@@ -421,74 +198,7 @@
         color: var(--ep-text-on-secondary);
     }
 
-    .ticket-info-box {
-        background-color: var(--ep-background-dark); /* */
-        border: 1px solid var(--ep-border); /* */
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-top: 2rem;
-    }
-
-    .ticket-header {
-        font-size: 1.4em;
-        font-weight: 600;
-        color: var(--ep-text-primary); /* */
-        margin: 0 0 1rem 0;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        border-bottom: 1px solid var(--ep-border); /* */
-        padding-bottom: 1rem;
-    }
-
-    .price-display {
-        font-size: 2em;
-        font-weight: 700;
-        color: var(--ep-primary); /* */
-        margin-bottom: 1.5rem;
-        text-align: center;
-    }
-
-    .payment-options {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .option {
-        display: flex;
-        justify-content: center;
-    }
-
-    .buy-button {
-        width: 100%;
-        max-width: 300px;
-        padding: 0.8em 1.5em;
-        font-size: 1.1em;
-        font-weight: 600;
-        background-color: var(--ep-primary); /* */
-        color: var(--ep-text-on-primary); /* */
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-
-    .buy-button:hover {
-        background-color: #008a91; /* Slightly darker primary */
-    }
-
-    .venue-info {
-        font-size: 0.9em;
-        color: var(--ep-text-secondary); /* */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        padding: 0.5rem;
-        background-color: var(--ep-accent); /* */
-        border-radius: 8px;
-    }
+    
 
     .event-type {
         display: inline-block;
