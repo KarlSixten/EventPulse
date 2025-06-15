@@ -6,8 +6,8 @@
     "setupDatabase": "node ./database/createDatabase.js",
     "resetDatabase": "node ./database/createDatabase.js --delete",
     "clearInvites": "node ./database/util/clearInvites.js",
-    "dev": "concurrently \"nodemon app.js\" \"cd ../client && npm run dev\"",
-    "prod": "cd ../client && npm run build && cd ../server && node app.js --prod"
+    "dev": "concurrently \"nodemon app.js\" \"cd ../client && npm run dev\" \"stripe listen --forward-to localhost:8080/api/payments/stripe-webhook\"",
+    "prod": "concurrently \"cd ../client && npm run build && cd ../server && node app.js --prod\" \"stripe listen --forward-to localhost:8080/api/payments/stripe-webhook\""
   },
   "keywords": [],
   "author": "",

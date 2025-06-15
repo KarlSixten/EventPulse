@@ -87,7 +87,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
       }
 
       sendTicketEmail(insertedTicket, eventDetails);
-    } catch (dbError) {
+    } catch (error) {
       return res.status(500).send({ message: 'Error saving ticket information.' });
     }
   }
