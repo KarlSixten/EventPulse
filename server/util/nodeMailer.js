@@ -1,17 +1,12 @@
 /* eslint-disable no-console */
-
 import nodemailer from 'nodemailer';
 import qrcode from 'qrcode';
 import {
-  getSignUpConfirmationPlainTextContent,
-  getSignUpConfirmationHtmlContent,
-  getInvitationPlainTextContent,
-  getInvitationHtmlContent,
-  getTicketConfirmationPlainTextContent,
-  getTicketConfirmationHtmlContent,
-  getResetPasswordEmailPlainTextContent,
-  getResetPasswordEmailHtmlContent,
-} from './emailTemplates.js';
+  getInvitationContent,
+  getResetPasswordEmailContent,
+  getSignUpConfirmationContent,
+  getTicketConfirmationContent,
+} from '../emailTemplates/emailTemplateEngine.js';
 
 const emailAuth = {
   user: process.env.EMAILUSER,
@@ -24,28 +19,32 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendSignUpConfirmationEmail(firstName, email) {
+  const { html, text } = await getSignUpConfirmationContent(firstName);
+
   const emailStructure = {
     from: 'EventPulse Team',
     to: email,
     subject: 'Welcome to EventPulse! Your Account is Ready.',
-    text: getSignUpConfirmationPlainTextContent(firstName),
-    html: getSignUpConfirmationHtmlContent(firstName),
+    text,
+    html,
   };
 
   try {
     await transporter.sendMail(emailStructure);
   } catch (error) {
-    console.error(`Error while sending sign up confirmation to ${email}:`, error);
+    console.error(`Error caught while sending sign up confirmation to ${email}:`, error);
   }
 }
 
 export async function sendEventInvitationEmail(inviteeEmail, event, message, inviterFirstName) {
+  const { html, text } = await getInvitationContent(event, message, inviterFirstName);
+
   const emailStructure = {
     from: 'EventPulse Team',
     to: inviteeEmail,
     subject: `${inviterFirstName} invited you to an event!`,
-    text: getInvitationPlainTextContent(event, message, inviterFirstName),
-    html: getInvitationHtmlContent(event, message, inviterFirstName),
+    text,
+    html,
   };
 
   try {
@@ -59,12 +58,14 @@ export async function sendTicketEmail(ticket, event) {
   try {
     const qrCodeDataURL = await qrcode.toDataURL(ticket.publicId);
 
+    const { html, text } = await getTicketConfirmationContent(event, ticket, qrCodeDataURL);
+
     const emailStructure = {
       from: 'EventPulse Team',
       to: ticket.customerEmail,
       subject: `Your Ticket for "${event.title}" is Confirmed!`,
-      text: getTicketConfirmationPlainTextContent(event, ticket),
-      html: getTicketConfirmationHtmlContent(event, ticket, qrCodeDataURL),
+      text,
+      html,
     };
 
     await transporter.sendMail(emailStructure);
@@ -73,16 +74,18 @@ export async function sendTicketEmail(ticket, event) {
   }
 }
 
-export async function sendForgotPasswordEmail(createdToken) {
+export async function sendResetPasswordEmail(createdToken) {
   const resetLink = `http://localhost:${process.env.PORT || 5173}/reset-password?token=${createdToken.uuid}`;
+
+  const { html, text } = await getResetPasswordEmailContent(resetLink);
 
   try {
     const emailStructure = {
       from: 'EventPulse Team',
       to: createdToken.email,
       subject: 'Password reset link.',
-      text: getResetPasswordEmailPlainTextContent(resetLink),
-      html: getResetPasswordEmailHtmlContent(resetLink),
+      text,
+      html,
     };
 
     await transporter.sendMail(emailStructure);
