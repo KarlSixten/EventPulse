@@ -1,67 +1,59 @@
 <script>
+    import { onMount } from "svelte";
     import { navigate, Link } from "svelte-routing";
     import { BASE_URL } from "../../stores/generalStore.js";
-    import { userStore } from "../../stores/userStore.js";
     import { apiFetch } from "../../util/fetch.js";
     import toastr from "toastr";
 
-    let email = $state("");
-    let password = $state("");
+    let token = $state();
+    let newPassword = $state("");
 
-    const handleLogin = async () => {
-        const loginPayload = {
-            email,
-            password,
+    onMount(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        token = urlParams.get('token');
+        if (!token) {
+            toastr.error("Invalid reset link");
+        }
+    });
+
+    const handleSubmit = async () => {
+        const payload = {
+            newPassword,
         };
 
-        const { result, ok, error } = await apiFetch(
-            `${$BASE_URL}/api/auth/login`,
+        const { ok, error } = await apiFetch(
+            `${$BASE_URL}/api/auth/reset-password?token=${token}`,
             {
                 method: "POST",
-                body: loginPayload,
+                body: payload,
             },
         );
 
         if (ok) {
-            const userData = result.data.user;
-            userStore.set(userData);
-            sessionStorage.setItem("currentUser", JSON.stringify(userData));
-
-            toastr.success("Logged in successfully!");
-            navigate("/discover");
+            toastr.success("Password reset successfully!");
+            navigate("/login");
         } else {
-            toastr.error(
-                error?.message ||
-                    "Login failed. Please check your credentials.",
-            );
+            toastr.error(error?.message || "Reset password failed.");
             console.error("Login failed:", error);
         }
     };
 </script>
 
 <svelte:head>
-    <title>EventPulse | Login</title>
+    <title>EventPulse | Reset Password</title>
 </svelte:head>
 
 <main>
     <form class="form-container">
-        <h2 class="form-title">Login</h2>
-        <input
-            type="email"
-            placeholder="Email"
-            bind:value={email}
-            required
-            class="form-input"
-        />
+        <h2 class="form-title">Reset password</h2>
         <input
             type="password"
             placeholder="Password"
-            bind:value={password}
+            bind:value={newPassword}
             required
             class="form-input"
         />
-        <Link to="/forgot-password">Forgot password</Link>
-        <button class="form-button" type="button" onclick={handleLogin}>Login</button>
+        <button class="form-button" type="button" onclick={handleSubmit}>Reset password</button>
     </form>
 </main>
 

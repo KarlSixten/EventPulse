@@ -31,6 +31,8 @@
   import Map from "./pages/Map/Map.svelte";
   import Home from "./pages/Home/Home.svelte";
   import AuthGuard from "./components/AuthGuard.svelte";
+    import ForgotPassword from "./pages/ForgotPassword/ForgotPassword.svelte";
+    import ResetPassword from "./pages/ResetPassword/ResetPassword.svelte";
 
   export let url = "";
 
@@ -72,6 +74,8 @@
       <Route path="/about"><About></About></Route>
       <Route path="/login"><Login></Login></Route>
       <Route path="/sign-up"><SignUp></SignUp></Route>
+      <Route path="/forgot-password"><ForgotPassword></ForgotPassword></Route>
+      <Route path="/reset-password"><ResetPassword></ResetPassword></Route>
 
       <Route path="/create-event">
         <AuthGuard>

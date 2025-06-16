@@ -1,51 +1,40 @@
 <script>
-    import { navigate, Link } from "svelte-routing";
+    import { navigate } from "svelte-routing";
     import { BASE_URL } from "../../stores/generalStore.js";
-    import { userStore } from "../../stores/userStore.js";
     import { apiFetch } from "../../util/fetch.js";
     import toastr from "toastr";
 
     let email = $state("");
-    let password = $state("");
 
-    const handleLogin = async () => {
-        const loginPayload = {
+    const handleSubmit = async () => {
+        const payload = {
             email,
-            password,
         };
 
-        const { result, ok, error } = await apiFetch(
-            `${$BASE_URL}/api/auth/login`,
+        const { ok, error } = await apiFetch(
+            `${$BASE_URL}/api/auth/forgot-password`,
             {
                 method: "POST",
-                body: loginPayload,
+                body: payload,
             },
         );
 
         if (ok) {
-            const userData = result.data.user;
-            userStore.set(userData);
-            sessionStorage.setItem("currentUser", JSON.stringify(userData));
-
-            toastr.success("Logged in successfully!");
-            navigate("/discover");
+            toastr.success("Reset link sent!", "Check your email inbox.");
         } else {
-            toastr.error(
-                error?.message ||
-                    "Login failed. Please check your credentials.",
-            );
-            console.error("Login failed:", error);
+            toastr.error(error?.message || "Could not send reset link");
+            console.error("Reset password failed:", error);
         }
     };
 </script>
 
 <svelte:head>
-    <title>EventPulse | Login</title>
+    <title>EventPulse | Forgot Password</title>
 </svelte:head>
 
 <main>
     <form class="form-container">
-        <h2 class="form-title">Login</h2>
+        <h2 class="form-title">Forgot password</h2>
         <input
             type="email"
             placeholder="Email"
@@ -53,15 +42,9 @@
             required
             class="form-input"
         />
-        <input
-            type="password"
-            placeholder="Password"
-            bind:value={password}
-            required
-            class="form-input"
-        />
-        <Link to="/forgot-password">Forgot password</Link>
-        <button class="form-button" type="button" onclick={handleLogin}>Login</button>
+        <button class="form-button" type="button" onclick={handleSubmit}
+            >Send recovery email</button
+        >
     </form>
 </main>
 
