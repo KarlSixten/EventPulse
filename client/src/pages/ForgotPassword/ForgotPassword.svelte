@@ -20,7 +20,7 @@
         );
 
         if (ok) {
-            toastr.success("Reset link sent!", "Check your email inbox.");
+            toastr.success("Check your email inbox.", "Reset link sent!");
         } else {
             toastr.error(error?.message || "Could not send reset link");
             console.error("Reset password failed:", error);

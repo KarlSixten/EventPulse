@@ -196,6 +196,8 @@ router.post('/reset-password', async (req, res) => {
       .update({ password_hashed: hashedPassword })
       .returning('*');
 
+    await db('tokens').where({ id: token.id }).del();
+
     return res.send({ message: 'Password has been reset.' });
   } catch (error) {
     return res.status(500).send({ message: 'Database error' });
