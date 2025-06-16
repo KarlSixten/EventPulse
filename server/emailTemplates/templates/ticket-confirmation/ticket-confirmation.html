@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Ticket is Confirmed!</title>
+    <style>
+        .body-wrapper {
+            font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            max-width: 580px;
+            margin: 20px auto;
+            padding: 25px;
+            border: 1px solid #dddddd;
+            border-radius: 6px;
+            background-color: #ffffff;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .header h1 {
+            font-size: 26px;
+            color: #00adb5;
+            margin: 0;
+            font-weight: 600;
+        }
+        .content p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .qr-code-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .details-box {
+            background-color: #f8f9fa;
+            border: 1px solid #eeeeee;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        .details-box h3 {
+            color: #00adb5;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #00adb5;
+            padding-bottom: 10px;
+        }
+        .details-box p {
+            font-size: 15px;
+            margin: 5px 0;
+        }
+        .button-container {
+            text-align: center;
+            margin: 25px 0;
+        }
+        .button {
+            background-color: #00adb5;
+            color: #ffffff;
+            padding: 11px 22px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #eeeeee;
+            font-size: 12px;
+            color: #777777;
+        }
+    </style>
+</head>
+<body>
+    <div class="body-wrapper">
+        <div class="header">
+            <h1>Your Ticket is Confirmed!</h1>
+        </div>
+        
+        <p>Hi {{customerName}},</p>
+        
+        <p>Thank you for your purchase. Your spot for <strong>"{{eventTitle}}"</strong> is reserved. The following QR code is your ticket for the event. We're excited to see you there!</p>
+
+        <div class="qr-code-container">
+            <img src="{{qrCodeDataUrl}}" alt="Your Ticket QR Code" style="width: 200px; height: 200px;">
+        </div>
+        
+        <div class="details-box">
+            <h3>Your Ticket Details</h3>
+            <p><strong>Event:</strong> {{eventTitle}}</p>
+            <p><strong>Date:</strong> {{formattedDate}}</p>
+            <p><strong>Ticket ID:</strong> TICKET-{{ticketPublicId}}</p>
+            <p><strong>Amount Paid:</strong> {{formattedPrice}}</p>
+        </div>
+
+        <div class="button-container">
+            <a href="{{eventUrl}}" target="_blank" class="button">View Event Details</a>
+        </div>
+        
+        <p>If you have any questions, please reply to this email.</p>
+        
+        <p>Best regards,<br>The EventPulse Team</p>
+        
+        <div class="footer">
+            <p style="margin: 0 0 5px 0;">&copy; {{currentYear}} EventPulse</p>
+            <p style="margin: 0;"><a href="{{websiteUrl}}" target="_blank" style="color: #00adb5; text-decoration: none;">EventPulse.com</a></p>
+        </div>
+    </div>
+</body>
+</html>

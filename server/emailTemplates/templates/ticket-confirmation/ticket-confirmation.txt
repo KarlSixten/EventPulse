@@ -1,0 +1,20 @@
+Hi {{customerName}},
+
+Thank you for your purchase. Your spot for "{{eventTitle}}" is reserved. We're excited to see you there!
+
+--- TICKET DETAILS ---
+Event: {{eventTitle}}
+Date: {{formattedDate}}
+Ticket ID: TICKET-{{ticketPublicId}}
+Amount Paid: {{formattedPrice}}
+--------------------
+
+View Event Details: {{eventUrl}}
+
+If you have any questions, please reply to this email.
+
+Best regards,
+The EventPulse Team
+
+© {{currentYear}} EventPulse
+{{websiteUrl}}

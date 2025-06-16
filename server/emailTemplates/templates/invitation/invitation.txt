@@ -1,0 +1,13 @@
+Hi there,
+
+{{inviterFirstName}} has invited you to the event: "{{eventTitle}}" on EventPulse!
+{{customMessageText}}
+View Event Details: {{eventUrl}}
+
+We hope this sounds interesting!
+
+Best regards,
+The EventPulse Team
+
+© {{currentYear}} EventPulse
+{{websiteUrl}}

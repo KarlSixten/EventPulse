@@ -1,0 +1,15 @@
+Hi {{firstName}},
+
+Thanks for signing up to EventPulse! We're excited to have you join our community for discovering and creating local events.
+
+You're all set. You can start exploring events now!
+
+Discover Events: {{discoverPageUrl}}
+
+If you have any questions, feel free to reach out.
+
+Best regards,
+The EventPulse Team
+
+© {{currentYear}} EventPulse
+{{websiteUrl}}
