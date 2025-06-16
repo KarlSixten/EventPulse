@@ -5,14 +5,17 @@
   import { userStore } from "../../stores/userStore.js";
   import { eventForEditing } from "../../stores/eventStore.js";
   import { apiFetch } from "../../util/fetch.js";
-  import {
-    formatDateTimeForInput,
-    getLocalDateTimeString,
-  } from "../../util/format.js"; //
+  import { formatDateTimeForInput } from "../../util/format.js";
   import toastr from "toastr";
 
-  import EventLocationMapInput from "../../components/EventLocationMapInput.svelte";
-  import ConfirmationModal from "../../components/ConfirmationModal.svelte";
+  import EventLocationMapInput from "../../components/EventInput/EventLocationMapInput.svelte";
+  import ConfirmationModal from "./ConfirmationModal.svelte";
+  import PriceInput from "../../components/EventInput/PriceInput.svelte";
+  import TicketTypeInput from "../../components/EventInput/TicketTypeInput.svelte";
+  import PublicityInput from "../../components/EventInput/PublicityInput.svelte";
+  import DateTimeInput from "../../components/EventInput/DateTimeInput.svelte";
+  import EventTypeInput from "../../components/EventInput/EventTypeInput.svelte";
+  import TitleDesctiptionInput from "../../components/EventInput/TitleDescriptionInput.svelte";
 
   let { id } = $props();
 
@@ -26,8 +29,6 @@
   let price = $state(null);
   let acceptsOnlinePayment = $state(false);
   let acceptsVenuePayment = $state(false);
-
-  let eventTypes = $state([]);
 
   let eventToEdit = $state(null);
   let isLoading = $state(true);
@@ -82,16 +83,6 @@
         }
       }
     });
-    const { result, error, ok } = await apiFetch(
-      `${$BASE_URL}/api/events/types`,
-    );
-
-    if (ok) {
-      eventTypes = result.data;
-    } else {
-      toastr.error("Could not load event types.");
-      console.error("Failed to fetch event types:", error);
-    }
   });
 
   async function fetchEventDetails() {
@@ -125,14 +116,6 @@
       acceptsVenuePayment = loadedEvent.acceptsVenuePayment || false;
       latitude = loadedEvent.location?.latitude ?? null;
       longitude = loadedEvent.location?.longitude ?? null;
-    } else {
-      title = "";
-      description = "";
-      typeId = null;
-      dateTime = "";
-      isPrivate = false;
-      latitude = null;
-      longitude = null;
     }
   }
 
@@ -228,95 +211,26 @@
       <form onsubmit={handleSubmit}>
         <fieldset>
           <legend>Event Details</legend>
-          <div>
-            <label for="event-title">Title:</label>
-            <input type="text" id="event-title" bind:value={title} required />
-          </div>
-          <div>
-            <label for="event-description">Description:</label>
-            <textarea
-              id="event-description"
-              rows="6"
-              bind:value={description}
-              required
-            ></textarea>
-            <div>
-              <label for="event-type">Type:</label>
-              <select bind:value={typeId} required>
-                <option value="" disabled>Select a type...</option>
-                {#each eventTypes as type}
-                  <option value={type.id}>{type.name}</option>
-                {/each}
-              </select>
-            </div>
-          </div>
-          <div>
-            <label for="event-date">Date & Time:</label>
-            <input
-              type="datetime-local"
-              id="event-date"
-              min={getLocalDateTimeString()}
-              bind:value={dateTime}
-              required
-            />
-          </div>
-          <div class="checkbox-group">
-            <input
-              type="checkbox"
-              id="event-is-private"
-              bind:checked={isPrivate}
-            />
-            <label for="event-is-private">This is a private event</label>
-          </div>
+          <TitleDesctiptionInput bind:title bind:description />
+          <EventTypeInput bind:typeId />
+          <PublicityInput bind:isPrivate />
+        </fieldset>
+
+        <fieldset class="form-fieldset">
+          <legend>Date & Time</legend>
+          <DateTimeInput bind:dateTime />
         </fieldset>
 
         <fieldset class="form-fieldset">
           <legend>Tickets & Pricing</legend>
-
           <div class="field-group">
             <div class="form-field">
-              <label for="event-price">Price</label>
-              <div class="price-input-wrapper">
-                <span class="currency-symbol">DKK</span>
-                <input
-                  id="event-price"
-                  type="number"
-                  bind:value={price}
-                  min="0"
-                  step="1"
-                  placeholder="0.00"
-                />
-              </div>
-              <small class="field-hint">Leave as 0 for a FREE event.</small>
-              <div class="checkbox-group">
-                <div class="form-group">
-                  <label>Ticket Sales Method</label>
-                  <div class="checkbox-group">
-                    <div class="checkbox-item">
-                      <input
-                        type="checkbox"
-                        id="accepts-online-payment"
-                        disabled={price <= 0}
-                        bind:checked={acceptsOnlinePayment}
-                      />
-                      <label for="accepts-online-payment"
-                        >Tickets sold online</label
-                      >
-                    </div>
-                    <div class="checkbox-item">
-                      <input
-                        type="checkbox"
-                        id="accepts-venue-payment"
-                        disabled={price <= 0}
-                        bind:checked={acceptsVenuePayment}
-                      />
-                      <label for="accepts-venue-payment"
-                        >Tickets sold at venue</label
-                      >
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <PriceInput bind:price />
+              <TicketTypeInput
+                bind:price
+                bind:acceptsOnlinePayment
+                bind:acceptsVenuePayment
+              />
             </div>
           </div>
         </fieldset>
@@ -370,80 +284,6 @@
   .event-title-display {
     color: var(--ep-primary);
     font-style: italic;
-  }
-
-  fieldset {
-    margin-bottom: 25px;
-    padding: 15px;
-    border: 1px solid var(--ep-border);
-    background-color: var(--ep-background-light);
-    border-radius: 6px;
-  }
-
-  legend {
-    color: var(--ep-primary);
-    font-weight: 600;
-    padding: 0 5px;
-    margin-left: 5px;
-  }
-
-  fieldset > div:not(.checkbox-group) {
-    margin-bottom: 15px;
-  }
-  fieldset > div:last-child {
-    margin-bottom: 0;
-  }
-
-  label {
-    display: block;
-    margin-bottom: 5px;
-    color: var(--ep-text-primary);
-    font-weight: 500;
-    font-size: 0.95em;
-  }
-
-  input[type="text"],
-  input[type="datetime-local"],
-  textarea {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid var(--ep-border);
-    background-color: var(--ep-background-light);
-    color: var(--ep-text-primary);
-    box-sizing: border-box;
-    border-radius: 4px;
-    font-size: 1em;
-  }
-
-  textarea {
-    resize: vertical;
-    min-height: 80px;
-  }
-
-  input[type="text"]:focus,
-  input[type="datetime-local"]:focus,
-  textarea:focus {
-    outline: none;
-    border-color: var(--ep-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ep-primary) 20%, transparent);
-  }
-
-  .checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
-  .checkbox-group input[type="checkbox"] {
-    width: auto;
-    margin: 0;
-  }
-  .checkbox-group label {
-    margin-bottom: 0;
-    font-weight: normal;
-    font-size: 0.9em;
-    color: var(--ep-text-secondary);
   }
 
   .form-actions,

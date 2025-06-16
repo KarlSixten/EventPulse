@@ -112,6 +112,7 @@
         width: 100%;
         border: 1px solid #ccc;
         margin-bottom: 10px;
+        z-index: 0;
     }
 
     :global(.leaflet-container) {

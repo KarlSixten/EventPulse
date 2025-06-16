@@ -63,8 +63,8 @@
         }
     }
 
-    async function handleSubmit(event) {
-        event.preventDefault();
+    async function handleSubmit(clickEvent) {
+        clickEvent.preventDefault();
         if (isLoading || !stripe || !elements) return;
 
         isLoading = true;

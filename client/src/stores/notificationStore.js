@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+
 import { writable, get } from 'svelte/store';
 import { io } from 'socket.io-client';
 import { userStore } from './userStore.js';
@@ -58,7 +60,7 @@ socket.on('new_notification', (notification) => {
 });
 
 userStore.subscribe((currentUser) => {
-  if (currentUser && !socket.connected) {
+  if (currentUser && currentUser !== undefined && !socket.connected) {
     socket.connect();
     fetchAndLoadNotifications();
   } else if (!currentUser && socket.connected) {
