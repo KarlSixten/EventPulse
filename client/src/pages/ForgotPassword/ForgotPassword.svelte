@@ -1,5 +1,4 @@
 <script>
-    import { navigate } from "svelte-routing";
     import { BASE_URL } from "../../stores/generalStore.js";
     import { apiFetch } from "../../util/fetch.js";
     import toastr from "toastr";
