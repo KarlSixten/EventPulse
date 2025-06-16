@@ -4,7 +4,7 @@ import { hashPassword, passwordMatchesHashed } from '../../util/passwordHasher.j
 
 // import ville skulle bruges i prod/real-world, derfor beholdt
 // eslint-disable-next-line no-unused-vars
-import { sendSignUpConfirmationEmail } from '../../util/nodeMailer.js';
+import { sendSignUpConfirmationEmail, sendForgotPasswordEmail } from '../../util/nodeMailer.js';
 
 const router = Router();
 
@@ -46,7 +46,7 @@ router.post('/sign-up', async (req, res) => {
     if (existingUser) {
       return res.status(409).send({ message: `User with email ${normalizedEmail} already exists` });
     }
-    const hashedPassword = await hashPassword(password); //
+    const hashedPassword = await hashPassword(password);
 
     await db('users').insert({
       email: normalizedEmail,
@@ -121,6 +121,84 @@ router.post('/logout', async (req, res) => {
     }
   } else {
     return res.status(200).send({ message: 'No active session to logout from.' });
+  }
+});
+
+router.post('/forgot-password', async (req, res) => {
+  if (!req.body || !req.body.email) {
+    return res.status(400).send({ message: 'Email for account is required' });
+  }
+
+  const { email } = req.body;
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (!emailRegex.test(normalizedEmail)) {
+    return res.status(400).send({ message: 'Invalid email format' });
+  }
+
+  let createdToken;
+
+  try {
+    const user = await db('users')
+      .where({ email: normalizedEmail })
+      .first();
+
+    if (!user) {
+      return res.status(409).send({ message: `User with email ${normalizedEmail} does not exists` });
+    }
+
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60); // 1 time frem
+    // eslint-disable-next-line max-len
+    const expiresAtTimestamp = Math.floor(expiresAt.getTime() / 1000); // ms siden epoch, divider med 1000 for at få sekunder
+
+    [createdToken] = await db('tokens').insert({
+      email: normalizedEmail,
+      expires_at: expiresAtTimestamp,
+    }).returning(['uuid', 'email', 'expires_at as expiresAt']);
+  } catch (error) {
+    return res.status(500).send({ message: 'A database error occured' });
+  }
+
+  sendForgotPasswordEmail(createdToken);
+
+  return res.send({ message: `Reset link sent to ${email}` });
+});
+
+router.post('/reset-password', async (req, res) => {
+  if (!req.body || !req.body.newPassword) {
+    return res.status(400).send({ message: 'New password for account is required' });
+  }
+
+  const { newPassword } = req.body;
+  const tokenUuid = req.query.token;
+
+  if (!tokenUuid) {
+    return res.status(400).send({ message: 'Invalid token' });
+  }
+
+  try {
+    const token = await db('tokens')
+      .where({ uuid: tokenUuid })
+      .first();
+
+    const now = new Date();
+
+    if (!token || token.expiresAt < now) {
+      return res.status(400).send({ message: 'Invalid or expired token' });
+    }
+
+    const tokenEmail = token.email;
+    const hashedPassword = await hashPassword(newPassword);
+
+    await db('users')
+      .where({ email: tokenEmail })
+      .update({ password_hashed: hashedPassword })
+      .returning('*');
+
+    return res.send({ message: 'Password has been reset.' });
+  } catch (error) {
+    return res.status(500).send({ message: 'Database error' });
   }
 });
 

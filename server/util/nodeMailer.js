@@ -238,3 +238,73 @@ export async function sendTicketEmail(ticket, event) {
     console.error(`Error while sending ticket to ${ticket.customerEmail}:`, error);
   }
 }
+
+function getResetPasswordEmailHtmlContent(resetLink) {
+  const linkExpirationTime = '60 minutes';
+
+  return `
+    <div style="font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; line-height: 1.6; color: #333333; max-width: 580px; margin: 20px auto; padding: 25px; border: 1px solid #dddddd; border-radius: 6px; background-color: #ffffff;">
+         
+        <div style="text-align: center; margin-bottom: 25px;">
+            <h1 style="font-size: 26px; color: #00adb5; margin: 0; font-weight: 600;">Reset Your Password</h1>
+        </div>
+        
+        <p style="font-size: 16px; margin-bottom: 15px;">Hi there,</p>
+        
+        <p style="font-size: 16px; margin-bottom: 20px;">We received a request to reset the password for your EventPulse account. Please click the button below to choose a new password.</p>
+        
+        <p style="font-size: 16px; margin-bottom: 25px;">If you did not request a password reset, you can safely ignore this email. Your password will not be changed.</p>
+        
+        <div style="text-align: center; margin: 25px 0;">
+            <a href="${resetLink}" target="_blank" style="background-color: #00adb5; color: #ffffff; padding: 11px 22px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">Reset Your Password</a>
+        </div>
+        
+        <p style="text-align: center; font-size: 14px; color: #777777; margin-bottom: 20px;">For security reasons, this link will expire in ${linkExpirationTime}.</p>
+
+        <p style="font-size: 12px; color: #999999;">If you're having trouble with the button, copy and paste this URL into your browser:<br><a href="${resetLink}" target="_blank" style="color: #00adb5;">${resetLink}</a></p>
+        
+        <div style="text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #eeeeee; font-size: 12px; color: #777777;">
+            <p style="margin: 0 0 5px 0;">&copy; ${currentYear} EventPulse</p>
+            <p style="margin: 0;"><a href="${WEBSITE_URL}" target="_blank" style="color: #00adb5; text-decoration: none;">EventPulse.com</a></p>
+        </div>
+    </div>`;
+}
+
+function getResetPasswordEmailPlainTextContent(resetLink) {
+  const linkExpirationTime = '60 minutes';
+
+  return `
+        Hi there,
+
+        We received a request to reset the password for your EventPulse account. Please use the link below to choose a new password.
+
+        Reset your password: ${resetLink}
+
+        If you did not request a password reset, you can safely ignore this email. Your password will not be changed.
+
+        For security reasons, this link will expire in ${linkExpirationTime}.
+
+        Best regards,
+        The EventPulse Team
+
+        © ${currentYear} EventPulse
+        ${WEBSITE_URL}`;
+}
+
+export async function sendForgotPasswordEmail(createdToken) {
+  const resetLink = `http://localhost:5173/reset-password?token=${createdToken.uuid}`;
+
+  try {
+    const emailStructure = {
+      from: 'EventPulse Team',
+      to: createdToken.email,
+      subject: 'Password reset link.',
+      text: getResetPasswordEmailPlainTextContent(resetLink),
+      html: getResetPasswordEmailHtmlContent(resetLink),
+    };
+
+    await transporter.sendMail(emailStructure);
+  } catch (error) {
+    console.error(`Error while sending ticket to ${createdToken.email}:`, error);
+  }
+}

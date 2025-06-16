@@ -137,6 +137,13 @@ async function createTables() {
         related_event_id INTEGER REFERENCES events(id) ON DELETE SET NULL,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE TABLE IF NOT EXISTS tokens (
+        id SERIAL PRIMARY KEY,
+        uuid UUID DEFAULT gen_random_uuid() NOT NULL UNIQUE,
+        email TEXT NOT NULL REFERENCES users(email) ON DELETE CASCADE,
+        expires_at INTEGER NOT NULL
+        );
 `);
 }
 
