@@ -4,7 +4,7 @@ import { hashPassword, passwordMatchesHashed } from '../../util/passwordHasher.j
 
 // import ville skulle bruges i prod/real-world, derfor beholdt
 // eslint-disable-next-line no-unused-vars
-import { sendSignUpConfirmationEmail, sendForgotPasswordEmail } from '../../util/nodeMailer.js';
+import { sendSignUpConfirmationEmail, sendResetPasswordEmail } from '../../util/nodeMailer.js';
 
 const router = Router();
 
@@ -56,7 +56,7 @@ router.post('/sign-up', async (req, res) => {
     });
 
     // Commented out to lessen spam
-    // sendSignUpConfirmationEmail(firstName, normalizedEmail);
+    await sendSignUpConfirmationEmail(firstName, normalizedEmail);
 
     return res.status(201).send({ message: 'User created' });
   } catch (error) {
@@ -160,7 +160,7 @@ router.post('/forgot-password', async (req, res) => {
     return res.status(500).send({ message: 'A database error occured' });
   }
 
-  sendForgotPasswordEmail(createdToken);
+  await sendResetPasswordEmail(createdToken);
 
   return res.send({ message: `Reset link sent to ${email}` });
 });
