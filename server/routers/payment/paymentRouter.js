@@ -86,7 +86,7 @@ router.post('/stripe-webhook', express.raw({ type: 'application/json' }), async 
         throw new Error(`Could not find event with ID ${insertedTicket.eventId}`);
       }
 
-      sendTicketEmail(insertedTicket, eventDetails);
+      await sendTicketEmail(insertedTicket, eventDetails);
     } catch (error) {
       return res.status(500).send({ message: 'Error saving ticket information.' });
     }
