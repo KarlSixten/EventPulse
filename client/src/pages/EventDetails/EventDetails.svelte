@@ -39,7 +39,6 @@
 
         if (ok) {
             event = result.data;
-            console.log(event);
 
         } else {
             error = apiError?.message || "Failed to load event details.";
