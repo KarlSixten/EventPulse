@@ -6,8 +6,12 @@
 
     let email = $state("");
     let password = $state("");
+    let confirmPassword = $state("");
     let firstName = $state("");
     let lastName = $state("");
+
+    let passwordError = $derived(confirmPassword && password !== confirmPassword);
+    let canSubmit = $derived(password && firstName && lastName && password === confirmPassword);
 
     const handleSignUp = async () => {
         const userData = {
@@ -57,6 +61,14 @@
             class="form-input"
         />
         <input
+            type="password"
+            placeholder="Confirm Password"
+            bind:value={confirmPassword}
+            required
+            class="form-input"
+            class:invalid={passwordError}
+        />
+        <input
             type="text"
             placeholder="First Name"
             bind:value={firstName}
@@ -70,7 +82,7 @@
             required
             class="form-input"
         />
-        <button class="form-button" type="button" onclick={handleSignUp}
+        <button class="form-button" type="button" onclick={handleSignUp} disabled={!canSubmit}
             >Sign up</button
         >
     </form>
@@ -148,5 +160,9 @@
     .form-button:hover {
         background-color: #007980;
         transform: translateY(-2px);
+    }
+    button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
     }
 </style>

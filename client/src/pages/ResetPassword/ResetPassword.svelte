@@ -1,22 +1,31 @@
 <script>
     import { onMount } from "svelte";
-    import { navigate, Link } from "svelte-routing";
+    import { navigate } from "svelte-routing";
     import { BASE_URL } from "../../stores/generalStore.js";
     import { apiFetch } from "../../util/fetch.js";
     import toastr from "toastr";
 
     let token = $state();
     let newPassword = $state("");
+    let confirmPassword = $state("");
+
+    let passwordError = $derived(confirmPassword && newPassword !== confirmPassword);
+    let canSubmit = $derived(newPassword && newPassword === confirmPassword);
 
     onMount(() => {
         const urlParams = new URLSearchParams(window.location.search);
-        token = urlParams.get('token');
+        token = urlParams.get("token");
         if (!token) {
             toastr.error("Invalid reset link");
         }
     });
 
     const handleSubmit = async () => {
+        if (!canSubmit) {
+            console.error("Attempted to submit with non-matching passwords.");
+            return;
+        }
+
         const payload = {
             newPassword,
         };
@@ -53,7 +62,20 @@
             required
             class="form-input"
         />
-        <button class="form-button" type="button" onclick={handleSubmit}>Reset password</button>
+        <input
+            type="password"
+            placeholder="Confirm New Password"
+            bind:value={confirmPassword}
+            required
+            class="form-input"
+            class:invalid={passwordError}
+        />
+        {#if passwordError}
+            <p class="error-text">Passwords do not match.</p>
+        {/if}
+        <button class="form-button" type="button" onclick={handleSubmit} disabled={!canSubmit}
+            >Reset password</button
+        >
     </form>
 </main>
 
@@ -129,5 +151,9 @@
     .form-button:hover {
         background-color: #007980;
         transform: translateY(-2px);
+    }
+    button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
     }
 </style>
