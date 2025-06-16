@@ -7,7 +7,7 @@
     "resetDatabase": "node ./database/createDatabase.js --delete",
     "clearInvites": "node ./database/util/clearInvites.js",
     "dev": "concurrently \"nodemon app.js\" \"cd ../client && npm run dev\" \"stripe listen --forward-to localhost:8080/api/payments/stripe-webhook\"",
-    "prod": "concurrently \"cd ../client && npm run build && cd ../server && node app.js --prod\" \"stripe listen --forward-to localhost:8080/api/payments/stripe-webhook\""
+    "prod": "concurrently \"cd ../client && npm run build && cd ../server && PORT=8080 node app.js --prod\" \"stripe listen --forward-to localhost:8080/api/payments/stripe-webhook\""
   },
   "keywords": [],
   "author": "",
@@ -16,6 +16,7 @@
   "type": "module",
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "connect-session-knex": "^5.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
