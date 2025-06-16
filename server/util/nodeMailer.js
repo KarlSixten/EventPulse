@@ -74,7 +74,7 @@ export async function sendTicketEmail(ticket, event) {
 }
 
 export async function sendForgotPasswordEmail(createdToken) {
-  const resetLink = `http://localhost:5173/reset-password?token=${createdToken.uuid}`;
+  const resetLink = `http://localhost:${process.env.PORT || 5173}/reset-password?token=${createdToken.uuid}`;
 
   try {
     const emailStructure = {
