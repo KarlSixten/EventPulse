@@ -99,14 +99,12 @@ router.post('/', isAuthenticated, async (req, res) => {
 
       io.to(actualInviteeId.toString()).emit('new_notification', finalNotificationPayload);
       // Commented out to lessen spam
-      /*
-      sendEventInvitationEmail(
+      await sendEventInvitationEmail(
         normalizedInviteeEmail,
         eventDetails,
         messageContent,
         inviterFirstName,
       );
-      */
 
       return res.status(201).send({
         message: `Invitation sent successfully to ${inviteeEmailInput}.`,
