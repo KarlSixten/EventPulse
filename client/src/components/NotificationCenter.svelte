@@ -9,9 +9,12 @@
     } from "../stores/notificationStore.js";
     import { formatDate } from "../util/format.js";
 
-    let showDropdown = false;
+    let showDropdown = $state(false);
+    let unreadCount = $state(0);
 
-    $: unreadCount = $notifications.filter((n) => !n.isRead).length;
+    $effect(() => {
+        unreadCount = $notifications.filter((n) => !n.isRead).length;
+    })
 
     function toggleDropdown() {
         showDropdown = !showDropdown;
