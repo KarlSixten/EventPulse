@@ -1,5 +1,4 @@
 <script>
-    import { onMount } from "svelte";
     import { navigate } from "svelte-routing";
     import { BASE_URL } from "../../stores/generalStore";
     import { apiFetch } from "../../util/fetch";
