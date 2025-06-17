@@ -72,11 +72,10 @@ router.post('/login', async (req, res) => {
   const originalEmail = req.body.email;
   const { password } = req.body;
 
-  if (!emailRegex.test(originalEmail)) {
+  const normalizedEmail = originalEmail.trim().toLowerCase();
+  if (!emailRegex.test(normalizedEmail)) {
     return res.status(400).send({ message: 'Invalid email format' });
   }
-
-  const normalizedEmail = originalEmail.trim().toLowerCase();
 
   try {
     const user = await db('users')
