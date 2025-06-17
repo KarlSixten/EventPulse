@@ -1,10 +1,13 @@
 import { Router } from 'express';
 import db from '../../database/connection.js';
 import isAuthenticated from '../../middleware/authMiddleware.js';
+import getIO from '../../socket.js';
 
 const router = Router({ mergeParams: true });
 
 router.post('/', isAuthenticated, async (req, res) => {
+  const io = getIO();
+
   const eventId = req.params.id;
   const status = req.body?.status;
 
@@ -17,7 +20,7 @@ router.post('/', isAuthenticated, async (req, res) => {
   try {
     const event = await db('events')
       .where({ id: eventId })
-      .select('id', 'is_private', 'created_by_id')
+      .select('id', 'title', 'is_private', 'created_by_id')
       .first();
 
     if (!event) {
@@ -59,11 +62,33 @@ router.post('/', isAuthenticated, async (req, res) => {
       .returning(['id', 'event_id', 'user_id', 'status', 'created_at', 'updated_at']);
 
     if (rsvpRecord) {
-      return res.send({
-        message: 'RSVP status updated successfully.',
-        data: rsvpRecord,
-      });
+      const [dbNotification] = await db('notifications').insert({
+        user_id: event.created_by_id,
+        type: 'invitee_response',
+        message: `${req.session.user.firstName} has RSVP'd '${status}' to your event: '${event.title}'`,
+        related_event_id: event.id,
+      }).returning('*');
+
+      const finalNotificationPayload = {
+        id: dbNotification.id,
+        type: dbNotification.type,
+        message: dbNotification.message,
+        isRead: dbNotification.is_read,
+        eventId: dbNotification.related_event_id,
+        eventName: event.title,
+        timestamp: dbNotification.created_at,
+      };
+
+      io.to(event.created_by_id.toString()).emit('new_notification', finalNotificationPayload);
+
+      if (rsvpRecord) {
+        return res.send({
+          message: 'RSVP status updated successfully.',
+          data: rsvpRecord,
+        });
+      }
     }
+
     return res.status(500).send({ message: 'Failed to update RSVP status or retrieve confirmation.' });
   } catch (error) {
     return res.status(500).send({ message: 'Failed to update RSVP status due to a server error.' });

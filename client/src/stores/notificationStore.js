@@ -49,7 +49,6 @@ socket.on('connect_error', (error) => {
 });
 
 socket.on('new_notification', (notification) => {
-  console.log(notification);
   
   notifications.update((currentNotifications) => [
     notification,
