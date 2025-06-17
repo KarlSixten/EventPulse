@@ -29,7 +29,7 @@
     async function setupStripe() {
         try {
             isInitialized = true;
-            await tick();
+            await tick(); // Sørg for at DOM er opdateret, ingen ventende opdateringer
 
             stripe = await loadStripe($STRIPE_PUBLISHABLE_KEY);
 
