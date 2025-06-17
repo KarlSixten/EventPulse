@@ -1,10 +1,11 @@
 <script>
-  export let isOpen = false;
-  export let title = 'Confirm Action';
-  export let message = 'Are you sure you want to proceed?';
-
-  export let onConfirm = () => {};
-  export let onCancel = () => {};
+  let { 
+    isOpen, 
+    onConfirm, 
+    onCancel, 
+    title = 'Confirm Action', 
+    message = 'Are you sure you want to proceed?'
+  } = $props();
 
   function handleConfirm() {
     onConfirm();
