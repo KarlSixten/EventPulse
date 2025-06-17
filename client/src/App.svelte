@@ -31,8 +31,9 @@
   import Map from "./pages/Map/Map.svelte";
   import Home from "./pages/Home/Home.svelte";
   import AuthGuard from "./components/AuthGuard.svelte";
-    import ForgotPassword from "./pages/ForgotPassword/ForgotPassword.svelte";
-    import ResetPassword from "./pages/ResetPassword/ResetPassword.svelte";
+  import ForgotPassword from "./pages/ForgotPassword/ForgotPassword.svelte";
+  import ResetPassword from "./pages/ResetPassword/ResetPassword.svelte";
+  import Page404 from './pages/Error/Page404.svelte';
 
   export let url = "";
 
@@ -92,6 +93,8 @@
           <EditEvent id={params.id}></EditEvent>
         </AuthGuard>
       </Route>
+      
+      <Route><Page404></Page404></Route>
     </div>
     <Footer />
   </Router>
