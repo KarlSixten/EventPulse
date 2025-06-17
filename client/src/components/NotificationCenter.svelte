@@ -14,13 +14,14 @@
 
     $effect(() => {
         unreadCount = $notifications.filter((n) => !n.isRead).length;
-    })
+    });
 
     function toggleDropdown() {
         showDropdown = !showDropdown;
     }
 
     function handleClickOutside(event) {
+        
         if (
             showDropdown &&
             !event.target.closest(".notification-center-wrapper")
@@ -29,12 +30,12 @@
         }
     }
 
-    onMount(() => {
+    $effect(() => {
         window.addEventListener("click", handleClickOutside);
-    });
 
-    onDestroy(() => {
-        window.removeEventListener("click", handleClickOutside);
+        return () => {
+            window.removeEventListener("click", handleClickOutside);
+        };
     });
 
     function handleClearNotifications() {
@@ -52,7 +53,8 @@
 {#if $userStore}
     <div class="notification-center-wrapper">
         <button class="notification-button" onclick={toggleDropdown}>
-            <ion-icon name="notifications{!showDropdown ? '-outline' : ''}"></ion-icon>
+            <ion-icon name="notifications{!showDropdown ? '-outline' : ''}"
+            ></ion-icon>
             {#if unreadCount > 0}
                 <span class="badge">{unreadCount}</span>
             {/if}
@@ -65,7 +67,8 @@
                     {#if unreadCount > 0}
                         <button
                             class="clear-all-button"
-                            onclick={handleClearNotifications}>Mark all as read</button
+                            onclick={handleClearNotifications}
+                            >Mark all as read</button
                         >
                     {/if}
                 </div>
@@ -74,7 +77,12 @@
                         <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
                         {#each $notifications as notification (notification.id)}
                             <!-- svelte-ignore a11y_click_events_have_key_events -->
-                            <li class="notification-item" class:read={notification.isRead} onclick={() => handleNotificationClick(notification)}>
+                            <li
+                                class="notification-item"
+                                class:read={notification.isRead}
+                                onclick={() =>
+                                    handleNotificationClick(notification)}
+                            >
                                 <p>{notification.message}</p>
                                 <span class="timestamp">
                                     {formatDate(notification.timestamp)}
