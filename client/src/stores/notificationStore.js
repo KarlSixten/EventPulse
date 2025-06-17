@@ -11,14 +11,14 @@ export const notifications = writable([]);
 export const hasUnreadNotifications = writable(false);
 export const isSocketConnected = writable(false);
 
+const serverUrl = get(BASE_URL);
+
 function updateUnreadStatus() {
   const unreadCount = get(notifications).filter((n) => !n.isRead).length;
   hasUnreadNotifications.set(unreadCount > 0);
 }
 
 async function fetchAndLoadNotifications() {
-  const serverUrl = get(BASE_URL);
-  
   const { result, error, ok } = await apiFetch(`${serverUrl}/api/notifications`);
 
   if (ok) {
@@ -71,7 +71,6 @@ userStore.subscribe((currentUser) => {
 
 
 export async function markNotificationRead(notificationId) {
-    const serverUrl = get(BASE_URL);
     const notification = get(notifications).find((n) => n.id === notificationId);
 
     if (!notification || notification.isRead) {
@@ -79,8 +78,11 @@ export async function markNotificationRead(notificationId) {
     }
     
     const { ok, error } = await apiFetch(
-        `${serverUrl}/api/notifications/${notificationId}/mark-read`, 
-        { method: "PUT" }
+        `${serverUrl}/api/notifications/${notificationId}`, 
+        { 
+          method: "PATCH",
+          body: { isRead: true }
+        }
     );
 
     if (ok) {
@@ -95,7 +97,6 @@ export async function markNotificationRead(notificationId) {
 }
 
 export async function dismissAllNotifications() {
-    const serverUrl = get(BASE_URL);
     const unreadExists = get(notifications).some((n) => !n.isRead);
 
     if (unreadExists) {

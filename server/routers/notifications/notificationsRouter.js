@@ -30,21 +30,26 @@ router.get('/', isAuthenticated, async (req, res) => {
   }
 });
 
-router.put('/:id/mark-read', isAuthenticated, async (req, res) => {
+router.patch('/:id', isAuthenticated, async (req, res) => {
   const userId = req.session.user.id;
   const notificationId = Number(req.params.id);
+  const { isRead } = req.body;
 
   if (Number.isNaN(notificationId) || notificationId <= 0) {
     return res.status(400).send({ message: 'Invalid notification ID parameter.' });
   }
 
+  if (typeof isRead !== 'boolean') {
+    return res.status(400).send({ message: 'Request body must contain an "isRead" property that is a boolean.' });
+  }
+
   try {
     const updatedCount = await db('notifications')
       .where({ id: notificationId, user_id: userId })
-      .update({ is_read: true });
+      .update({ is_read: isRead });
 
     if (updatedCount > 0) {
-      return res.send({ message: 'Notification marked as read.' });
+      return res.status(200).send({ message: 'Notification updated successfully.' });
     }
     return res.status(404).send({ message: 'Notification not found or you do not have permission to update it.' });
   } catch (error) {
