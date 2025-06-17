@@ -61,7 +61,7 @@ router.post('/', isAuthenticated, async (req, res) => {
       })
       .returning(['id', 'event_id', 'user_id', 'status', 'created_at', 'updated_at']);
 
-    if (rsvpRecord) {
+    if (rsvpRecord && event.is_private) {
       const [dbNotification] = await db('notifications').insert({
         user_id: event.created_by_id,
         type: 'invitee_response',
@@ -80,13 +80,12 @@ router.post('/', isAuthenticated, async (req, res) => {
       };
 
       io.to(event.created_by_id.toString()).emit('new_notification', finalNotificationPayload);
-
-      if (rsvpRecord) {
-        return res.send({
-          message: 'RSVP status updated successfully.',
-          data: rsvpRecord,
-        });
-      }
+    }
+    if (rsvpRecord) {
+      return res.send({
+        message: 'RSVP status updated successfully.',
+        data: rsvpRecord,
+      });
     }
 
     return res.status(500).send({ message: 'Failed to update RSVP status or retrieve confirmation.' });
