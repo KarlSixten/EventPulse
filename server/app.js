@@ -28,7 +28,13 @@ app.use(express.json());
 
 const httpServer = createServer(app);
 
-initSocket(httpServer, sessionMiddleware);
+initSocket(httpServer, sessionMiddleware, prodMode
+  ? {} : {
+    cors: {
+      origin: 'http://localhost:5173',
+      credentials: true,
+    },
+  });
 
 app.use('/api/auth', authRouter);
 
