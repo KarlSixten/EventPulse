@@ -1,8 +1,6 @@
 import { Router } from 'express';
 import db from '../../database/connection.js';
 
-// import ville skulle bruges i prod/real-world, derfor beholdt
-// eslint-disable-next-line no-unused-vars
 import { sendEventInvitationEmail } from '../../util/nodeMailer.js';
 
 import getIO from '../../util/socket.js';
