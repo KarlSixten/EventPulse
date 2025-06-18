@@ -151,11 +151,10 @@
 
 <style>
     .modal-content {
-        background-color: white;
+        background-color: var(--ep-background-light);
         padding: 2rem;
         border-radius: 8px;
         width: 90%;
-        max-width: 700px;
         position: relative;
     }
 
@@ -163,20 +162,15 @@
         position: absolute;
         top: 10px;
         right: 15px;
-        background: none;
         border: none;
-        font-size: 1.5rem;
+        font-size: 1rem;
         cursor: pointer;
-        color: var(--ep-text-secondary, #6c757d);
-    }
-
-    h2 {
-        margin-top: 0;
+        padding: 0.5rem;
+        color: var(--ep-text-on-primary);
     }
 
     .subtitle {
-        margin-bottom: 1.5rem;
-        color: var(--ep-text-secondary, #6c757d);
+        color: var(--ep-text-secondary);
     }
 
     .form-group {
@@ -184,52 +178,34 @@
     }
 
     label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-        color: var(--ep-text-primary, #333);
+        color: var(--ep-text-primary);
     }
 
     input {
         width: 100%;
-        padding: 10px;
-        border: 1px solid var(--ep-border, #ccc);
-        border-radius: 4px;
+        border: 1px solid var(--ep-border);
+        border-radius: 8px;
         font-size: 1em;
-        box-sizing: border-box;
     }
 
     #address-element,
     #payment-element {
-        border: 1px solid var(--ep-border, #ccc);
-        padding: 10px;
-        border-radius: 4px;
-    }
-
-    input:focus {
-        border-color: var(--ep-primary, #00adb5);
-        outline: none;
+        border: 1px solid var(--ep-border);
+        padding: 1rem;
+        border-radius: 8px;
     }
 
     button[type="submit"] {
         width: 100%;
-        padding: 12px;
-        font-size: 1.1em;
-        font-weight: 600;
-        color: var(--ep-text-on-primary, white);
-        background-color: var(--ep-primary, #00adb5);
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
     }
 
     button[type="submit"]:disabled {
-        background-color: var(--ep-disabled, #ccc);
+        background-color: var(--ep-disabled);
         cursor: not-allowed;
     }
 
     .error-message {
-        color: var(--ep-error, red);
+        color: var(--ep-error);
         margin-bottom: 1rem;
         text-align: center;
     }
@@ -237,6 +213,6 @@
     .loading-state {
         padding: 2rem 0;
         text-align: center;
-        color: var(--ep-text-secondary, #6c757d);
+        color: var(--ep-text-secondary);
     }
 </style>

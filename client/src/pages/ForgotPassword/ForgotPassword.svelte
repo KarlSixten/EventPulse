@@ -41,7 +41,7 @@
             required
             class="form-input"
         />
-        <button class="form-button" type="button" onclick={handleSubmit}
+        <button class="form-button" type="button" onclick={handleSubmit} disabled={email == ''}
             >Send recovery email</button
         >
     </form>
@@ -51,22 +51,19 @@
     main {
         display: flex;
         justify-content: center;
-        align-items: center;
-        width: 100%;
     }
 
     .form-container {
-        background-color: #ffffff;
         padding: 2rem 2.5rem;
         border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px var(--ep-accent);
         width: 100%;
         max-width: 400px;
         box-sizing: border-box;
     }
 
     .form-title {
-        color: #333333;
+        color: var(--ep-text-primary);
         margin-bottom: 1.5rem;
         text-align: center;
         font-size: 1.8rem;
@@ -77,47 +74,23 @@
         width: 100%;
         padding: 0.9rem 1rem;
         margin-bottom: 1rem;
-        border: 1px solid #dddddd;
-        border-radius: 6px;
+        border: 1px solid var(--ep-border);
+        border-radius: 8px;
         box-sizing: border-box;
         font-size: 1rem;
-        color: #333333;
-        transition:
-            border-color 0.3s ease,
-            box-shadow 0.3s ease;
+        color: var(--ep-text-primary);
     }
 
     .form-input::placeholder {
-        color: #999999;
+        color: var(--ep-text-placeholder);
     }
 
     .form-input:focus {
         outline: none;
-        border-color: #007bff;
-        box-shadow: 0 0 0 0.2rem #00adb5;
+        box-shadow: 0 0 0 0.2rem var(--ep-primary);
     }
 
-    .form-input:last-of-type {
-        margin-bottom: 1.5rem;
-    }
-
-    .form-button {
+    button {
         width: 100%;
-        padding: 0.9rem 1rem;
-        background-color: #00adb5;
-        color: #ffffff;
-        border: none;
-        border-radius: 6px;
-        font-size: 1.1rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition:
-            background-color 0.3s ease,
-            transform 0.2s ease;
-    }
-
-    .form-button:hover {
-        background-color: #007980;
-        transform: translateY(-2px);
     }
 </style>

@@ -84,13 +84,12 @@
         <p class="event-type event-type-{event.type.name}">
             {event.type.name}
         </p>
-        <p class="event-price">{formatCurrency(event.price)}</p>
         <TicketInfo event={event}></TicketInfo>
         <h3 class="event-datetime">
             <ion-icon name="calendar"></ion-icon>{formatDate(event.dateTime)}
         </h3>
         <h3>RSVP</h3>
-        <h4>{displayCount} {othersText} going</h4>
+        <h2>{displayCount} {othersText} going</h2>
         <RsvpPicker eventId={event.id} initialStatus={event.userRsvpStatus} />
         
         <PeopleGoing attendees={event.attendees} />
@@ -115,32 +114,23 @@
 <style>
     main {
         max-width: 800px;
-        margin: 20px auto;
-        padding: 20px;
-        color: var(--ep-text-primary);
+        margin: auto;
     }
 
     h1 {
         color: var(--ep-primary);
-        margin-bottom: 0.5em;
         text-align: center;
     }
     h2 {
-        font-size: 1.2em;
         color: var(--ep-text-secondary);
-        margin-bottom: 1.5em;
         text-align: center;
-        font-weight: normal;
     }
 
     h3 {
-        font-size: 1.1em;
-        color: var(--ep-text-primary);
-        margin-top: 1.5em;
-        margin-bottom: 0.5em;
         border-bottom: 1px solid var(--ep-border);
         padding-bottom: 0.3em;
     }
+    
     h3.event-datetime {
         text-align: center;
         font-size: 1.2em;
@@ -149,14 +139,6 @@
         margin-bottom: 1em;
     }
 
-    
-    h4 {
-        text-align: center;
-        font-size: 0.9em;
-        color: var(--ep-text-secondary);
-        margin-bottom: 1em;
-        font-weight: normal;
-    }
     main > :global(button.btn) {
         display: block;
         margin: 20px auto;
@@ -167,15 +149,6 @@
         margin-top: 20px;
     }
 
-    p {
-        line-height: 1.6;
-        color: var(--ep-text-secondary);
-    }
-    main > p {
-        text-align: center;
-        padding: 20px;
-        font-size: 1.1em;
-    }
     .event-publicity {
         display: inline-block;
         font-size: 0.85em;
@@ -196,8 +169,6 @@
         background-color: var(--ep-secondary);
         color: var(--ep-text-on-secondary);
     }
-
-    
 
     .event-type {
         display: inline-block;

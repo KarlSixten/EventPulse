@@ -27,3 +27,18 @@
         </div>
     </div>
 </div>
+
+<style>
+    .checkbox-group {
+        display: block;
+    }
+
+    .checkbox-item {
+        display: flex;
+        padding: 0.3rem;
+    }
+
+    .checkbox-item label {
+        font-weight: 300;
+}
+</style>

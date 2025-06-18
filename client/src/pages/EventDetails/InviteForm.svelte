@@ -66,29 +66,6 @@
 
 <style>
     .invite-form {
-        flex-direction: column;
-        gap: 10px;
-    }
-    input[type="email"],
-    textarea {
-        width: 100%;
-        padding: 8px 10px;
-        border: 1px solid var(--ep-border);
-        background-color: var(--ep-background-light);
-        color: var(--ep-text-primary);
-        box-sizing: border-box;
-        border-radius: 4px;
-        font-size: 1em;
-    }
-    textarea {
-        resize: vertical;
-        min-height: 60px;
-    }
-    input[type="email"]:focus,
-    textarea:focus {
-        outline: none;
-        border-color: var(--ep-primary);
-        box-shadow: 0 0 0 2px
-            color-mix(in srgb, var(--ep-primary) 20%, transparent);
+        padding: auto;
     }
 </style>

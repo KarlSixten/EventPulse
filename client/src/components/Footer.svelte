@@ -11,14 +11,9 @@
 <style>
   .site-footer {
     color: var(--ep-text-secondary);
-    padding: 20px;
     text-align: center;
     font-size: 0.9em;
     margin-top: auto;
     border-top: 1px solid var(--ep-border);
-  }
-
-  .footer-content p {
-    margin: 0;
   }
 </style>

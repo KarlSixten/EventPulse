@@ -25,8 +25,8 @@
       <h2 id="modal-title">{title}</h2>
       <p id="modal-description">{message}</p>
       <div class="modal-actions">
-        <button class="btn-cancel" onclick={handleCancel}>Cancel</button>
-        <button class="btn-delete" onclick={handleConfirm}>Confirm</button>
+        <button class="cancel-button" onclick={handleCancel}>Cancel</button>
+        <button class="delete-button" onclick={handleConfirm}>Confirm</button>
       </div>
     </div>
   </div>
@@ -51,41 +51,27 @@
   .modal-content {
     background-color: var(--ep-background-light);
     color: var(--ep-text-primary);
-    padding: 20px;
-    border-radius: 6px;
+    padding: 1.5rem;
+    border-radius: 8px;
     min-width: 280px;
     max-width: 400px;
     width: 100%;
     text-align: center;
   }
 
-  .modal-content h2 {
-    font-size: 1.4em;
-    margin-top: 0;
-    margin-bottom: 0.75em;
-    color: var(--ep-text-primary);
-  }
-
   .modal-content p {
-    margin-bottom: 1.5em;
-    line-height: 1.5;
     color: var(--ep-text-secondary);
   }
-
-  .modal-actions {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 15px;
+  
+  .delete-button {
+    background-color: transparent;
+    color: var(--ep-error);
+    border: 1px solid var(--ep-error);
   }
 
-  .btn-delete {
+  .delete-button:hover {
     background-color: var(--ep-error);
-  }
-
-  .btn-cancel {
-    background-color: var(--ep-background-light);
-    color: var(--ep-text-primary);
+    color: var(--ep-text-on-primary);
   }
 
 </style>

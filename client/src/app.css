@@ -7,6 +7,7 @@
   --ep-text-secondary: #6c757d;
   --ep-text-on-primary: #ffffff;
   --ep-text-on-secondary: #eeeeee;
+  --ep-text-placeholder: #ccc;
   --ep-background-light: #ffffff;
   --ep-background-dark: #f7f7f7;
   --ep-success: #5cb85c;
@@ -18,6 +19,7 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+
   color-scheme: light;
   color: var(--ep-text-primary);
   background-color: var(--ep-background-light);
@@ -28,8 +30,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-html {
-  height: 100%;
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: #535bf2;
 }
 
 body {
@@ -42,115 +50,97 @@ body {
   color: var(--ep-text-primary);
 }
 
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+.card {
+  padding: 2em;
+}
+
 #app {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-}
-
-a {
-  font-weight: 500;
-  color: var(--ep-primary);
-  text-decoration: inherit;
-  transition: color 0.2s ease-in-out, filter 0.2s ease-in-out;
+  padding-top: 70px;
 }
 
 button {
+  border: none;
   border-radius: 8px;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: var(--ep-primary);
   color: var(--ep-text-on-primary);
+  background-color: var(--ep-primary);
   cursor: pointer;
-  transition: background-color 0.25s, border-color 0.25s;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-  color: var(--ep-text-primary);
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+button:hover {
+  background-color: #007980;
+}
+
+button:disabled {
+  background-color: var(--ep-disabled);
+  cursor: not-allowed;
 }
 
 fieldset {
-        margin-bottom: 25px;
-        padding: 15px;
-        border: 1px solid var(--ep-border);
-        background-color: var(--ep-background-light);
-        border-radius: 6px;
-    }
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--ep-border);
+  background-color: var(--ep-background-light);
+  border-radius: 8px;
+}
 
-    legend {
-        color: var(--ep-primary);
-        font-weight: 600;
-        padding: 0 5px;
-        margin-left: 5px;
-    }
+legend {
+  color: var(--ep-primary);
+}
 
-    fieldset > div {
-        margin-bottom: 15px;
-    }
-    fieldset > div:last-child {
-        margin-bottom: 0;
-    }
+fieldset>div {
+  margin-bottom: 1rem;
+}
 
-    label {
-        display: block;
-        margin-bottom: 5px;
-        color: var(--ep-text-primary);
-        font-weight: 500;
-        font-size: 0.95em;
-    }
+label {
+  display: block;
+  color: var(--ep-text-primary);
+  font-weight: bold;
+}
 
-    input[type="text"],
-    input[type="datetime-local"],
-    textarea {
-        width: 100%;
-        padding: 8px 10px;
-        border: 1px solid var(--ep-border);
-        background-color: var(--ep-background-light);
-        color: var(--ep-text-primary);
-        box-sizing: border-box;
-        border-radius: 4px;
-        font-size: 1em;
-    }
+input[type="text"],
+input[type="email"],
+input[type="datetime-local"],
+textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--ep-border);
+  color: var(--ep-text-primary);
+  box-sizing: border-box;
+  border-radius: 6px;
+  font-size: 1em;
+}
 
-    textarea {
-        resize: vertical;
-        min-height: 80px;
-    }
+textarea {
+  resize: vertical;
+}
 
-    input[type="text"]:focus,
-    input[type="datetime-local"]:focus,
-    textarea:focus {
-        outline: none;
-        border-color: var(--ep-primary);
-        box-shadow: 0 0 0 2px
-            color-mix(in srgb, var(--ep-primary) 20%, transparent);
-    }
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="datetime-local"]:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ep-primary), transparent);
+}
 
-    .checkbox-group {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .checkbox-group input[type="checkbox"] {
-        width: auto;
-        margin: 0;
-    }
-    .checkbox-group label {
-        margin-bottom: 0;
-        font-weight: normal;
-        font-size: 0.9em;
-        color: var(--ep-text-secondary);
-    }
-    form > button[type="submit"].btn-primary {
-        display: block;
-        width: 60%;
-        height: 50px;
-        margin-left: auto;
-        margin-right: auto;
-        margin-top: 20px;
-        font-size: 1.3em;
-    }
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}

@@ -14,14 +14,8 @@
 
 <style>
     .map-container-wrapper {
-        height: 300px;
+        height: 40vh;
         width: 100%;
-        border: 1px solid #ccc;
-        margin-bottom: 10px;
-    }
-
-    :global(.leaflet-container) {
-        height: 100%;
-        width: 100%;
+        border: 1px solid var(--ep-primary);
     }
 </style>

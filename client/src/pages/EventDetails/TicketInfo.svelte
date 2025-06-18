@@ -60,7 +60,6 @@
     .ticket-header {
         font-size: 1.4em;
         font-weight: 600;
-        color: var(--ep-text-primary);
         margin: 0 0 1rem 0;
         display: flex;
         align-items: center;
@@ -90,24 +89,10 @@
 
     .buy-button {
         width: 100%;
-        max-width: 300px;
-        padding: 0.8em 1.5em;
-        font-size: 1.1em;
-        font-weight: 600;
-        background-color: var(--ep-primary);
-        color: var(--ep-text-on-primary);
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-
-    .buy-button:hover {
-        background-color: #008a91;
+        max-width: 40%;
     }
 
     .venue-info {
-        font-size: 0.9em;
         color: var(--ep-text-secondary);
         display: flex;
         align-items: center;

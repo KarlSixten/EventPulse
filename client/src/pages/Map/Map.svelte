@@ -91,7 +91,7 @@
     {#if isLoadingEvents}
         <p>Loading event locations...</p>
     {/if}
-    <h3>Nearby public Events</h3>
+    <h2>Nearby public Events</h2>
 
     <div
         class="map-container-wrapper"
@@ -101,34 +101,24 @@
 </main>
 
 <style>
-    h3 {
+    h2 {
         text-align: center;
         color: var(--ep-primary);
-        margin-top: 1em;
-        margin-bottom: 1em;
-        font-size: 1.5em;
     }
 
     p {
         text-align: center;
-        margin-bottom: 1em;
         color: var(--ep-text-secondary);
     }
 
     .map-container-wrapper {
-        height: 75vh;
+        height: 70vh;
         min-height: 450px;
         width: 100%;
         max-width: 95%;
         border: 1px solid var(--ep-border);
         margin: 0 auto 20px auto;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 2px 8px var(--ep-primary);
         border-radius: 8px;
-    }
-
-    :global(.leaflet-container) {
-        height: 100%;
-        width: 100%;
-        border-radius: inherit;
     }
 </style>

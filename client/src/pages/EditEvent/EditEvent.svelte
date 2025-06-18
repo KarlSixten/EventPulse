@@ -240,16 +240,11 @@
           <EventLocationMapInput bind:latitude bind:longitude />
         </fieldset>
 
-        <div class="form-actions">
+        <div class="action-buttons">
           <button type="submit" class="btn btn-primary">Save Changes</button>
+          <button type="button" class="delete-button" onclick={handleDeleteEvent}>Delete Event</button>
         </div>
       </form>
-
-      <div class="delete-action-section">
-        <button class="btn btn-danger" onclick={handleDeleteEvent}
-          >Delete Event</button
-        >
-      </div>
 
       <ConfirmationModal
         isOpen={showConfirmationModal}
@@ -269,59 +264,38 @@
 <style>
   .edit-event-container {
     max-width: 650px;
-    margin: 30px auto;
+    margin: auto;
     padding: 25px;
     background-color: var(--ep-background-dark);
-    border-radius: 8px;
   }
 
   h1 {
     text-align: center;
-    color: var(--ep-text-primary);
-    margin-bottom: 25px;
-    font-size: 1.8em;
   }
+
   .event-title-display {
     color: var(--ep-primary);
     font-style: italic;
   }
 
-  .form-actions,
-  .delete-action-section {
-    margin-top: 20px;
+  .action-buttons {
+    gap: 1rem;
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--ep-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
-  .form-actions .btn-primary {
-    display: block;
-    width: 60%;
-    height: 50px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 20px;
-    font-size: 1.3em;
+  .delete-button {
+    background-color: transparent;
+    color: var(--ep-error);
+    border: 1px solid var(--ep-error);
   }
 
-  .form-actions .btn-primary,
-  .delete-action-section .btn-danger {
-    display: block;
-  }
-  .delete-action-section .btn-danger {
-    margin-top: 100px;
-    width: 20%;
-    margin-left: auto;
-    margin-right: auto;
+  .delete-button:hover {
     background-color: var(--ep-error);
     color: var(--ep-text-on-primary);
-  }
-  .delete-action-section .btn-danger:hover {
-    background-color: color-mix(in srgb, var(--ep-error) 85%, black);
-  }
-
-  .loading-message,
-  .error-message {
-    text-align: center;
-    padding: 20px;
-    font-size: 1.1em;
-    color: var(--ep-text-secondary);
   }
 </style>

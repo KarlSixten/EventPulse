@@ -68,63 +68,46 @@
 </main>
 
 <style>
-    .home-page {
-        color: var(--ep-text-primary);
-    }
-    section {
-        padding: 25px 15px;
-        text-align: center;
-    }
     .container {
-        max-width: 800px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    h1, h2, h3 {
-        margin-top: 0;
-        margin-bottom: 0.75rem;
-        font-weight: 600;
-        line-height: 1.3;
-        color: var(--ep-text-primary);
-    }
-    h3 { color: var(--ep-primary); }
-    p {
-        color: var(--ep-text-secondary);
-    }
-    .subtitle, .cta-subtitle {
-        font-size: 1em;
-        margin-bottom: 1.25rem;
-        max-width: 550px;
-        margin-left: auto;
-        margin-right: auto;
+        width: 90%;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 2rem 0;
     }
     .hero-section {
-        background-color: var(--ep-primary); 
-        color: var(--ep-text-on-primary); 
+        background-color: var(--ep-primary);
+        color: var(--ep-text-on-primary);
     }
-    .hero-section h1, .hero-section .subtitle, .hero-section :global(a) {
-        color: var(--ep-text-on-primary) !important;
+
+    h1, h2 {
+        text-align: center;
     }
-    .hero-cta :global(a) {
-        margin: 0 10px;
-        font-weight: 500;
-        text-decoration: underline;
+
+    p {
+        text-align: center;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
     }
-    .hero-cta :global(a:hover) {
-        opacity: 0.8;
-    }
+
     .features-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-        gap: 20px;
-        margin-top: 20px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        margin-top: 2rem;
     }
+
     .feature-item {
-        padding: 15px;
+        text-align: center;
     }
+
     .feature-item ion-icon {
-        font-size: 1.8rem;
+        font-size: 2.5rem;
         color: var(--ep-primary);
-        margin-bottom: 8px;
+    }
+    
+    .hero-cta, .cta-section {
+        text-align: center;
+        padding-top: 1rem;
     }
 </style>

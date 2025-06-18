@@ -101,17 +101,12 @@
 <style>
     .notification-center-wrapper {
         position: relative;
-        margin-left: 10px;
     }
 
     .notification-button {
         background: none;
-        cursor: pointer;
         font-size: 1.2rem;
-        position: relative;
-        padding: 2px;
-        color: var(--ep-text-on-primary);
-        border: none;
+        padding: 0.3rem;
     }
 
     .badge {
@@ -122,18 +117,17 @@
         color: var(--ep-text-on-primary);
         border-radius: 50%;
         font-size: 0.6rem;
-        padding: 1px 3px;
+        padding: 0.1rem 0.2rem;
         min-width: 8px;
-        height: 8px;
-        line-height: 8px;
+        height: 0.7rem;
+        line-height: 10px;
     }
 
     .dropdown {
         position: absolute;
-        top: 100%;
         right: 0;
         width: 250px;
-        max-height: 300px;
+        max-height: 40vh;
         overflow-y: auto;
         z-index: 1000;
         background-color: var(--ep-background-light);
@@ -142,7 +136,7 @@
     }
 
     .dropdown-header {
-        padding: 5px;
+        padding: 0.5rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -151,61 +145,45 @@
 
     .dropdown-header h4 {
         margin: 0;
-        font-size: 0.9rem;
     }
 
     .clear-all-button {
-        background: var(--ep-accent);
-        border: 1px solid var(--ep-border);
-        color: var(--ep-text-primary);
+        border-radius: 3px;
         padding: 2px 5px;
         font-size: 0.7rem;
         cursor: pointer;
     }
 
     .notification-list {
-        list-style: none;
         padding: 0;
         margin: 0;
     }
 
     .notification-item {
-        padding: 5px;
+        padding: 0.3rem;
         border-bottom: 1px solid var(--ep-border);
     }
-
-    .notification-item:last-child {
-        border-bottom: none;
-    }
-
-    .notification-item :global(a) {
-        text-decoration: none;
-    }
-
+    
     .notification-item p {
         margin: 0 0 2px 0;
         font-size: 0.8rem;
-        line-height: 1.2;
-        color: var(--ep-text-primary);
     }
 
     .notification-item.read {
-        background-color: #f8f9fa;
+        background-color: var(--ep-background-dark);
         opacity: 0.7;
     }
 
     .notification-item.read p,
     .notification-item.read .timestamp {
-        color: #6c757d;
+        color: var(--ep-text-secondary);
     }
 
     .notification-item .timestamp {
         font-size: 0.7rem;
-        color: var(--ep-text-secondary);
     }
 
     .no-notifications {
-        padding: 10px;
         text-align: center;
         font-size: 0.8rem;
         color: var(--ep-text-secondary);

@@ -69,7 +69,6 @@
 <style>
     .navbar {
         display: flex;
-        align-items: center;
         padding: 10px 20px;
         background-color: var(--ep-primary);
         position: fixed;
@@ -78,6 +77,8 @@
         width: 100%;
         box-sizing: border-box;
         z-index: 1000;
+                color: var(--ep-text-on-primary);
+
     }
     .navbar :global(a.nav-link) {
         color: var(--ep-text-on-primary);
@@ -93,49 +94,39 @@
     }
 
     .navbar :global(a.nav-link ion-icon) {
-        margin-right: 5px;
+        margin-right: 0.5rem;
     }
 
     .logo-img {
-        height: 40px;
+        height: 3rem;
         display: block;
     }
 
     .nav-spacer {
         flex-grow: 1;
+        min-width: 5rem;
     }
 
     .nav-links-auth {
         display: flex;
         align-items: center;
+        text-wrap-mode: nowrap;
+
     }
 
     .welcome-message {
         margin: 0 8px;
-        color: var(--ep-text-on-primary);
+
     }
 
     .logout-button {
-        background: none;
-        border: 1px solid var(--ep-text-on-primary);
-        color: var(--ep-text-on-primary);
-        padding: 5px 8px;
-        margin-left: 8px;
-        font-size: 1em;
-        font-weight: 500;
-        font-family: inherit;
-        border-radius: 4px;
+        margin-left: 2rem;
         cursor: pointer;
-        transition: opacity 0.2s;
         display: inline-flex;
         align-items: center;
     }
 
     .logout-button ion-icon {
-        margin-left: 5px;
-    }
-
-    .logout-button:hover {
-        opacity: 0.8;
+        margin-left: 0.2rem;
     }
 </style>

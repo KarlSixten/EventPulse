@@ -130,15 +130,12 @@
 <style>
     .create-event-container {
         max-width: 650px;
-        margin: 30px auto;
+        margin: auto;
         padding: 25px;
         background-color: var(--ep-background-dark);
-        border-radius: 8px;
     }
 
     h1 {
         text-align: center;
-        color: var(--ep-text-primary);
-        margin-bottom: 25px;
     }
 </style>

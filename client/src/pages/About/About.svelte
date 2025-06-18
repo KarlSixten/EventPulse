@@ -99,9 +99,8 @@
 
 <style>
     .about-container {
-        max-width: 720px;
-        margin: 30px auto;
-        padding: 20px;
+        max-width: 75vh;
+        margin: auto;
         color: var(--ep-text-primary);
     }
 
@@ -114,25 +113,9 @@
         border-bottom: 1px solid var(--ep-border);
         padding-bottom: 0.75rem;
     }
-
-    h2 {
-        font-size: 1.6rem;
-        font-weight: 600;
-        margin-top: 2rem;
-        margin-bottom: 1rem;
-        color: var(--ep-secondary);
-    }
-
+    
     h3 {
-        font-size: 1.3rem;
-        font-weight: 600;
-        margin-top: 1.5rem;
-        margin-bottom: 0.5rem;
         color: var(--ep-text-secondary);
-    }
-
-    p {
-        margin-bottom: 1rem;
     }
 
     ul {
@@ -150,6 +133,5 @@
 
     strong {
         font-weight: 600;
-        color: var(--ep-text-primary);
     }
 </style>
