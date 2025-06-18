@@ -6,10 +6,12 @@ import juice from 'juice';
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 const APP_URL = process.env.PORT ? `http://localhost:${process.env.PORT}` : 'http://localhost:5173';
+const css = await readFile(path.join(dirname, 'templates', 'styles.css'), 'utf8');
 
 async function populateTemplate(templateName, data, extension) {
   try {
     const templatePath = path.join(dirname, 'templates', templateName, `${templateName}.${extension}`);
+
     const initialContent = await readFile(templatePath, 'utf-8');
 
     const populatedContent = Object.entries(data).reduce(
@@ -20,7 +22,7 @@ async function populateTemplate(templateName, data, extension) {
       initialContent,
     );
 
-    return extension === 'html' ? juice(populatedContent) : populatedContent;
+    return extension === 'html' ? juice(populatedContent, { extraCss: css }) : populatedContent;
   } catch (error) {
     return extension === 'html' ? '<p>Error loading email content.</p>' : 'Error loading email content.';
   }
