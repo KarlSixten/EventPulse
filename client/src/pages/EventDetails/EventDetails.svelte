@@ -74,6 +74,7 @@
     {:else if event}
         <h1>{event.title}</h1>
         <h2>{event.description}</h2>
+        <div class="publicity-type-container">
         <h2
             class="event-publicity"
             class:public={!event.isPrivate}
@@ -84,10 +85,12 @@
         <p class="event-type event-type-{event.type.name}">
             {event.type.name}
         </p>
-        <TicketInfo event={event}></TicketInfo>
+        </div>
         <h3 class="event-datetime">
             <ion-icon name="calendar"></ion-icon>{formatDate(event.dateTime)}
         </h3>
+        <TicketInfo event={event}></TicketInfo>
+
         <h3>RSVP</h3>
         <h2>{displayCount} {othersText} going</h2>
         <RsvpPicker eventId={event.id} initialStatus={event.userRsvpStatus} />
@@ -129,6 +132,10 @@
     h3 {
         border-bottom: 1px solid var(--ep-border);
         padding-bottom: 0.3em;
+    }
+
+    .publicity-type-container {
+        text-align: center;
     }
     
     h3.event-datetime {
@@ -226,4 +233,6 @@
         color: #374151;
         border-color: #d1d5db;
     }
+
+    
 </style>

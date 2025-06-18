@@ -108,11 +108,11 @@
 
 <style>
     .controls-container {
-        background-color: var(--ep-background-dark, #f7f7f7);
+        background-color: var(--ep-background-dark);
         border: 1px solid var(--ep-border);
         border-radius: 8px;
         padding: 1rem;
-        margin-bottom: 2rem;
+        margin: 1rem;
     }
 
     .sort-controls {
@@ -122,24 +122,15 @@
         align-items: flex-end;
     }
 
-    .control-group {
-        display: flex;
-        flex-direction: column;
-    }
-
     .control-group label {
-        font-size: 0.85em;
-        font-weight: 500;
         color: var(--ep-text-secondary);
-        margin-bottom: 0.25rem;
     }
 
     select {
         padding: 8px 12px;
-        border-radius: 4px;
+        border-radius: 8px;
         border: 1px solid var(--ep-border);
         background-color: var(--ep-background-light);
-        color: var(--ep-text-primary);
         font-size: 0.9em;
     }
 
@@ -147,13 +138,12 @@
     .location-button {
         cursor: pointer;
         padding: 8px 12px;
-        border-radius: 4px;
+        border-radius: 8px;
         border: 1px solid var(--ep-border);
         font-size: 0.9em;
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        transition: all 0.2s ease-in-out;
     }
 
     .filter-toggle-button {
@@ -163,13 +153,6 @@
 
     .filter-toggle-button:hover {
         background-color: var(--ep-accent);
-        border-color: #ccc;
-    }
-
-    .location-button {
-        background-color: var(--ep-primary);
-        border-color: var(--ep-primary);
-        color: var(--ep-text-on-primary);
     }
 
     .location-button:hover {
@@ -178,30 +161,28 @@
 
     .filter-pane {
         margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--ep-border);
         animation: fade-in 0.3s ease;
     }
 
     .type-filter {
         border: none;
-        padding: 0;
+    }
+
+    fieldset > div {
+        margin: 0;
     }
 
     .checkbox-group {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px 15px;
     }
 
     .checkbox-label {
-        display: inline-flex;
-        align-items: center;
         cursor: pointer;
         font-size: 0.9em;
         background-color: var(--ep-background-light);
         padding: 6px 12px;
-        border-radius: 20px;
+        border-radius: 8px;
         border: 1px solid var(--ep-border);
         transition: all 0.2s ease;
     }
@@ -217,6 +198,7 @@
     .checkbox-label span {
         position: relative;
         padding-left: 24px;
+        font-weight: normal;
     }
 
     .checkbox-label span::before {
@@ -229,7 +211,7 @@
         height: 16px;
         border: 2px solid var(--ep-border);
         border-radius: 4px;
-        background: white;
+        background: var(--ep-background-light);
         transition: all 0.2s ease;
     }
 
@@ -244,8 +226,7 @@
         left: 2px;
         top: 50%;
         transform: translateY(-50%);
-        color: white;
-        font-size: 16px;
-        font-weight: bold;
+        color: var(--ep-text-on-primary);
+        font-size: 1rem;
     }
 </style>

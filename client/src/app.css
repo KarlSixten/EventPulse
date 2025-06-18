@@ -116,6 +116,7 @@ label {
 
 input[type="text"],
 input[type="email"],
+input[type="search"],
 input[type="datetime-local"],
 textarea {
   width: 100%;
@@ -133,6 +134,7 @@ textarea {
 
 input[type="text"]:focus,
 input[type="email"]:focus,
+input[type="search"]:focus,
 input[type="datetime-local"]:focus,
 textarea:focus {
   outline: none;

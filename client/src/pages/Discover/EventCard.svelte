@@ -1,5 +1,9 @@
 <script>
-    import { formatDate, formatDistance, formatCurrency } from "../../util/format";
+    import {
+        formatDate,
+        formatDistance,
+        formatCurrency,
+    } from "../../util/format";
 
     let { event } = $props();
 </script>
@@ -12,7 +16,7 @@
             class:public={!event.isPrivate}
             class:private={event.isPrivate}
         >
-            {event.isPrivate ? 'Private' : 'Public'}
+            {event.isPrivate ? "Private" : "Public"}
         </p>
         <p class="event-type event-type-{event.type.name}">
             {event.type.name}
@@ -43,15 +47,10 @@
         flex-direction: column;
         justify-content: space-between;
         min-height: 250px;
-        overflow: hidden;
     }
 
     .event-card:hover {
         box-shadow: 0 4px 12px var(--ep-primary);
-    }
-
-    .card-content {
-        flex-grow: 1;
     }
 
     .event-title {
@@ -59,23 +58,18 @@
         font-weight: bold;
         color: var(--ep-text-primary);
         margin-top: 0;
-        margin-bottom: 8px;
         line-height: 1.3;
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
     .event-publicity {
         display: inline-block;
-        font-size: 0.75em;
         font-weight: normal;
         color: var(--ep-text-secondary);
         background-color: var(--ep-accent);
         padding: 2px 6px;
         border-radius: 4px;
-        margin-bottom: 8px;
     }
 
     .event-publicity.public {
@@ -88,27 +82,13 @@
         color: var(--ep-text-on-secondary);
     }
 
-    .card-footer {
-        margin-top: 8px;
-    }
 
-    .event-date-time, .event-distance-from-user {
-        font-size: 0.85em;
-        color: var(--ep-text-primary);
-        margin-bottom: 4px;
-        line-height: 1.2;
-    }
-    .event-date-time:last-child, 
-    .event-distance-from-user:last-child {
-        margin-bottom: 0;
-    }
     .event-type {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.75em;
-    font-weight: normal;
-    border: 1px solid;
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: normal;
+        border: 1px solid;
     }
 
     .event-type-Concert {
