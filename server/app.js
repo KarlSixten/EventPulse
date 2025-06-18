@@ -22,7 +22,7 @@ if (!prodMode) {
 
 app.use(sessionMiddleware);
 
-app.use('/api/payments', paymentRouter); // bruger ikke express.json()
+app.use('/api/payments', paymentRouter); // bruger ikke raw JSON
 
 app.use(express.json());
 
