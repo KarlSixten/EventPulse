@@ -1,39 +1,15 @@
 <script>
-    import { onMount, onDestroy } from "svelte";
-    import L from "leaflet";
+    import { singleLocationMap } from '../../util/setupMap.js';
 
     let { latitude, longitude } = $props();
-
-    let mapContainer;
-    let mapInstance;
-
-    const defaultZoom = 15;
-
-    onMount(() => {
-        if (!mapContainer || mapInstance) return;
-
-        mapInstance = L.map(mapContainer).setView(
-            [latitude, longitude],
-            defaultZoom,
-        );
-        L.marker([latitude, longitude]).addTo(mapInstance);
-
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution:
-                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        }).addTo(mapInstance);
-    });
-
-    onDestroy(() => {
-        if (mapInstance) {
-            mapInstance.remove();
-            mapInstance = null;
-        }
-    });
 </script>
 
 <main>
-    <div class="map-container-wrapper" bind:this={mapContainer}></div>
+    <div 
+        class="map-container-wrapper" 
+        use:singleLocationMap={{ latitude, longitude }}
+    >
+    </div>
 </main>
 
 <style>

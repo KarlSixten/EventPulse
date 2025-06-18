@@ -1,47 +1,21 @@
 <script>
-    import { onMount, onDestroy } from "svelte";
     import { BASE_URL } from "../../stores/generalStore";
+    import { apiFetch } from "../../util/fetch";
     import L from "leaflet";
     import "leaflet/dist/leaflet.css";
-    import { apiFetch } from "../../util/fetch";
     import toastr from "toastr";
 
-    let mapContainer = $state(null);
+    import { discoverMap } from "../../util/setupMap.js";
+
     let mapInstance = $state(null);
     let eventMarkersGroup = $state(null);
     let events = $state([]);
     let isLoadingEvents = $state(true);
 
-    const COPENHAGEN_LAT = 55.7;
-    const COPENHAGEN_LON = 12.5;
-    const ZOOM_FALLBACK = 10;
-    const ZOOM_GEOLOCATED = 13;
-
-    function setupMap(centerLat, centerLon, initialZoom) {
-        if (!mapContainer) {
-            console.error(
-                "MapPage: mapContainer DOM element not found during setupMap.",
-            );
-            return;
-        }
-        if (mapInstance) {
-            mapInstance.setView([centerLat, centerLon], initialZoom);
-            return;
-        }
-
-        mapInstance = L.map(mapContainer).setView(
-            [centerLat, centerLon],
-            initialZoom,
-        );
-
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution:
-                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        }).addTo(mapInstance);
-
-        if (!eventMarkersGroup) {
-            eventMarkersGroup = L.layerGroup().addTo(mapInstance);
-        }
+    function onMapReady(e) {
+        mapInstance = e.detail.map;
+        eventMarkersGroup = L.layerGroup().addTo(mapInstance);
+        loadEventsWithLocations();
     }
 
     async function loadEventsWithLocations() {
@@ -63,49 +37,6 @@
 
         isLoadingEvents = false;
     }
-
-    onMount(() => {
-        if (!mapContainer) {
-            console.error(
-                "MapPage: mapContainer element not available onMount. Map will not initialize.",
-            );
-            isLoadingEvents = false;
-            return;
-        }
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    setupMap(
-                        position.coords.latitude,
-                        position.coords.longitude,
-                        ZOOM_GEOLOCATED,
-                    );
-                },
-                (error) => {
-                    console.warn(
-                        `MapPage: Geolocation error (${error.code}): ${error.message}. Defaulting to Copenhagen.`,
-                    );
-                    setupMap(COPENHAGEN_LAT, COPENHAGEN_LON, ZOOM_FALLBACK);
-                },
-            );
-        } else {
-            console.warn(
-                "MapPage: Geolocation not supported by this browser. Defaulting to Copenhagen.",
-            );
-            setupMap(COPENHAGEN_LAT, COPENHAGEN_LON, ZOOM_FALLBACK);
-        }
-
-        loadEventsWithLocations();
-    });
-
-    onDestroy(() => {
-        if (mapInstance) {
-            mapInstance.remove();
-            mapInstance = null;
-            eventMarkersGroup = null;
-        }
-    });
 
     $effect(() => {
         const currentEvents = events;
@@ -162,7 +93,11 @@
     {/if}
     <h3>Nearby public Events</h3>
 
-    <div class="map-container-wrapper" bind:this={mapContainer}></div>
+    <div
+        class="map-container-wrapper"
+        use:discoverMap
+        onmap_ready={onMapReady}
+    ></div>
 </main>
 
 <style>
