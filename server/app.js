@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
 import path from 'path';
-import { initSocket } from './socket.js';
+import { initSocket } from './util/socket.js';
 
 import corsMiddleware from './middleware/corsMiddleware.js';
 import sessionMiddleware from './middleware/sessionMiddleware.js';

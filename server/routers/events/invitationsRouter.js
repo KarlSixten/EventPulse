@@ -5,7 +5,7 @@ import db from '../../database/connection.js';
 // eslint-disable-next-line no-unused-vars
 import { sendEventInvitationEmail } from '../../util/nodeMailer.js';
 
-import getIO from '../../socket.js';
+import getIO from '../../util/socket.js';
 import isAuthenticated from '../../middleware/authMiddleware.js';
 
 const router = Router({ mergeParams: true });

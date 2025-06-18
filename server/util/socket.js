@@ -12,10 +12,8 @@ export function initSocket(httpServer, sessionMiddleware, options) {
   io.engine.use(sessionMiddleware);
 
   io.on('connection', (socket) => {
-    // request er det underlæggende HTTP kald der igangsatte websocket.
     const socketRequest = socket.request;
 
-    // sikrer at jeg altid tjekker på 'frisk' data.
     socketRequest.session.reload((error) => {
       if (error) {
         socket.disconnect(true);
