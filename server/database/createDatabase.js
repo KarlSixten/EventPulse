@@ -4,9 +4,12 @@
 /* eslint-disable no-console */
 import { pgPool } from './connection.js';
 import { hashPassword } from '../util/passwordHasher.js';
-import { seedUsersData, seedEventTypesData, seedEventsData } from './util/seedData.js';
+import {
+  seedUsersData, seedEventTypesData, seedEventsData, seedRsvpsData, seedInvitationsData,
+} from './util/seedData.js';
 
 const deleteMode = process.argv.includes('--delete');
+const seedMode = process.argv.includes('--seed');
 
 try {
   console.log('Setting up database...');
@@ -29,7 +32,7 @@ try {
   await createTables();
   console.log('Tables created or already exists.');
 
-  if (deleteMode) {
+  if (seedMode) {
     console.log('Seeding the database...');
     await seed();
     console.log('Database has been seeded.');
@@ -148,14 +151,11 @@ async function createTables() {
 }
 
 async function seed() {
-  // USERS
   await seedUsers();
-
-  // EVENT TYPES
   await seedEventTypes();
-
-  // EVENTS
   await seedEvents();
+  await seedRsvps();
+  await seedInvitations();
 }
 
 async function seedUsers() {
@@ -208,4 +208,36 @@ async function seedEvents() {
     }
   }
   console.log('Database seeding attempted.');
+}
+
+async function seedRsvps() {
+  console.log('Starting RSVP seeding...');
+  for (const rsvpData of seedRsvpsData) {
+    try {
+      await pgPool.query(
+        'INSERT INTO event_rsvps (event_id, user_id, status) VALUES ($1, $2, $3)',
+        rsvpData,
+      );
+      console.log(`Processed RSVP: User ${rsvpData[1]} for Event ${rsvpData[0]}`);
+    } catch (error) {
+      console.error('Error inserting RSVP:', error);
+    }
+  }
+  console.log('RSVP seeding complete.');
+}
+
+async function seedInvitations() {
+  console.log('Starting Invitation seeding...');
+  for (const invitationData of seedInvitationsData) {
+    try {
+      await pgPool.query(
+        'INSERT INTO event_invitations (event_id, inviter_id, invitee_id, message) VALUES ($1, $2, $3, $4)',
+        invitationData,
+      );
+      console.log(`Processed Invitation: From User ${invitationData[1]} to User ${invitationData[2]} for Event ${invitationData[0]}`);
+    } catch (error) {
+      console.error('Error inserting invitation:', error);
+    }
+  }
+  console.log('Invitation seeding complete.');
 }

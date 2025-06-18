@@ -1,155 +1,119 @@
+/* eslint-disable max-len */
 /* eslint-disable no-multi-spaces */
 export const seedUsersData = [
-  [
-    'admin@example.com',         // email
-    'adminPass123!',             // plainTextPassword
-    'Admin',                     // first_name
-    'User',                      // last_name
-  ],
-  [
-    'k.joergensen@example.dk',   // email
-    'kristianPass456',           // plainTextPassword
-    'Kristian',                  // first_name
-    'Jørgensen',                 // last_name
-  ],
-  [
-    'sofie.nielsen@example.com', // email
-    'sofiePass789',              // plainTextPassword
-    'Sofie',                     // first_name
-    'Nielsen',                   // last_name
-  ],
+  // email, plainTextPassword, first_name, last_name
+  ['freja.andersen@email.dk', 'password123', 'Freja', 'Andersen'],
+  ['viktor.jensen@email.com', 'password123', 'Viktor', 'Jensen'],
+  ['clara.nielsen@email.co.uk', 'password123', 'Clara', 'Nielsen'],
+  ['emil.christensen@email.com', 'password123', 'Emil', 'Christensen'],
+  ['sofia.larsen@email.dk', 'password123', 'Sofia', 'Larsen'],
+  ['magnus.pedersen@email.com', 'password123', 'Magnus', 'Pedersen'],
+  ['ida.sorensen@email.co.uk', 'password123', 'Ida', 'Sorensen'],
+  ['oscar.rasmussen@email.dk', 'password123', 'Oscar', 'Rasmussen'],
 ];
 
 export const seedEventTypesData = [
-  [
-    'Concert',
-  ],
-  [
-    'Meetup',
-  ],
-  [
-    'Birthday',
-  ],
-  [
-    'Food',
-  ],
-  [
-    'Workshop',
-  ],
-  [
-    'Workout',
-  ],
-  [
-    'Presentation',
-  ],
-  [
-    'Other',
-  ],
+  ['Concert'],
+  ['Meetup'],
+  ['Workshop'],
+  ['Food & Drink'],
+  ['Art & Culture'],
+  ['Sports & Fitness'],
+  ['Charity'],
+  ['Other'],
 ];
 
 export const seedEventsData = [
+  // title, description, created_by_id, lon, lat, date_time, is_private, type_id, price, accepts_online_payment, accepts_venue_payment
   [
-    'Sankt Hans Bonfire on the Beach', // title
-    'Join us for a traditional Danish Midsummer celebration with a huge bonfire, songs, and a beautiful sunset over the water.', // description
-    2, // created_by_id
-    12.6491, // longitude
-    55.6429, // latitude
-    '2025-06-23 20:00:00+02', // date_time
-    false, // is_private
-    8, // type_id (Other)
-    0.00, // price
-    false, // accepts_online_payment
-    false, // accepts_venue_payment
+    'Summer Jazz in the King\'s Garden',
+    'Enjoy a relaxing evening of live jazz music right in the heart of Copenhagen. Bring a blanket and a picnic basket!',
+    1, // Created by Freja
+    12.5794, 55.6855, // Rosenborg Castle Gardens
+    '2025-07-25 18:30:00+02',
+    false, // Public
+    1, // Concert
+    75.00,
+    true,
+    true,
   ],
   [
-    'Open Air Cinema: Modern Classics', // title
-    'Enjoy a movie under the stars. We are showing a beloved modern classic. Bring blankets and snacks for a cozy evening.', // description
-    3, // created_by_id
-    12.5786, // longitude
-    55.6738, // latitude
-    '2025-08-01 21:30:00+02', // date_time
-    false, // is_private
-    1, // type_id (Concert - repurposed for outdoor screening)
-    50.00, // price
-    true, // accepts_online_payment
-    true, // accepts_venue_payment
+    'Node.js Copenhagen Meetup',
+    'Monthly meetup for Node.js enthusiasts. This month, we\'ll have talks on the latest features in Node.js 22 and scalable WebSocket architectures.',
+    2, // Created by Viktor
+    12.5896, 55.6782, // A tech hub in Christianshavn
+    '2025-08-12 19:00:00+02',
+    false, // Public
+    2, // Meetup
+    0.00,
+    false,
+    false,
   ],
   [
-    'Startup Pitch Night CPH', // title
-    'Local startups pitch their latest ideas. A great opportunity for networking with founders, investors, and tech talents.', // description
-    1, // created_by_id
-    12.5878, // longitude
-    55.6698, // latitude
-    '2025-07-10 18:00:00+02', // date_time
-    false, // is_private
-    7, // type_id (Presentation)
-    25.00, // price
-    true, // accepts_online_payment
-    false, // accepts_venue_payment
+    'Clara\'s Birthday Bash',
+    'Celebrating my birthday with drinks and music at my place. Please RSVP so I know how many to expect! It\'s a private gathering.',
+    3, // Created by Clara
+    12.5511, 55.6901, // An apartment in Nørrebro
+    '2025-09-05 20:00:00+02',
+    true, // Private
+    8, // Other
+    0.00,
+    false,
+    false,
   ],
   [
-    'Morning Run & Coffee', // title
-    'A social 5k run around the Copenhagen lakes, followed by coffee and conversation at a nearby cafe. All paces welcome!', // description
-    2, // created_by_id
-    12.5623, // longitude
-    55.6836, // latitude
-    '2025-06-21 09:00:00+02', // date_time
-    false, // is_private
-    6, // type_id (Workout)
-    0.00, // price
-    false, // accepts_online_payment
-    true, // accepts_venue_payment
+    'Sourdough Baking Workshop',
+    'Learn the art and science of sourdough bread from scratch. All materials provided, and you get to take your own loaf home!',
+    1, // Created by Freja
+    12.5486, 55.6720, // A cozy bakery in Vesterbro
+    '2025-08-23 10:00:00+02',
+    false, // Public
+    3, // Workshop
+    450.00,
+    true,
+    false,
   ],
   [
-    'Sofie\'s Summer Grill Party', // title
-    'Private garden party to celebrate summer. I\'ll provide the grill and some basics, you bring your favorite grilling food and drinks.', // description
-    3, // created_by_id
-    12.5298, // longitude
-    55.6755, // latitude
-    '2025-07-19 18:00:00+02', // date_time
-    true, // is_private
-    4, // type_id (Food)
-    0.00, // price
-    false, // accepts_online_payment
-    false, // accepts_venue_payment
+    'Morning Yoga at Amager Strand',
+    'Start your weekend with a refreshing yoga session by the sea. All levels are welcome. Please bring your own mat.',
+    2, // Created by Viktor
+    12.6491, 55.6429, // Amager Strandpark
+    '2025-08-03 09:00:00+02',
+    false, // Public
+    6, // Sports & Fitness
+    50.00,
+    true,
+    true,
   ],
-  [
-    'Advanced Javascript Workshop', // title
-    'Deep dive into advanced Javascript concepts including async/await, generators, and performance optimization. For experienced developers.', // description
-    1, // created_by_id
-    12.5896, // longitude
-    55.6782, // latitude
-    '2025-08-16 10:00:00+02', // date_time
-    false, // is_private
-    5, // type_id (Workshop)
-    650.00, // price
-    true, // accepts_online_payment
-    false, // accepts_venue_payment
-  ],
-  [
-    'Indie Game Developers Meetup', // title
-    'A casual get-together for indie game developers in Copenhagen. Show off your projects, share experiences, and find collaborators.', // description
-    2, // created_by_id
-    12.5656, // longitude
-    55.6826, // latitude
-    '2025-07-29 19:00:00+02', // date_time
-    false, // is_private
-    2, // type_id (Meetup)
-    0.00, // price
-    false, // accepts_online_payment
-    true, // accepts_venue_payment
-  ],
-  [
-    'Kristian\'s Housewarming', // title
-    'I finally moved! Come see my new place and celebrate with me. There will be drinks, snacks, and music.', // description
-    2, // created_by_id
-    12.5511, // longitude
-    55.6901, // latitude
-    '2025-09-06 19:30:00+02', // date_time
-    true, // is_private
-    3, // type_id (Birthday - repurposed for housewarming)
-    0.00, // price
-    false, // accepts_online_payment
-    false, // accepts_venue_payment
-  ],
+];
+
+export const seedRsvpsData = [
+  // event_id, user_id, status
+  [2, 1, 'going'],
+  [2, 3, 'maybe'],
+  [1, 2, 'going'],
+  [1, 4, 'going'],
+  [1, 5, 'maybe'],
+
+  [2, 4, 'going'],
+  [2, 6, 'going'],
+
+  [3, 1, 'going'],
+  [3, 2, 'not_going'],
+  [4, 3, 'going'],
+  [4, 7, 'going'],
+  [4, 8, 'maybe'],
+
+  [5, 1, 'going'],
+  [5, 5, 'going'],
+  [5, 6, 'not_going'],
+];
+
+export const seedInvitationsData = [
+  // [event_id, inviter_id, invitee_id, message]
+  [3, 3, 1, 'Hey Freja, hope you can make it to my birthday party!'],
+  [3, 3, 2, 'Viktor, come celebrate with me!'],
+  [3, 3, 4, 'Emil, would be great to see you at my party!'],
+  [3, 3, 5, 'Hi Sofia! You are invited to my birthday bash.'],
+  [1, 2, 8, 'Oscar, you like jazz, right? Check this out.'],
 ];
