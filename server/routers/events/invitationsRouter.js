@@ -98,7 +98,6 @@ router.post('/', isAuthenticated, async (req, res) => {
       };
 
       io.to(actualInviteeId.toString()).emit('new_notification', finalNotificationPayload);
-      // Commented out to lessen spam
       await sendEventInvitationEmail(
         normalizedInviteeEmail,
         eventDetails,
