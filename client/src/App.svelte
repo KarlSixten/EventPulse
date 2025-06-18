@@ -1,23 +1,11 @@
 <script>
   import { onMount } from "svelte";
-  import { userStore } from "./stores/userStore.js";
   import { apiFetch } from "./util/fetch.js";
-  import { BASE_URL } from "./stores/generalStore.js";
   import { Router, Route } from "svelte-routing";
 
+  import { userStore } from "./stores/userStore.js";
+  import { BASE_URL } from "./stores/generalStore.js";
   import "./stores/notificationStore.js";
-
-  import "toastr/build/toastr.min.css";
-
-  import toastr from "toastr";
-
-  toastr.options = {
-    closeButton: true,
-    progressBar: true,
-    positionClass: "toast-bottom-right",
-    timeOut: "4000",
-    extendedTimeOut: "1000",
-  };
 
   import Header from "./components/Header.svelte";
   import Footer from "./components/Footer.svelte";
@@ -34,6 +22,16 @@
   import ForgotPassword from "./pages/ForgotPassword/ForgotPassword.svelte";
   import ResetPassword from "./pages/ResetPassword/ResetPassword.svelte";
   import Page404 from './pages/Error/Page404.svelte';
+
+  import "toastr/build/toastr.min.css";
+  import toastr from "toastr";
+  toastr.options = {
+    closeButton: true,
+    progressBar: true,
+    positionClass: "toast-bottom-right",
+    timeOut: "4000",
+    extendedTimeOut: "1000",
+  };
 
   export let url = "";
 

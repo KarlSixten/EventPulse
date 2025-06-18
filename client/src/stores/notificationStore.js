@@ -1,5 +1,3 @@
-/* eslint-disable no-undef */
-
 import { writable, get } from 'svelte/store';
 import { io } from 'socket.io-client';
 import { userStore } from './userStore.js';
